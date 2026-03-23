@@ -11,9 +11,3 @@
 *.rar
 hs_err_pid*
 replay_pid*
-target/
-*.class
-.settings/
-.project
-.classpath
-.factorypath
