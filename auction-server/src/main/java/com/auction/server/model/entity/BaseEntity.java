@@ -41,6 +41,9 @@ public abstract class BaseEntity {
         if (o == null || getClass() != o.getClass()) {
             return false;
         }
+        if (this.id == null) {
+            return false;
+        }
         BaseEntity that = (BaseEntity) o;
         return Objects.equals(id, that.id);
     }
