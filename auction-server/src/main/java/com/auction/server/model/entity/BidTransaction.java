@@ -1,3 +1,5 @@
+// hàm này lưu trữ bản ghi cho mỗi lượt đặt giá trong hệ thống
+// dữ liệu này có thể dùng để vẽ biểu đồ theo thời gian thực trong BiddingRoomController
 package com.auction.server.model.entity;
 
 import java.time.LocalDateTime;
@@ -5,13 +7,14 @@ import java.util.Objects;
 
 public class BidTransaction extends BaseEntity {
 
-  private final Long auctionId;
-  private final Long bidderId;
-  private final double amount;
-  private final LocalDateTime timestamp;
+  // dùng final để đảm bảo BidTransaction là bất biến sau khi khởi tạo
+  private final Long auctionId; // id phiên đấu giá
+  private final Long bidderId; // id người đấu giá
+  private final double amount; // số tiền đặt giá
+  private final LocalDateTime timestamp; // thời điểm đặt giá được ghi nhận trên sever
 
   public BidTransaction(Long auctionId, Long bidderId, double amount) {
-    super();
+    super(); // khởi tạo rỗng của lớp cha BaseEntity
     this.auctionId = Objects.requireNonNull(auctionId, "auctionId must not be null");
     this.bidderId = Objects.requireNonNull(bidderId, "bidderId must not be null");
     if (amount <= 0) {
@@ -41,6 +44,7 @@ public class BidTransaction extends BaseEntity {
   public double getAmount() {
     return amount;
   }
+  // không có các hàm setter để đảm bảo tính bất biến
 
   public LocalDateTime getTimestamp() {
     return timestamp;

@@ -1,3 +1,4 @@
+// đây là entity tổng hợp cốt lõi đại diện cho 1 phiên đấu giá trên hệ thống
 package com.auction.server.model.entity;
 
 import com.auction.server.model.enums.AuctionStatus;
@@ -6,14 +7,22 @@ import java.util.Objects;
 
 public class Auction extends BaseEntity {
 
+  // Anti-sniping logi (logic chống đặt giá giây cuối): nếu một lượt đặt giá được
+  // thực hiện trong vòng ANTI_SNIPE_WINDOW_SECONDS giây trước khi kết thúc, thời
+  // gian kết thúc sẽ tự động được gia hạn thêm EXTENSION_SECONDS giây. Logic này
+  // được xử lý ở tầng AuctionServiceImpl.
+
+  // số giấy trước khi kết thúc đấu giá để kích hoạt anti-snipping
   public static final int ANTI_SNIPE_WINDOW_SECONDS = 30;
+
+  // số giây gia hạn thêm khi anti-snipping kích hoạt
   public static final int EXTENSION_SECONDS = 30;
 
   private Long itemId;
   private Long sellerId;
-  private double currentPrice;
-  private Long currentWinnerId;
-  private AuctionStatus status;
+  private double currentPrice; // giá cao nhất được đặt hiện tại
+  private Long currentWinnerId; // id của Bidder dẫn đầu, gán null nếu chưa có ai
+  private AuctionStatus status; // trạng thái vòng đời của phiên đấu giá
   private LocalDateTime startTime;
   private LocalDateTime endTime;
 
@@ -30,6 +39,8 @@ public class Auction extends BaseEntity {
     this.status = AuctionStatus.OPEN;
     this.startTime = Objects.requireNonNull(startTime, "startTime must not be null");
     this.endTime = Objects.requireNonNull(endTime, "endTime must not be null");
+
+    // endTime phải ở sau startTime
     if (!endTime.isAfter(startTime)) {
       throw new IllegalArgumentException("endTime must be after startTime");
     }
@@ -47,14 +58,17 @@ public class Auction extends BaseEntity {
     this.endTime = endTime;
   }
 
+  // kiểm tra xem phiên đấu giá có đang ở trạng thái Running không
   public boolean isRunning() {
     return AuctionStatus.RUNNING.equals(status);
   }
 
+  // kiểm tra xem phiên đấu giá có đang ở trạng thái Kết thúc không
   public boolean isFinished() {
     return AuctionStatus.FINISHED.equals(status);
   }
 
+  // cập nhật giá hiện tại và id người dẫn đầu sau 1 lượt đặt giá hợp lệ
   public void applyBid(double newPrice, Long bidderId) {
     if (!isRunning()) {
       throw new IllegalStateException("Cannot place bid: auction is not RUNNING. Current status: " + status);
@@ -71,7 +85,7 @@ public class Auction extends BaseEntity {
     if (extraSeconds <= 0) {
       throw new IllegalArgumentException("extraSeconds must be positive: " + extraSeconds);
     }
-    this.endTime = this.endTime.plusSeconds(extraSeconds);
+    this.endTime = this.endTime.plusSeconds(extraSeconds); // plusSeconds() là phương thức built-in của LocalDateTime
   }
 
   public Long getItemId() {
