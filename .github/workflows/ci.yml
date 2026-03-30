@@ -3,7 +3,7 @@ name: Java CI & Code Quality
 # Kích hoạt khi có người đẩy code hoặc tạo Pull Request vào nhánh main
 on:
   push:
-    branches: ["main"]
+    branches: ["**"]
   pull_request:
     branches: ["main"]
 
