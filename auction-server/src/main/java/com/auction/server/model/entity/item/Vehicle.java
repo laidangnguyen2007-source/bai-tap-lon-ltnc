@@ -14,8 +14,15 @@ public class Vehicle extends Item {
     super();
   }
 
-  public Vehicle(String name, String description, double startingPrice, Long sellerId, String manufacturer,
-      int yearManufactured, int mileageKm, String fuelType) {
+  public Vehicle(
+      String name,
+      String description,
+      double startingPrice,
+      Long sellerId,
+      String manufacturer,
+      int yearManufactured,
+      int mileageKm,
+      String fuelType) {
     super(name, description, startingPrice, sellerId);
     this.manufacturer = manufacturer;
     this.yearManufactured = yearManufactured;
@@ -23,8 +30,17 @@ public class Vehicle extends Item {
     this.fuelType = fuelType;
   }
 
-  public Vehicle(Long id, LocalDateTime createdAt, String name, String description, double startingPrice, Long sellerId,
-      String manufacturer, int yearManufactured, int mileageKm, String fuelType) {
+  public Vehicle(
+      Long id,
+      LocalDateTime createdAt,
+      String name,
+      String description,
+      double startingPrice,
+      Long sellerId,
+      String manufacturer,
+      int yearManufactured,
+      int mileageKm,
+      String fuelType) {
     super(id, createdAt, name, description, startingPrice, sellerId);
     this.manufacturer = manufacturer;
     this.yearManufactured = yearManufactured;
@@ -78,15 +94,27 @@ public class Vehicle extends Item {
   @Override
   public String toString() {
     return "Vehicle{"
-        + "id=" + getId()
-        + ", name='" + getName() + '\''
-        + ", manufacturer='" + manufacturer + '\''
-        + ", yearManufactured=" + yearManufactured
-        + ", mileageKm=" + mileageKm
-        + ", fuelType='" + fuelType + '\''
-        + ", startingPrice=" + getStartingPrice()
-        + ", sellerId=" + getSellerId()
-        + ", createdAt=" + getCreatedAt()
+        + "id="
+        + getId()
+        + ", name='"
+        + getName()
+        + '\''
+        + ", manufacturer='"
+        + manufacturer
+        + '\''
+        + ", yearManufactured="
+        + yearManufactured
+        + ", mileageKm="
+        + mileageKm
+        + ", fuelType='"
+        + fuelType
+        + '\''
+        + ", startingPrice="
+        + getStartingPrice()
+        + ", sellerId="
+        + getSellerId()
+        + ", createdAt="
+        + getCreatedAt()
         + "}";
   }
 }

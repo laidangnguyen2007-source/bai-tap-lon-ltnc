@@ -24,7 +24,12 @@ public class BidTransaction extends BaseEntity {
     this.timestamp = LocalDateTime.now();
   }
 
-  public BidTransaction(Long id, LocalDateTime createdAt, Long auctionId, Long bidderId, double amount,
+  public BidTransaction(
+      Long id,
+      LocalDateTime createdAt,
+      Long auctionId,
+      Long bidderId,
+      double amount,
       LocalDateTime timestamp) {
     super(id, createdAt);
     this.auctionId = auctionId;
@@ -44,6 +49,7 @@ public class BidTransaction extends BaseEntity {
   public double getAmount() {
     return amount;
   }
+
   // không có các hàm setter để đảm bảo tính bất biến
 
   public LocalDateTime getTimestamp() {
@@ -53,11 +59,16 @@ public class BidTransaction extends BaseEntity {
   @Override
   public String toString() {
     return "BidTransaction{"
-        + "id=" + getId()
-        + ", auctionId=" + auctionId
-        + ", bidderId=" + bidderId
-        + ", amount=" + amount
-        + ", timestamp=" + timestamp
+        + "id="
+        + getId()
+        + ", auctionId="
+        + auctionId
+        + ", bidderId="
+        + bidderId
+        + ", amount="
+        + amount
+        + ", timestamp="
+        + timestamp
         + "}";
   }
 }
