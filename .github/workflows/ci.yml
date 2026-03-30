@@ -20,10 +20,10 @@ jobs:
         uses: wagoid/commitlint-github-action@v5
         # Nếu commit không có chữ feat, fix, chore... nó sẽ đánh trượt ngay
 
-      - name: Cài đặt Java 25 cho máy chủ
+      - name: Cài đặt Java 21 cho máy chủ
         uses: actions/setup-java@v4
         with:
-          java-version: "25"
+          java-version: "21"
           distribution: "temurin"
           cache: maven
 
