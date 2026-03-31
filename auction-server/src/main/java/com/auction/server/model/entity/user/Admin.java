@@ -26,7 +26,13 @@ public class Admin extends User {
 
   // Đăng nhập tài khoản Admin đã có khi load từ liệu từ Database về để khôi phục
   // tài khoản
-  public Admin(Long id, LocalDateTime createdAt, String username, String passwordHash, String email, int accessLevel) {
+  public Admin(
+      Long id,
+      LocalDateTime createdAt,
+      String username,
+      String passwordHash,
+      String email,
+      int accessLevel) {
     super(id, createdAt, username, passwordHash, email);
     this.accessLevel = validateAccessLevel(accessLevel);
   }
@@ -63,11 +69,18 @@ public class Admin extends User {
   @Override
   public String toString() {
     return "Admin{"
-        + "id=" + getId()
-        + ", username='" + getUsername() + '\''
-        + ", email='" + getEmail() + '\''
-        + ", accessLevel=" + accessLevel
-        + ", createdAt=" + getCreatedAt()
+        + "id="
+        + getId()
+        + ", username='"
+        + getUsername()
+        + '\''
+        + ", email='"
+        + getEmail()
+        + '\''
+        + ", accessLevel="
+        + accessLevel
+        + ", createdAt="
+        + getCreatedAt()
         + "}";
   }
 }

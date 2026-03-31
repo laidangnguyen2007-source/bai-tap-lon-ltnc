@@ -24,7 +24,12 @@ public abstract class Item extends BaseEntity {
     this.sellerId = Objects.requireNonNull(sellerId, "sellerId must not be null");
   }
 
-  protected Item(Long id, LocalDateTime createdAt, String name, String description, double startingPrice,
+  protected Item(
+      Long id,
+      LocalDateTime createdAt,
+      String name,
+      String description,
+      double startingPrice,
       Long sellerId) {
     super(id, createdAt);
     this.name = name;
@@ -81,12 +86,19 @@ public abstract class Item extends BaseEntity {
   @Override
   public String toString() {
     return getClass().getSimpleName()
-        + "{id=" + getId()
-        + ", name='" + name + '\''
-        + ", category=" + getCategory()
-        + ", startingPrice=" + startingPrice
-        + ", sellerId=" + sellerId
-        + ", createdAt=" + getCreatedAt()
+        + "{id="
+        + getId()
+        + ", name='"
+        + name
+        + '\''
+        + ", category="
+        + getCategory()
+        + ", startingPrice="
+        + startingPrice
+        + ", sellerId="
+        + sellerId
+        + ", createdAt="
+        + getCreatedAt()
         + "}";
   }
 }

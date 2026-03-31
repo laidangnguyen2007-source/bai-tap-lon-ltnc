@@ -3,9 +3,13 @@ name: Java CI & Code Quality
 # Kích hoạt khi có người đẩy code hoặc tạo Pull Request vào nhánh main
 on:
   push:
-    branches: ["main"]
+    branches: ["**"]
   pull_request:
     branches: ["main"]
+
+permissions:
+  contents: read
+  pull-requests: read
 
 jobs:
   build-and-check:
@@ -28,9 +32,11 @@ jobs:
           cache: maven
 
       - name: Soi lỗi Format Code (Spotless Check)
+        working-directory: auction-server
         run: mvn spotless:check
         # Nếu phát hiện code thụt lề sai 2 spaces, đánh trượt ngay
 
       - name: Kiểm tra chạy thử dự án (Build)
+        working-directory: auction-server
         run: mvn clean package -DskipTests
         # Kiểm tra xem code có bị lỗi cú pháp gạch đỏ không

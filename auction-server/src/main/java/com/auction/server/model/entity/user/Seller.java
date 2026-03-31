@@ -18,7 +18,13 @@ public class Seller extends User {
     this.rating = 0.0;
   }
 
-  public Seller(Long id, LocalDateTime createdAt, String username, String passwordHash, String email, String shopName,
+  public Seller(
+      Long id,
+      LocalDateTime createdAt,
+      String username,
+      String passwordHash,
+      String email,
+      String shopName,
       double rating) {
     super(id, createdAt, username, passwordHash, email);
     this.shopName = shopName;
@@ -52,11 +58,18 @@ public class Seller extends User {
   @Override
   public String toString() {
     return "Seller{"
-        + "id=" + getId()
-        + ", username='" + getUsername() + '\''
-        + ", shopName='" + shopName + '\''
-        + ", rating=" + rating
-        + ", createdAt=" + getCreatedAt()
+        + "id="
+        + getId()
+        + ", username='"
+        + getUsername()
+        + '\''
+        + ", shopName='"
+        + shopName
+        + '\''
+        + ", rating="
+        + rating
+        + ", createdAt="
+        + getCreatedAt()
         + "}";
   }
 }

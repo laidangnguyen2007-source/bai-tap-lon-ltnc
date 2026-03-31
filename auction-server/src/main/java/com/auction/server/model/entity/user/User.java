@@ -22,7 +22,8 @@ public abstract class User extends BaseEntity {
     this.email = Objects.requireNonNull(email, "email must not be null");
   }
 
-  protected User(Long id, LocalDateTime createdAt, String username, String passwordHash, String email) {
+  protected User(
+      Long id, LocalDateTime createdAt, String username, String passwordHash, String email) {
     super(id, createdAt);
     this.username = username;
     this.passwordHash = passwordHash;
@@ -58,11 +59,18 @@ public abstract class User extends BaseEntity {
   @Override
   public String toString() {
     return getClass().getSimpleName()
-        + "{id=" + getId()
-        + ", username='" + username + '\''
-        + ", email='" + email + '\''
-        + ", role=" + getRole()
-        + ", createdAt=" + getCreatedAt()
+        + "{id="
+        + getId()
+        + ", username='"
+        + username
+        + '\''
+        + ", email='"
+        + email
+        + '\''
+        + ", role="
+        + getRole()
+        + ", createdAt="
+        + getCreatedAt()
         + "}";
   }
 }

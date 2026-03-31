@@ -13,16 +13,30 @@ public class Artwork extends Item {
     super();
   }
 
-  public Artwork(String name, String description, double startingPrice, Long sellerId, String artistName,
-      int yearCreated, String medium) {
+  public Artwork(
+      String name,
+      String description,
+      double startingPrice,
+      Long sellerId,
+      String artistName,
+      int yearCreated,
+      String medium) {
     super(name, description, startingPrice, sellerId);
     this.artistName = artistName;
     this.yearCreated = yearCreated;
     this.medium = medium;
   }
 
-  public Artwork(Long id, LocalDateTime createdAt, String name, String description, double startingPrice, Long sellerId,
-      String artistName, int yearCreated, String medium) {
+  public Artwork(
+      Long id,
+      LocalDateTime createdAt,
+      String name,
+      String description,
+      double startingPrice,
+      Long sellerId,
+      String artistName,
+      int yearCreated,
+      String medium) {
     super(id, createdAt, name, description, startingPrice, sellerId);
     this.artistName = artistName;
     this.yearCreated = yearCreated;
@@ -64,14 +78,25 @@ public class Artwork extends Item {
   @Override
   public String toString() {
     return "Artwork{"
-        + "id=" + getId()
-        + ", name='" + getName() + '\''
-        + ", artistName='" + artistName + '\''
-        + ", yearCreated=" + yearCreated
-        + ", medium='" + medium + '\''
-        + ", startingPrice=" + getStartingPrice()
-        + ", sellerId=" + getSellerId()
-        + ", createdAt=" + getCreatedAt()
+        + "id="
+        + getId()
+        + ", name='"
+        + getName()
+        + '\''
+        + ", artistName='"
+        + artistName
+        + '\''
+        + ", yearCreated="
+        + yearCreated
+        + ", medium='"
+        + medium
+        + '\''
+        + ", startingPrice="
+        + getStartingPrice()
+        + ", sellerId="
+        + getSellerId()
+        + ", createdAt="
+        + getCreatedAt()
         + "}";
   }
 }
