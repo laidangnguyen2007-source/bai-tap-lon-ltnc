@@ -46,8 +46,16 @@ public class Auction extends BaseEntity {
     }
   }
 
-  public Auction(Long id, LocalDateTime createdAt, Long itemId, Long sellerId, double currentPrice,
-      Long currentWinnerId, AuctionStatus status, LocalDateTime startTime, LocalDateTime endTime) {
+  public Auction(
+      Long id,
+      LocalDateTime createdAt,
+      Long itemId,
+      Long sellerId,
+      double currentPrice,
+      Long currentWinnerId,
+      AuctionStatus status,
+      LocalDateTime startTime,
+      LocalDateTime endTime) {
     super(id, createdAt);
     this.itemId = itemId;
     this.sellerId = sellerId;
@@ -71,11 +79,15 @@ public class Auction extends BaseEntity {
   // cập nhật giá hiện tại và id người dẫn đầu sau 1 lượt đặt giá hợp lệ
   public void applyBid(double newPrice, Long bidderId) {
     if (!isRunning()) {
-      throw new IllegalStateException("Cannot place bid: auction is not RUNNING. Current status: " + status);
+      throw new IllegalStateException(
+          "Cannot place bid: auction is not RUNNING. Current status: " + status);
     }
     if (newPrice <= currentPrice) {
       throw new IllegalArgumentException(
-          "New bid must be higher than current price. Current: " + currentPrice + ", offered: " + newPrice);
+          "New bid must be higher than current price. Current: "
+              + currentPrice
+              + ", offered: "
+              + newPrice);
     }
     this.currentPrice = newPrice;
     this.currentWinnerId = Objects.requireNonNull(bidderId, "bidderId must not be null");
@@ -85,7 +97,9 @@ public class Auction extends BaseEntity {
     if (extraSeconds <= 0) {
       throw new IllegalArgumentException("extraSeconds must be positive: " + extraSeconds);
     }
-    this.endTime = this.endTime.plusSeconds(extraSeconds); // plusSeconds() là phương thức built-in của LocalDateTime
+    this.endTime =
+        this.endTime.plusSeconds(
+            extraSeconds); // plusSeconds() là phương thức built-in của LocalDateTime
   }
 
   public Long getItemId() {
@@ -147,15 +161,24 @@ public class Auction extends BaseEntity {
   @Override
   public String toString() {
     return "Auction{"
-        + "id=" + getId()
-        + ", itemId=" + itemId
-        + ", sellerId=" + sellerId
-        + ", currentPrice=" + currentPrice
-        + ", currentWinnerId=" + currentWinnerId
-        + ", status=" + status
-        + ", startTime=" + startTime
-        + ", endTime=" + endTime
-        + ", createdAt=" + getCreatedAt()
+        + "id="
+        + getId()
+        + ", itemId="
+        + itemId
+        + ", sellerId="
+        + sellerId
+        + ", currentPrice="
+        + currentPrice
+        + ", currentWinnerId="
+        + currentWinnerId
+        + ", status="
+        + status
+        + ", startTime="
+        + startTime
+        + ", endTime="
+        + endTime
+        + ", createdAt="
+        + getCreatedAt()
         + "}";
   }
 }

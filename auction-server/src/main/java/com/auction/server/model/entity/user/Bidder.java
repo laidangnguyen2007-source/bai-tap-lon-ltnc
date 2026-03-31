@@ -15,7 +15,13 @@ public class Bidder extends User {
     this.balance = balance;
   }
 
-  public Bidder(Long id, LocalDateTime createdAt, String username, String passwordHash, String email, double balance) {
+  public Bidder(
+      Long id,
+      LocalDateTime createdAt,
+      String username,
+      String passwordHash,
+      String email,
+      double balance) {
     super(id, createdAt, username, passwordHash, email);
     this.balance = balance;
   }
@@ -41,18 +47,26 @@ public class Bidder extends User {
       throw new IllegalArgumentException("Deduction amount must be positive: " + amount);
     }
     if (amount > balance) {
-      throw new IllegalArgumentException("Insufficient balance. Required: " + amount + ", available: " + balance);
+      throw new IllegalArgumentException(
+          "Insufficient balance. Required: " + amount + ", available: " + balance);
     }
     this.balance -= amount;
   }
 
   @Override
   public String toString() {
-    return "Bidder{id=" + getId()
-        + ", username='" + getUsername() + '\''
-        + ", email='" + getEmail() + '\''
-        + ", balance=" + balance
-        + ", createdAt=" + getCreatedAt()
+    return "Bidder{id="
+        + getId()
+        + ", username='"
+        + getUsername()
+        + '\''
+        + ", email='"
+        + getEmail()
+        + '\''
+        + ", balance="
+        + balance
+        + ", createdAt="
+        + getCreatedAt()
         + "}";
   }
 }
