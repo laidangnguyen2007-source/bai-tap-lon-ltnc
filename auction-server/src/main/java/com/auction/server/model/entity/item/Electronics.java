@@ -13,16 +13,30 @@ public class Electronics extends Item {
     super();
   }
 
-  public Electronics(String name, String description, double startingPrice, Long sellerId, String brand,
-      int warrantyMonths, double powerWatts) {
+  public Electronics(
+      String name,
+      String description,
+      double startingPrice,
+      Long sellerId,
+      String brand,
+      int warrantyMonths,
+      double powerWatts) {
     super(name, description, startingPrice, sellerId);
     this.brand = brand;
     this.warrantyMonths = warrantyMonths;
     this.powerWatts = powerWatts;
   }
 
-  public Electronics(Long id, LocalDateTime createdAt, String name, String description, double startingPrice,
-      Long sellerId, String brand, int warrantyMonths, double powerWatts) {
+  public Electronics(
+      Long id,
+      LocalDateTime createdAt,
+      String name,
+      String description,
+      double startingPrice,
+      Long sellerId,
+      String brand,
+      int warrantyMonths,
+      double powerWatts) {
     super(id, createdAt, name, description, startingPrice, sellerId);
     this.brand = brand;
     this.warrantyMonths = warrantyMonths;
@@ -67,14 +81,24 @@ public class Electronics extends Item {
   @Override
   public String toString() {
     return "Electronics{"
-        + "id=" + getId()
-        + ", name='" + getName() + '\''
-        + ", brand='" + brand + '\''
-        + ", warrantyMonths=" + warrantyMonths
-        + ", powerWatts=" + powerWatts
-        + ", startingPrice=" + getStartingPrice()
-        + ", sellerId=" + getSellerId()
-        + ", createdAt=" + getCreatedAt()
+        + "id="
+        + getId()
+        + ", name='"
+        + getName()
+        + '\''
+        + ", brand='"
+        + brand
+        + '\''
+        + ", warrantyMonths="
+        + warrantyMonths
+        + ", powerWatts="
+        + powerWatts
+        + ", startingPrice="
+        + getStartingPrice()
+        + ", sellerId="
+        + getSellerId()
+        + ", createdAt="
+        + getCreatedAt()
         + "}";
   }
 }
