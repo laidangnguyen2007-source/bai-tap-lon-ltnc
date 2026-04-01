@@ -76,6 +76,16 @@ public class Auction extends BaseEntity {
     return AuctionStatus.FINISHED.equals(status);
   }
 
+  // kiểm tra xem phiên đấu giá đã được thanh toán chưa
+  public boolean isPaid() {
+    return AuctionStatus.PAID.equals(status);
+  }
+
+  // kiểm tra xem phiên đấu giá có bị hủy không
+  public boolean isCanceled() {
+    return AuctionStatus.CANCELED.equals(status);
+  }
+
   // cập nhật giá hiện tại và id người dẫn đầu sau 1 lượt đặt giá hợp lệ
   public void applyBid(double newPrice, Long bidderId) {
     if (!isRunning()) {
