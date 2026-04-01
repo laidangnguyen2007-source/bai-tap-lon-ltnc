@@ -12,5 +12,4 @@ public interface UserService {
   boolean hasRole(long userId, String requiredRole);
 
   Optional<User> findById(long userId);
-
 }
