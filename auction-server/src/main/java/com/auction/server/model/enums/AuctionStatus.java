@@ -4,7 +4,9 @@ package com.auction.server.model.enums;
 public enum AuctionStatus {
   OPEN, // khởi tạo phiên đấu giá nhưng chưa đặt giá được
   RUNNING,
-  FINISHED // kết thúc đấu giá, không thể đặt giá nữa
+  FINISHED, // kết thúc đấu giá, không thể đặt giá nữa
+  PAID, 
+  CANCELED
 }
 
 // enum (Enumeration/ kiểu liệt kê) là một kiểu dữ liệu đặc biệt trong Java dùng
