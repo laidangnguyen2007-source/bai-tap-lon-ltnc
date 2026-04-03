@@ -33,6 +33,14 @@
     </build>
 
     <dependencies>
+        <!-- MySQL Connector: Driver kết nối Java với MySQL Server -->
+        <dependency>
+            <groupId>com.mysql</groupId>
+            <artifactId>mysql-connector-j</artifactId>
+            <version>9.0.0</version>
+        </dependency>
+
+        <!-- JUnit 5: Framework viết Unit Test -->
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter</artifactId>
