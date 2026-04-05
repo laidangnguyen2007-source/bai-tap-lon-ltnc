@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.PasswordField?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.layout.HBox?>
+
+<!--
+  View: Màn hình Đăng Nhập
+  Controller tương ứng: LoginController.java
+  Mô hình MVC: File này chỉ khai báo giao diện, không chứa logic nghiệp vụ.
+-->
+<StackPane
+  xmlns="http://javafx.com/javafx/21"
+  xmlns:fx="http://javafx.com/fxml/1"
+  fx:controller="com.auction.client.controller.LoginController"
+  styleClass="root-pane">
+
+  <!-- Card trắng căn giữa màn hình -->
+  <VBox styleClass="card" maxWidth="400" maxHeight="480" spacing="16">
+    <padding><Insets top="40" right="40" bottom="40" left="40"/></padding>
+
+    <!-- Tiêu đề -->
+    <Label text="🔨 Online Auction" styleClass="title-label"/>
+    <Label text="Đăng nhập để tiếp tục" styleClass="subtitle-label"/>
+
+    <!-- Trường nhập Username -->
+    <VBox spacing="4">
+      <Label text="Tên đăng nhập" styleClass="field-label"/>
+      <TextField
+        fx:id="usernameField"
+        promptText="Nhập tên đăng nhập..."
+        styleClass="text-field"/>
+    </VBox>
+
+    <!-- Trường nhập Mật khẩu -->
+    <VBox spacing="4">
+      <Label text="Mật khẩu" styleClass="field-label"/>
+      <PasswordField
+        fx:id="passwordField"
+        promptText="Nhập mật khẩu..."
+        styleClass="text-field"/>
+    </VBox>
+
+    <!-- Thông báo lỗi inline (ẩn mặc định) -->
+    <Label fx:id="errorLabel" styleClass="error-label" visible="false" wrapText="true"/>
+
+    <!-- Nút Đăng Nhập -->
+    <Button
+      fx:id="loginButton"
+      text="Đăng Nhập"
+      onAction="#handleLogin"
+      styleClass="primary-button"
+      maxWidth="Infinity"/>
+
+    <!-- Liên kết đến trang đăng ký -->
+    <HBox alignment="CENTER">
+      <Button
+        fx:id="registerButton"
+        text="Chưa có tài khoản? Đăng ký ngay"
+        onAction="#handleGoToRegister"
+        styleClass="link-button"/>
+    </HBox>
+
+  </VBox>
+</StackPane>

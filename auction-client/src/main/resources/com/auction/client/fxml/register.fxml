@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.PasswordField?>
+<?import javafx.scene.control.RadioButton?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
+
+<!--
+  View: Màn hình Đăng Ký Tài Khoản
+  Controller tương ứng: RegisterController.java
+-->
+<StackPane
+  xmlns="http://javafx.com/javafx/21"
+  xmlns:fx="http://javafx.com/fxml/1"
+  fx:controller="com.auction.client.controller.RegisterController"
+  styleClass="root-pane">
+
+  <VBox styleClass="card" maxWidth="460" maxHeight="620" spacing="14">
+    <padding><Insets top="36" right="40" bottom="36" left="40"/></padding>
+
+    <Label text="📝 Tạo Tài Khoản Mới" styleClass="title-label"/>
+
+    <!-- Username -->
+    <VBox spacing="4">
+      <Label text="Tên đăng nhập *" styleClass="field-label"/>
+      <TextField fx:id="usernameField" promptText="Tối thiểu 4 ký tự" styleClass="text-field"/>
+    </VBox>
+
+    <!-- Email -->
+    <VBox spacing="4">
+      <Label text="Email *" styleClass="field-label"/>
+      <TextField fx:id="emailField" promptText="email@example.com" styleClass="text-field"/>
+    </VBox>
+
+    <!-- Password -->
+    <VBox spacing="4">
+      <Label text="Mật khẩu *" styleClass="field-label"/>
+      <PasswordField fx:id="passwordField" promptText="Tối thiểu 6 ký tự" styleClass="text-field"/>
+    </VBox>
+
+    <!-- Confirm Password -->
+    <VBox spacing="4">
+      <Label text="Xác nhận mật khẩu *" styleClass="field-label"/>
+      <PasswordField fx:id="confirmPasswordField" promptText="Nhập lại mật khẩu" styleClass="text-field"/>
+    </VBox>
+
+    <!-- Role selection -->
+    <VBox spacing="6">
+      <Label text="Vai trò *" styleClass="field-label"/>
+      <HBox spacing="24">
+        <RadioButton fx:id="bidderRadio" text="🛒 Người đấu giá (Bidder)" styleClass="radio-btn"/>
+        <RadioButton fx:id="sellerRadio" text="🏪 Người bán (Seller)" styleClass="radio-btn"/>
+      </HBox>
+    </VBox>
+
+    <!-- Shop name (ẩn/hiện theo lựa chọn role trong RegisterController.initialize()) -->
+    <VBox spacing="4">
+      <Label fx:id="shopNameLabel" text="Tên cửa hàng *" styleClass="field-label" visible="false"/>
+      <TextField fx:id="shopNameField" promptText="Nhập tên cửa hàng của bạn" styleClass="text-field" visible="false"/>
+    </VBox>
+
+    <!-- Thông báo kết quả -->
+    <Label fx:id="errorLabel" styleClass="error-label" visible="false" wrapText="true"/>
+    <Label fx:id="successLabel" styleClass="success-label" visible="false" wrapText="true"/>
+
+    <!-- Nút hành động -->
+    <Button
+      fx:id="registerButton"
+      text="Tạo Tài Khoản"
+      onAction="#handleRegister"
+      styleClass="primary-button"
+      maxWidth="Infinity"/>
+
+    <Button
+      fx:id="backToLoginButton"
+      text="← Quay lại đăng nhập"
+      onAction="#handleBackToLogin"
+      styleClass="link-button"
+      maxWidth="Infinity"/>
+
+  </VBox>
+</StackPane>
