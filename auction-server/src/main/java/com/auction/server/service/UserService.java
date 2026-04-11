@@ -1,5 +1,3 @@
 package com.auction.server.service;
 
-public interface UserService {
-
-}
+public interface UserService {}
