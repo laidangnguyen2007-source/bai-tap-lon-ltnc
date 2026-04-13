@@ -13,10 +13,11 @@ public class Electronics extends Item {
     super();
   }
 
-  public Electronics(
+  // Package-private: chỉ ItemFactory (cùng package) mới được dùng
+  Electronics(
       String name,
       String description,
-      double startingPrice,
+      long startingPrice,
       Long sellerId,
       String brand,
       int warrantyMonths,
@@ -27,12 +28,13 @@ public class Electronics extends Item {
     this.powerWatts = powerWatts;
   }
 
-  public Electronics(
+  // Package-private: chỉ ItemFactory dùng để phục dựng từ DB
+  Electronics(
       Long id,
       LocalDateTime createdAt,
       String name,
       String description,
-      double startingPrice,
+      long startingPrice,
       Long sellerId,
       String brand,
       int warrantyMonths,

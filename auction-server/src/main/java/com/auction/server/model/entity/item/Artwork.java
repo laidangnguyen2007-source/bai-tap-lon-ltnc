@@ -13,10 +13,11 @@ public class Artwork extends Item {
     super();
   }
 
-  public Artwork(
+  // Package-private: chỉ ItemFactory (cùng package) mới được dùng để đúc Artwork mới
+  Artwork(
       String name,
       String description,
-      double startingPrice,
+      long startingPrice,
       Long sellerId,
       String artistName,
       int yearCreated,
@@ -27,12 +28,13 @@ public class Artwork extends Item {
     this.medium = medium;
   }
 
-  public Artwork(
+  // Package-private: chỉ ItemFactory dùng để phục dựng Artwork từ DB
+  Artwork(
       Long id,
       LocalDateTime createdAt,
       String name,
       String description,
-      double startingPrice,
+      long startingPrice,
       Long sellerId,
       String artistName,
       int yearCreated,
