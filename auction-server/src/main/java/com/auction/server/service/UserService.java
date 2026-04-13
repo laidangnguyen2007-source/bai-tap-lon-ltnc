@@ -63,7 +63,8 @@ public class UserService {
     User user =
         userDao
             .findByUsername(username)
-            .orElseThrow(() -> new AuthenticationException("Tên đăng nhập không tồn tại: " + username));
+            .orElseThrow(
+                () -> new AuthenticationException("Tên đăng nhập không tồn tại: " + username));
 
     // So sánh hash mật khẩu nhập vào với hash đã lưu
     if (!PasswordUtil.verifyPassword(rawPassword, user.getPasswordHash())) {
@@ -122,4 +123,3 @@ public class UserService {
     }
   }
 }
-
