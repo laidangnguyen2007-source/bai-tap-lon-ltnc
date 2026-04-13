@@ -28,9 +28,9 @@ public class ItemFactory {
    * trường, Factory sẽ quyết định gọi constructor của class con nào.
    *
    * @param category Loại sản phẩm (ARTWORK, ELECTRONICS, VEHICLE)
-   * 
+   *
    * @param params Bản đồ chứa các thuộc tính bắt buộc tuỳ theo loại
-   * 
+   *
    * @return Item đã khởi tạo, chưa có ID (sẽ được DAO gán sau khi INSERT)
    */
   public static Item create(ItemCategory category, Map<String, Object> params) {
@@ -43,18 +43,36 @@ public class ItemFactory {
     // nếu sai kiểu cũng sẽ ném ra exception
 
     return switch (category) {
-      case ARTWORK -> new Artwork(name, description, startingPrice, sellerId,
-          require(params, "artistName", String.class),
-          require(params, "yearCreated", Integer.class), require(params, "medium", String.class));
+      case ARTWORK ->
+          new Artwork(
+              name,
+              description,
+              startingPrice,
+              sellerId,
+              require(params, "artistName", String.class),
+              require(params, "yearCreated", Integer.class),
+              require(params, "medium", String.class));
 
-      case ELECTRONICS -> new Electronics(name, description, startingPrice, sellerId,
-          require(params, "brand", String.class), require(params, "warrantyMonths", Integer.class),
-          require(params, "powerWatts", Double.class));
+      case ELECTRONICS ->
+          new Electronics(
+              name,
+              description,
+              startingPrice,
+              sellerId,
+              require(params, "brand", String.class),
+              require(params, "warrantyMonths", Integer.class),
+              require(params, "powerWatts", Double.class));
 
-      case VEHICLE -> new Vehicle(name, description, startingPrice, sellerId,
-          require(params, "manufacturer", String.class),
-          require(params, "yearManufactured", Integer.class),
-          require(params, "mileageKm", Integer.class), require(params, "fuelType", String.class));
+      case VEHICLE ->
+          new Vehicle(
+              name,
+              description,
+              startingPrice,
+              sellerId,
+              require(params, "manufacturer", String.class),
+              require(params, "yearManufactured", Integer.class),
+              require(params, "mileageKm", Integer.class),
+              require(params, "fuelType", String.class));
     };
   }
 
@@ -65,25 +83,64 @@ public class ItemFactory {
    * hiển thị dữ liệu đang có (các sản phẩm đang đấu giá, các cuộc đấu giá đang diễn ra, ...). Cần
    * truyền đầy đủ id + createdAt vì đây là Item ĐÃ TỒN TẠI trong DB.
    */
-  public static Artwork reconstructArtwork(Long id, LocalDateTime createdAt, String name,
-      String description, long startingPrice, Long sellerId, String artistName, int yearCreated,
+  public static Artwork reconstructArtwork(
+      Long id,
+      LocalDateTime createdAt,
+      String name,
+      String description,
+      long startingPrice,
+      Long sellerId,
+      String artistName,
+      int yearCreated,
       String medium) {
-    return new Artwork(id, createdAt, name, description, startingPrice, sellerId, artistName,
-        yearCreated, medium);
+    return new Artwork(
+        id, createdAt, name, description, startingPrice, sellerId, artistName, yearCreated, medium);
   }
 
-  public static Electronics reconstructElectronics(Long id, LocalDateTime createdAt, String name,
-      String description, long startingPrice, Long sellerId, String brand, int warrantyMonths,
+  public static Electronics reconstructElectronics(
+      Long id,
+      LocalDateTime createdAt,
+      String name,
+      String description,
+      long startingPrice,
+      Long sellerId,
+      String brand,
+      int warrantyMonths,
       double powerWatts) {
-    return new Electronics(id, createdAt, name, description, startingPrice, sellerId, brand,
-        warrantyMonths, powerWatts);
+    return new Electronics(
+        id,
+        createdAt,
+        name,
+        description,
+        startingPrice,
+        sellerId,
+        brand,
+        warrantyMonths,
+        powerWatts);
   }
 
-  public static Vehicle reconstructVehicle(Long id, LocalDateTime createdAt, String name,
-      String description, long startingPrice, Long sellerId, String manufacturer,
-      int yearManufactured, int mileageKm, String fuelType) {
-    return new Vehicle(id, createdAt, name, description, startingPrice, sellerId, manufacturer,
-        yearManufactured, mileageKm, fuelType);
+  public static Vehicle reconstructVehicle(
+      Long id,
+      LocalDateTime createdAt,
+      String name,
+      String description,
+      long startingPrice,
+      Long sellerId,
+      String manufacturer,
+      int yearManufactured,
+      int mileageKm,
+      String fuelType) {
+    return new Vehicle(
+        id,
+        createdAt,
+        name,
+        description,
+        startingPrice,
+        sellerId,
+        manufacturer,
+        yearManufactured,
+        mileageKm,
+        fuelType);
   }
 
   // ─── INTERNAL ────────────────────────────────────────────────────
@@ -97,8 +154,13 @@ public class ItemFactory {
     if (!type.isInstance(value)) {
       // isInstance() lợi hơn instanceof() ở chỗ nó không yêu cầu xác định kiểu dữ liệu tại thời
       // điểm Compile nên có thể linh hoạt kiểm tra tùy theo biến Class người dùng đẩy vào Map
-      throw new AuctionException("ItemFactory: tham số '" + key + "' phải là kiểu "
-          + type.getSimpleName() + " nhưng nhận được " + value.getClass().getSimpleName());
+      throw new AuctionException(
+          "ItemFactory: tham số '"
+              + key
+              + "' phải là kiểu "
+              + type.getSimpleName()
+              + " nhưng nhận được "
+              + value.getClass().getSimpleName());
     }
     return (T) value;
   }

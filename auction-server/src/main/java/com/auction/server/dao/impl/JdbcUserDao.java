@@ -17,11 +17,11 @@ import java.util.Optional;
 /**
  * Triển khai UserDao sử dụng JDBC + MySQL.
  *
- * PreparedStatement: Dùng dấu ? thay vì nhúng trực tiếp giá trị vào chuỗi SQL. Lợi ích kép: (1)
+ * <p>PreparedStatement: Dùng dấu ? thay vì nhúng trực tiếp giá trị vào chuỗi SQL. Lợi ích kép: (1)
  * Chống SQL Injection (2) Database cache query plan → nhanh hơn.
  *
- * Single Table Inheritance: Toàn bộ Bidder/Seller/Admin đều lưu chung vào 1 bảng "users". Cột ROLE
- * phân biệt loại. Phương thức mapRow() đọc cột ROLE và tạo đúng class con tương ứng.
+ * <p>Single Table Inheritance: Toàn bộ Bidder/Seller/Admin đều lưu chung vào 1 bảng "users". Cột
+ * ROLE phân biệt loại. Phương thức mapRow() đọc cột ROLE và tạo đúng class con tương ứng.
  */
 public class JdbcUserDao implements UserDao {
 
@@ -41,8 +41,9 @@ public class JdbcUserDao implements UserDao {
 
   @Override
   public User save(User user) {
-    String sql = "INSERT INTO users (created_at, username, password_hash, email, role,"
-        + " balance, shop_name, rating, access_level) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+    String sql =
+        "INSERT INTO users (created_at, username, password_hash, email, role,"
+            + " balance, shop_name, rating, access_level) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
     try (PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
       ps.setTimestamp(1, Timestamp.valueOf(user.getCreatedAt()));
@@ -85,7 +86,8 @@ public class JdbcUserDao implements UserDao {
   public List<User> findAll() {
     List<User> users = new ArrayList<>();
     String sql = "SELECT * FROM users";
-    try (Statement st = conn.createStatement(); ResultSet rs = st.executeQuery(sql)) {
+    try (Statement st = conn.createStatement();
+        ResultSet rs = st.executeQuery(sql)) {
       while (rs.next()) {
         users.add(mapRow(rs));
       }
@@ -97,8 +99,9 @@ public class JdbcUserDao implements UserDao {
 
   @Override
   public User update(User user) {
-    String sql = "UPDATE users SET username=?, password_hash=?, email=?,"
-        + " balance=?, shop_name=?, rating=?, access_level=? WHERE id=?";
+    String sql =
+        "UPDATE users SET username=?, password_hash=?, email=?,"
+            + " balance=?, shop_name=?, rating=?, access_level=? WHERE id=?";
     try (PreparedStatement ps = conn.prepareStatement(sql)) {
       ps.setString(1, user.getUsername());
       ps.setString(2, user.getPasswordHash());
@@ -139,7 +142,8 @@ public class JdbcUserDao implements UserDao {
   @Override
   public long count() {
     String sql = "SELECT COUNT(1) FROM users";
-    try (Statement st = conn.createStatement(); ResultSet rs = st.executeQuery(sql)) {
+    try (Statement st = conn.createStatement();
+        ResultSet rs = st.executeQuery(sql)) {
       return rs.next() ? rs.getLong(1) : 0L;
     } catch (SQLException e) {
       throw new AuctionException("Database error counting Users", e);
@@ -156,8 +160,7 @@ public class JdbcUserDao implements UserDao {
     try (PreparedStatement ps = conn.prepareStatement(sql)) {
       ps.setString(1, username);
       try (ResultSet rs = ps.executeQuery()) {
-        if (rs.next())
-          return Optional.of(mapRow(rs));
+        if (rs.next()) return Optional.of(mapRow(rs));
       }
     } catch (SQLException e) {
       throw new AuctionException("Database error finding User by username", e);
@@ -171,8 +174,7 @@ public class JdbcUserDao implements UserDao {
     try (PreparedStatement ps = conn.prepareStatement(sql)) {
       ps.setString(1, email);
       try (ResultSet rs = ps.executeQuery()) {
-        if (rs.next())
-          return Optional.of(mapRow(rs));
+        if (rs.next()) return Optional.of(mapRow(rs));
       }
     } catch (SQLException e) {
       throw new AuctionException("Database error finding User by email", e);
@@ -187,8 +189,7 @@ public class JdbcUserDao implements UserDao {
     try (PreparedStatement ps = conn.prepareStatement(sql)) {
       ps.setString(1, role.name());
       try (ResultSet rs = ps.executeQuery()) {
-        while (rs.next())
-          users.add(mapRow(rs));
+        while (rs.next()) users.add(mapRow(rs));
       }
     } catch (SQLException e) {
       throw new AuctionException("Database error finding Users by role", e);
@@ -240,12 +241,19 @@ public class JdbcUserDao implements UserDao {
     UserRole role = UserRole.valueOf(rs.getString("role"));
 
     return switch (role) {
-      case BIDDER -> new Bidder(id, createdAt, username, passwordHash, email,
-          rs.getLong("balance"));
-      case SELLER -> new Seller(id, createdAt, username, passwordHash, email,
-          rs.getString("shop_name"), rs.getDouble("rating"));
-      case ADMIN -> new Admin(id, createdAt, username, passwordHash, email,
-          rs.getInt("access_level"));
+      case BIDDER ->
+          new Bidder(id, createdAt, username, passwordHash, email, rs.getLong("balance"));
+      case SELLER ->
+          new Seller(
+              id,
+              createdAt,
+              username,
+              passwordHash,
+              email,
+              rs.getString("shop_name"),
+              rs.getDouble("rating"));
+      case ADMIN ->
+          new Admin(id, createdAt, username, passwordHash, email, rs.getInt("access_level"));
     };
   }
 

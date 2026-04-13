@@ -27,6 +27,7 @@ public class AuctionManager {
 
   // Bộ nhớ đệm (in-memory) chứa các phiên đang RUNNING
   private final Map<Long, Auction> activeAuctions = new ConcurrentHashMap<>();
+
   // final đảm bảo bộ nhớ chỉ cấp 1 khung Map duy nhất, chống mất bộ nhớ gây sập server
 
   private AuctionManager() {}
@@ -129,7 +130,9 @@ public class AuctionManager {
   // ─── INTERNAL ────────────────────────────────────────────────────
 
   private Auction findActiveAuction(Long auctionId) {
-    return Optional.ofNullable(activeAuctions.get(auctionId)).orElseThrow(
-        () -> new AuctionException("Không tìm thấy phiên đấu giá đang hoạt động: #" + auctionId));
+    return Optional.ofNullable(activeAuctions.get(auctionId))
+        .orElseThrow(
+            () ->
+                new AuctionException("Không tìm thấy phiên đấu giá đang hoạt động: #" + auctionId));
   }
 }

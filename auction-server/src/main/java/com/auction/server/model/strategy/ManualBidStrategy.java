@@ -56,8 +56,7 @@ public class ManualBidStrategy implements BidStrategy {
     if (requestAmount < currentPrice) {
       throw new InvalidBidException(
           String.format(
-              "Bid amount %d must be greater than current price %d",
-              requestAmount, currentPrice));
+              "Bid amount %d must be greater than current price %d", requestAmount, currentPrice));
     }
 
     // Giá đặt bé hơn giá sàn
