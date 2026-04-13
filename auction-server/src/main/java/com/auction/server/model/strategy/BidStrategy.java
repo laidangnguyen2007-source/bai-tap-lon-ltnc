@@ -18,7 +18,7 @@ public interface BidStrategy {
    * @return một BidTranscation để lưu trữ (vào database), hoặc null nếu không nên đặt giá đầu thầu
    *     nào (xảy ra khi không ai bật autobid, đạt maxbid, đặt bid cao nhất)
    */
-  BidTransaction calculateBid(Auction auction, long bidderId, double requestAmount);
+  BidTransaction calculateBid(Auction auction, long bidderId, long requestAmount);
 
   /**
    * @return tên hiển thị (dành cho logging/UI)
