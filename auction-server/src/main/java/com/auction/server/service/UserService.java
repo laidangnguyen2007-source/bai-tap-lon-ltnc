@@ -10,6 +10,7 @@ import com.auction.server.model.entity.user.Seller;
 import com.auction.server.model.entity.user.User;
 import com.auction.server.model.enums.UserRole;
 import com.auction.server.model.exception.AuctionException;
+import com.auction.server.model.exception.AuthenticationException;
 import com.auction.server.service.util.PasswordUtil;
 import java.util.List;
 import java.util.Objects;
@@ -26,7 +27,7 @@ public class UserService {
   // ===== ĐĂNG KÝ TÀI KHOẢN =====
 
   // Đăng ký tài khoản Bidder (người đấu giá)
-  public User registerBidder(String username, String rawPassword, String email, double balance) {
+  public User registerBidder(String username, String rawPassword, String email, long balance) {
     validateRegistration(username, rawPassword, email);
     String passwordHash = PasswordUtil.hashPassword(rawPassword);
     Bidder bidder = new Bidder(username, passwordHash, email, balance);
@@ -52,6 +53,8 @@ public class UserService {
   // ===== ĐĂNG NHẬP =====
 
   // Đăng nhập: kiểm tra username + password, trả về User nếu hợp lệ
+  // Nếu sai username hoặc mật khẩu, ném AuthenticationException (không phải AuctionException)
+  // — Tuân thủ SRP: lỗi xác thực và lỗi nghiệp vụ cần được xử lý riêng biệt
   public User login(String username, String rawPassword) {
     Objects.requireNonNull(username, "Username must not be null");
     Objects.requireNonNull(rawPassword, "Password must not be null");
@@ -60,11 +63,11 @@ public class UserService {
     User user =
         userDao
             .findByUsername(username)
-            .orElseThrow(() -> new AuctionException("Username not found: " + username));
+            .orElseThrow(() -> new AuthenticationException("Tên đăng nhập không tồn tại: " + username));
 
     // So sánh hash mật khẩu nhập vào với hash đã lưu
     if (!PasswordUtil.verifyPassword(rawPassword, user.getPasswordHash())) {
-      throw new AuctionException("Incorrect password");
+      throw new AuthenticationException("Mật khẩu không đúng");
     }
 
     return user;

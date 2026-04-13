@@ -8,7 +8,9 @@ import com.auction.server.dao.ItemDao;
 import com.auction.server.model.entity.item.Item;
 import com.auction.server.model.enums.ItemCategory;
 import com.auction.server.model.exception.AuctionException;
+import com.auction.server.model.entity.item.ItemFactory;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -24,7 +26,24 @@ public class ItemService {
 
   // ===== THÊM SẢN PHẨM =====
 
-  // Lưu sản phẩm mới vào hệ thống (item đã được tạo bên ngoài hoặc qua Factory)
+  /*
+   * Factory Method Pattern: Tạo sản phẩm thông qua ItemFactory thay vì gọi new Artwork/Electronics/Vehicle trực tiếp.
+   * Toàn bộ logic "đúc" đúng kiểu Item được giao cho ItemFactory, Service chỉ lo validate và lưu DB.
+   *
+   * @param category Loại sản phẩm muốn tạo (ARTWORK, ELECTRONICS, VEHICLE)
+   * @param params   Map chứa các thuộc tính cần thiết tuỳ theo loại
+   * @return Item đã được lưu vào database kèm ID được gán tự động
+   */
+  public Item createItem(ItemCategory category, Map<String, Object> params) {
+    Objects.requireNonNull(category, "category must not be null");
+    Objects.requireNonNull(params, "params must not be null");
+    // Giao việc khởi tạo đúng kiểu Item cho Factory — đây là điểm cốt lõi của Factory Pattern
+    Item item = ItemFactory.create(category, params);
+    validateItem(item);
+    return itemDao.save(item);
+  }
+
+  // Giữ lại phương thức cũ để tương thích với code đã dùng Item trực tiếp
   public Item createItem(Item item) {
     Objects.requireNonNull(item, "Item must not be null");
     validateItem(item);
