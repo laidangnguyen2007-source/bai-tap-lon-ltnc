@@ -8,28 +8,34 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.sql.Statement;
 
-/**
- * Quản lý kết nối đến MySQL Database theo mô hình Singleton.
- *
- * <p>Singleton Pattern: Chỉ mở 1 kết nối duy nhất tới Database trong suốt vòng đời của Server.
- * Tránh tình trạng mở hàng trăm kết nối dư thừa làm ngốn RAM và gây lỗi "Too many connections".
- *
- * <p>MySQL URL Format: jdbc:mysql://localhost:3306/auction_db → Kết nối tới Server MySQL ở
- * localhost, database auction_db. createDatabaseIfNotExist=true → Tự động tạo database nếu chưa tồn
- * tại.
+/*
+ * Đây là 1 lớp quản lý kết nối từ Java xuống MySQL Singleton Pattern: Chỉ mở 1 kết nối duy nhất tới
+ * Database trong suốt vòng đời của Server. Cái gì cần thao tác dữ liệu thì dùng chung đường ống kết
+ * nối này. Tránh tình trạng mở hàng trăm kết nối dư thừa làm ngốn RAM và gây lỗi
+ * "Too many connections". MySQL URL Format: jdbc:mysql://localhost:3306/auction_db → Kết nối tới
+ * Server MySQL ở localhost, database auction_db. createDatabaseIfNotExist=true → Tự động tạo
+ * database nếu chưa tồn tại.
  */
 public class DatabaseConfig {
 
   // Đường dẫn tới MySQL Server
   private static final String DB_URL =
       "jdbc:mysql://localhost:3306/auction_db?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC";
+  // jdbc:mysql:// là giao thức Protocol kết nối tới MySQL
+  // localhost là địa chỉ IP của máy chủ MySQL
+  // 3306 là cổng (Port) mặc định của MySQL khi dùng XAMPP trên toàn thế giới
+  // auction_db là tên database cụ thể ta đang thao tác
+  // createDatabaseIfNotExist=true là ép MySQL tự động tạo database nếu chưa tồn tại trên máy khách
+  // useSSL=false để vượt tường lửa chứng chỉ mã hóa SSL bảo mật của MySQL
+  // allowPublicKeyRetrieval=true là cho phép MySQL lấy public key để mã hóa
+  // serverTimezone=UTC để đồng bộ múi giờ UTC tránh sai lệch thời gian
 
   // Tài khoản mặc định của XAMPP / MySQL Local
   private static final String DB_USER = "root";
   private static final String DB_PASSWORD = "";
 
   // Instance duy nhất — Singleton Pattern
-  private static DatabaseConfig instance;
+  private static volatile DatabaseConfig instance;
 
   // Kết nối duy nhất tới Database
   private Connection connection;
@@ -38,29 +44,33 @@ public class DatabaseConfig {
   private DatabaseConfig() throws SQLException {
     this.connection = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
     initializeSchema();
+    // hàm getConnection() của thư viện DriverManager sẽ kiểm tra nội bộ và tạo ra Object Connection
+    // nối thẳng tới MySQL Server
   }
 
-  /**
-   * Phương thức truy cập Singleton — đảm bảo chỉ có 1 instance tồn tại.
-   *
-   * <p>Dùng synchronized để tránh Race Condition khi nhiều Thread cùng gọi getInstance() lần đầu.
-   */
-  public static synchronized DatabaseConfig getInstance() throws SQLException {
-    if (instance == null || instance.connection.isClosed()) {
-      instance = new DatabaseConfig();
+  // Double-Checked Locking
+  public static DatabaseConfig getInstance() throws SQLException {
+    DatabaseConfig result = instance;
+    // Lệnh isClosed() đóng vai trò cơ chế Tự phục hồi (Self-Healing) phòng khi mất kết nối
+    if (result == null || result.connection.isClosed()) {
+      synchronized (DatabaseConfig.class) {
+        result = instance;
+        if (result == null || result.connection.isClosed()) {
+          instance = result = new DatabaseConfig();
+        }
+      }
     }
-    return instance;
+    return result;
   }
 
-  /** Trả về Connection để các DAO dùng để thực thi SQL. */
+  // Trả về Connection để các DAO dùng để thực thi SQL.
   public Connection getConnection() {
     return connection;
   }
 
-  /**
-   * Đọc và chạy file schema.sql để tạo bảng khi khởi động lần đầu. CREATE TABLE IF NOT EXISTS đảm
-   * bảo lần sau khởi động lại không bị lỗi bảng đã tồn tại.
-   */
+  // Đọc và chạy file schema.sql để tạo bảng khi khởi động lần đầu, rồi chia dòng gửi đến database.
+  // CREATE TABLE IF NOT EXISTS đảm
+  // bảo lần sau khởi động lại không bị lỗi bảng đã tồn tại.
   private void initializeSchema() throws SQLException {
     try (InputStream is = DatabaseConfig.class.getClassLoader().getResourceAsStream("schema.sql");
         Statement stmt = connection.createStatement()) {

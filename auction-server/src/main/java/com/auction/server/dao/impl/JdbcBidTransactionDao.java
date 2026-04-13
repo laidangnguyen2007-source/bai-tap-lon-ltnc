@@ -12,11 +12,11 @@ import java.util.Optional;
 /**
  * Triển khai BidTransactionDao sử dụng JDBC + MySQL.
  *
- * <p>ORDER BY timestamp: Dữ liệu được sắp xếp ngay tại tầng Database thay vì dùng Java Stream API
+ * ORDER BY timestamp: Dữ liệu được sắp xếp ngay tại tầng Database thay vì dùng Java Stream API
  * .sorted(). Hiệu quả hơn vì Database có index tối ưu.
  *
- * <p>Ngoại lệ SQLException đã được bọc vào trong AuctionException để không làm lộ implementation
- * chi tiết.
+ * Ngoại lệ SQLException đã được bọc vào trong AuctionException để không làm lộ implementation chi
+ * tiết.
  */
 public class JdbcBidTransactionDao implements BidTransactionDao {
 
@@ -43,12 +43,13 @@ public class JdbcBidTransactionDao implements BidTransactionDao {
       ps.setTimestamp(1, Timestamp.valueOf(bid.getCreatedAt()));
       ps.setLong(2, bid.getAuctionId());
       ps.setLong(3, bid.getBidderId());
-      ps.setDouble(4, bid.getAmount());
+      ps.setLong(4, bid.getAmount());
       ps.setTimestamp(5, Timestamp.valueOf(bid.getTimestamp()));
       ps.executeUpdate();
 
       try (ResultSet keys = ps.getGeneratedKeys()) {
-        if (keys.next()) bid.setId(keys.getLong(1));
+        if (keys.next())
+          bid.setId(keys.getLong(1));
       }
       return bid;
     } catch (SQLException e) {
@@ -62,7 +63,8 @@ public class JdbcBidTransactionDao implements BidTransactionDao {
     try (PreparedStatement ps = conn.prepareStatement(sql)) {
       ps.setLong(1, id);
       try (ResultSet rs = ps.executeQuery()) {
-        if (rs.next()) return Optional.of(mapRow(rs));
+        if (rs.next())
+          return Optional.of(mapRow(rs));
       }
     } catch (SQLException e) {
       throw new AuctionException("Database error finding BidTransaction by id", e);
@@ -74,9 +76,9 @@ public class JdbcBidTransactionDao implements BidTransactionDao {
   public List<BidTransaction> findAll() {
     List<BidTransaction> list = new ArrayList<>();
     String sql = "SELECT * FROM bid_transactions ORDER BY timestamp ASC";
-    try (Statement st = conn.createStatement();
-        ResultSet rs = st.executeQuery(sql)) {
-      while (rs.next()) list.add(mapRow(rs));
+    try (Statement st = conn.createStatement(); ResultSet rs = st.executeQuery(sql)) {
+      while (rs.next())
+        list.add(mapRow(rs));
     } catch (SQLException e) {
       throw new AuctionException("Database error fetching all BidTransactions", e);
     }
@@ -115,8 +117,7 @@ public class JdbcBidTransactionDao implements BidTransactionDao {
   @Override
   public long count() {
     String sql = "SELECT COUNT(1) FROM bid_transactions";
-    try (Statement st = conn.createStatement();
-        ResultSet rs = st.executeQuery(sql)) {
+    try (Statement st = conn.createStatement(); ResultSet rs = st.executeQuery(sql)) {
       return rs.next() ? rs.getLong(1) : 0L;
     } catch (SQLException e) {
       throw new AuctionException("Database error counting BidTransactions", e);
@@ -134,7 +135,8 @@ public class JdbcBidTransactionDao implements BidTransactionDao {
     try (PreparedStatement ps = conn.prepareStatement(sql)) {
       ps.setLong(1, auctionId);
       try (ResultSet rs = ps.executeQuery()) {
-        while (rs.next()) list.add(mapRow(rs));
+        while (rs.next())
+          list.add(mapRow(rs));
       }
     } catch (SQLException e) {
       throw new AuctionException("Database error finding BidTransactions by auction ID", e);
@@ -149,7 +151,8 @@ public class JdbcBidTransactionDao implements BidTransactionDao {
     try (PreparedStatement ps = conn.prepareStatement(sql)) {
       ps.setLong(1, bidderId);
       try (ResultSet rs = ps.executeQuery()) {
-        while (rs.next()) list.add(mapRow(rs));
+        while (rs.next())
+          list.add(mapRow(rs));
       }
     } catch (SQLException e) {
       throw new AuctionException("Database error finding BidTransactions by bidder ID", e);
@@ -163,7 +166,8 @@ public class JdbcBidTransactionDao implements BidTransactionDao {
     try (PreparedStatement ps = conn.prepareStatement(sql)) {
       ps.setLong(1, auctionId);
       try (ResultSet rs = ps.executeQuery()) {
-        if (rs.next()) return Optional.of(mapRow(rs));
+        if (rs.next())
+          return Optional.of(mapRow(rs));
       }
     } catch (SQLException e) {
       throw new AuctionException("Database error finding highest bid for auction", e);
@@ -189,12 +193,8 @@ public class JdbcBidTransactionDao implements BidTransactionDao {
   // ─────────────────────────────────────────────
 
   private BidTransaction mapRow(ResultSet rs) throws SQLException {
-    return new BidTransaction(
-        rs.getLong("id"),
-        rs.getTimestamp("created_at").toLocalDateTime(),
-        rs.getLong("auction_id"),
-        rs.getLong("bidder_id"),
-        rs.getDouble("amount"),
+    return new BidTransaction(rs.getLong("id"), rs.getTimestamp("created_at").toLocalDateTime(),
+        rs.getLong("auction_id"), rs.getLong("bidder_id"), rs.getLong("amount"),
         rs.getTimestamp("timestamp").toLocalDateTime());
   }
 }

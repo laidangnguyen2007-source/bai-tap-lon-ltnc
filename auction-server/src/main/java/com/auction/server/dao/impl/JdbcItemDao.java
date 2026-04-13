@@ -5,6 +5,7 @@ import com.auction.server.dao.ItemDao;
 import com.auction.server.model.entity.item.Artwork;
 import com.auction.server.model.entity.item.Electronics;
 import com.auction.server.model.entity.item.Item;
+import com.auction.server.model.entity.item.ItemFactory;
 import com.auction.server.model.entity.item.Vehicle;
 import com.auction.server.model.enums.ItemCategory;
 import com.auction.server.model.exception.AuctionException;
@@ -47,7 +48,7 @@ public class JdbcItemDao implements ItemDao {
       ps.setTimestamp(1, Timestamp.valueOf(item.getCreatedAt()));
       ps.setString(2, item.getName());
       ps.setString(3, item.getDescription());
-      ps.setDouble(4, item.getStartingPrice());
+      ps.setLong(4, item.getStartingPrice());
       ps.setLong(5, item.getSellerId());
       ps.setString(6, item.getCategory().name());
       bindItemTypeFields(ps, item); // gán các cột đặc thù bắt đầu từ index 7
@@ -100,7 +101,7 @@ public class JdbcItemDao implements ItemDao {
     try (PreparedStatement ps = conn.prepareStatement(sql)) {
       ps.setString(1, item.getName());
       ps.setString(2, item.getDescription());
-      ps.setDouble(3, item.getStartingPrice());
+      ps.setLong(3, item.getStartingPrice());
       bindItemTypeFieldsForUpdate(ps, item, 4);
       ps.setLong(14, item.getId());
       ps.executeUpdate();
@@ -203,45 +204,29 @@ public class JdbcItemDao implements ItemDao {
     var createdAt = rs.getTimestamp("created_at").toLocalDateTime();
     String name = rs.getString("name");
     String description = rs.getString("description");
-    double startingPrice = rs.getDouble("starting_price");
+    long startingPrice = rs.getLong("starting_price");
     Long sellerId = rs.getLong("seller_id");
     ItemCategory category = ItemCategory.valueOf(rs.getString("category"));
 
+    // Factory Pattern: gọi ItemFactory.reconstruct*() thay vì new trực tiếp
+    // Giữ cho DAO không bị phụ thuộc vào cụ thể của từng loại Item
     return switch (category) {
-      case ELECTRONICS ->
-          new Electronics(
-              id,
-              createdAt,
-              name,
-              description,
-              startingPrice,
-              sellerId,
-              rs.getString("brand"),
-              rs.getInt("warranty_months"),
-              rs.getDouble("power_watts"));
-      case ARTWORK ->
-          new Artwork(
-              id,
-              createdAt,
-              name,
-              description,
-              startingPrice,
-              sellerId,
-              rs.getString("artist"),
-              rs.getInt("art_year"),
-              rs.getString("medium"));
-      case VEHICLE ->
-          new Vehicle(
-              id,
-              createdAt,
-              name,
-              description,
-              startingPrice,
-              sellerId,
-              rs.getString("make"),
-              rs.getInt("vehicle_year"),
-              rs.getInt("mileage"),
-              ""); // fuelType chưa có cột, để trống
+      case ELECTRONICS -> ItemFactory.reconstructElectronics(
+          id, createdAt, name, description, startingPrice, sellerId,
+          rs.getString("brand"),
+          rs.getInt("warranty_months"),
+          rs.getDouble("power_watts"));
+      case ARTWORK -> ItemFactory.reconstructArtwork(
+          id, createdAt, name, description, startingPrice, sellerId,
+          rs.getString("artist"),
+          rs.getInt("art_year"),
+          rs.getString("medium"));
+      case VEHICLE -> ItemFactory.reconstructVehicle(
+          id, createdAt, name, description, startingPrice, sellerId,
+          rs.getString("make"),
+          rs.getInt("vehicle_year"),
+          rs.getInt("mileage"),
+          ""); // fuelType chưa có cột, để trống
     };
   }
 

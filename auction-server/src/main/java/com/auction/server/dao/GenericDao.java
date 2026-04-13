@@ -12,7 +12,7 @@ public interface GenericDao<T extends BaseEntity> {
   // Lưu entity mới vào hệ thống. Nếu entity chưa có ID, hệ thống sẽ tự gán
   T save(T entity);
 
-  // Tìm entity theo ID. Trả về Optional để tránh NullPointerException
+  // Tìm entity theo ID. Trả về hộp Optional để tránh NullPointerException
   Optional<T> findById(Long id);
 
   // Quét sạch bộ nhớ, trả về 1 List chứa toàn bộ danh sách
