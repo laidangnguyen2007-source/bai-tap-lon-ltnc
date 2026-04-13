@@ -100,7 +100,7 @@ public class BiddingRoomController implements AuctionObserver {
 
     // Thiết lập thông tin tiêu đề phiên
     auctionTitleLabel.setText("Phiên Đấu Giá #" + auction.getId());
-    currentPriceLabel.setText(String.format("%.0f VNĐ", auction.getCurrentPrice()));
+    currentPriceLabel.setText(String.format("%,d VNĐ", auction.getCurrentPrice()));
     statusLabel.setText(auction.getStatus().name());
 
     // Thiết lập biểu đồ đường
@@ -190,7 +190,7 @@ public class BiddingRoomController implements AuctionObserver {
     String timeStr = bid.getTimestamp() != null ? bid.getTimestamp().format(TIME_FORMAT) : "--:--";
     String entry =
         String.format(
-            "[%s] Bidder #%d đặt giá: %,.0f VNĐ", timeStr, bid.getBidderId(), bid.getAmount());
+            "[%s] Bidder #%d đặt giá: %,d VNĐ", timeStr, bid.getBidderId(), bid.getAmount());
 
     // Thêm vào đầu danh sách để lần đặt giá mới nhất luôn hiển thị ở trên cùng
     bidHistoryItems.add(0, entry);
@@ -222,7 +222,7 @@ public class BiddingRoomController implements AuctionObserver {
           addBidToChart(bid);
 
           // Cập nhật nhãn giá hiện tại
-          currentPriceLabel.setText(String.format("%,.0f VNĐ", bid.getAmount()));
+          currentPriceLabel.setText(String.format("%,d VNĐ", bid.getAmount()));
 
           // Thêm vào danh sách lịch sử
           addBidToHistoryList(bid);
@@ -281,10 +281,10 @@ public class BiddingRoomController implements AuctionObserver {
       return;
     }
 
-    double amount;
+    long amount;
     try {
       // Validate: phải là số hợp lệ
-      amount = Double.parseDouble(amountText.replace(",", ""));
+      amount = Long.parseLong(amountText.replace(",", ""));
     } catch (NumberFormatException e) {
       infoLabel.setText("Số tiền không hợp lệ. Chỉ nhập số.");
       return;
@@ -299,7 +299,7 @@ public class BiddingRoomController implements AuctionObserver {
     if (amount <= auction.getCurrentPrice()) {
       infoLabel.setText(
           String.format(
-              "Giá đặt phải cao hơn giá hiện tại (%.0f VNĐ).", auction.getCurrentPrice()));
+              "Giá đặt phải cao hơn giá hiện tại (%,d VNĐ).", auction.getCurrentPrice()));
       return;
     }
 

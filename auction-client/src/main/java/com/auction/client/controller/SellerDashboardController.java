@@ -4,6 +4,7 @@ import com.auction.client.model.AuctionSessionState;
 import com.auction.client.service.ServerService;
 import com.auction.client.util.FxmlLoader;
 import com.auction.server.model.entity.Auction;
+import com.auction.server.service.AuctionManager;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
@@ -53,7 +54,7 @@ public class SellerDashboardController {
 
   @FXML private TableColumn<Auction, Long> idCol;
 
-  @FXML private TableColumn<Auction, Double> priceCol;
+  @FXML private TableColumn<Auction, Long> priceCol;
 
   @FXML private TableColumn<Auction, String> statusCol;
 
@@ -121,10 +122,10 @@ public class SellerDashboardController {
     }
 
     Long itemId;
-    double startingPrice;
+    long startingPrice;
     try {
       itemId = Long.parseLong(itemIdText);
-      startingPrice = Double.parseDouble(priceText);
+      startingPrice = Long.parseLong(priceText);
     } catch (NumberFormatException e) {
       formResultLabel.setText("Mã sản phẩm và giá khởi điểm phải là số hợp lệ.");
       return;
@@ -155,6 +156,10 @@ public class SellerDashboardController {
     Long createdId = serverService.createAuction(newAuction);
 
     if (createdId != null && createdId > 0) {
+      newAuction.setId(createdId);
+      // Singleton Pattern: Khai mạc phiên đấu giá qua AuctionManager duy nhất của hệ thống
+      // AuctionManager giúp quản lý tập trung tất cả phiên đang chạy, phục vụ Concurrency
+      AuctionManager.getInstance().openAuction(newAuction);
       formResultLabel.setText("Tạo phiên đấu giá thành công! Mã phiên: #" + createdId);
       clearForm();
       loadMyAuctions(); // Refresh bảng
