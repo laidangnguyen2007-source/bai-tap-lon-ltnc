@@ -14,10 +14,11 @@ public class Vehicle extends Item {
     super();
   }
 
-  public Vehicle(
+  // Package-private: chỉ ItemFactory (cùng package) mới được dùng
+  Vehicle(
       String name,
       String description,
-      double startingPrice,
+      long startingPrice,
       Long sellerId,
       String manufacturer,
       int yearManufactured,
@@ -30,12 +31,13 @@ public class Vehicle extends Item {
     this.fuelType = fuelType;
   }
 
-  public Vehicle(
+  // Package-private: chỉ ItemFactory dùng để phục dựng từ DB
+  Vehicle(
       Long id,
       LocalDateTime createdAt,
       String name,
       String description,
-      double startingPrice,
+      long startingPrice,
       Long sellerId,
       String manufacturer,
       int yearManufactured,

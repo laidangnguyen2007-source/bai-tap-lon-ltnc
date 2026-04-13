@@ -141,7 +141,7 @@ public class ServerService {
    * @param amount số tiền muốn đặt (phải > giá hiện tại)
    * @return true nếu server chấp nhận, false nếu bị từ chối
    */
-  public boolean placeBid(Long auctionId, Long bidderId, double amount) {
+  public boolean placeBid(Long auctionId, Long bidderId, long amount) {
     // STUB: TV3 thay bằng gửi request PLACE_BID qua socket và chờ response
     return false;
   }

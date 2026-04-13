@@ -14,22 +14,22 @@ import com.auction.server.model.exception.InvalidBidException;
  */
 public class ManualBidStrategy implements BidStrategy {
   // Mức tăng tối thiểu so với giá hiện tại để vượt qua
-  private final double minimumIncrement; // Bước giá tối thiểu
+  private final long minimumIncrement; // Bước giá tối thiểu
 
   // Tạo ra ManualBidStrategy với mức tăng tùy ý
   // @param minimumIncrement Số tiền tối thiểu mà giá thầu phải cao hơn so với giá hiện tại.
-  public ManualBidStrategy(double minimumIncrement) {
+  public ManualBidStrategy(long minimumIncrement) {
     if (minimumIncrement < 0) throw new IllegalArgumentException("minimumIncrement must be >=0!");
     this.minimumIncrement = minimumIncrement;
   }
 
   // Không yêu cầu mức tăng tối thiểu
   public ManualBidStrategy() {
-    this(0.0);
+    this(0L);
   }
 
   @Override
-  public BidTransaction calculateBid(Auction auction, long bidderId, double requestAmount) {
+  public BidTransaction calculateBid(Auction auction, long bidderId, long requestAmount) {
     validateAuction(auction);
     validateAmount(auction, requestAmount);
     return new BidTransaction(auction.getId(), bidderId, requestAmount);
@@ -48,15 +48,15 @@ public class ManualBidStrategy implements BidStrategy {
     }
   }
 
-  private void validateAmount(Auction auction, double requestAmount) {
-    double currentPrice = auction.getCurrentPrice();
-    double requiredMinimum = currentPrice + minimumIncrement;
+  private void validateAmount(Auction auction, long requestAmount) {
+    long currentPrice = auction.getCurrentPrice();
+    long requiredMinimum = currentPrice + minimumIncrement;
 
     // Giá đặt bé hơn giá hiện tại
     if (requestAmount < currentPrice) {
       throw new InvalidBidException(
           String.format(
-              "Bid amount %.2f must be greater than current price %.2f",
+              "Bid amount %d must be greater than current price %d",
               requestAmount, currentPrice));
     }
 
@@ -64,7 +64,7 @@ public class ManualBidStrategy implements BidStrategy {
     if (requestAmount < requiredMinimum) {
       throw new InvalidBidException(
           String.format(
-              "Bid amount %.2f doesn't meet minimum increment. Require >= %.2f.",
+              "Bid amount %d doesn't meet minimum increment. Require >= %d.",
               requestAmount, requiredMinimum));
     }
   }
@@ -74,7 +74,7 @@ public class ManualBidStrategy implements BidStrategy {
     return "MANUAL";
   }
 
-  public double getMinimumIncrement() {
+  public long getMinimumIncrement() {
     return minimumIncrement;
   }
 }

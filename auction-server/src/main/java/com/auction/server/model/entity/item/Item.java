@@ -9,14 +9,14 @@ public abstract class Item extends BaseEntity {
 
   private String name;
   private String description;
-  private double startingPrice;
+  private long startingPrice;
   private Long sellerId;
 
   protected Item() {
     super();
   }
 
-  protected Item(String name, String description, double startingPrice, Long sellerId) {
+  protected Item(String name, String description, long startingPrice, Long sellerId) {
     super();
     this.name = Objects.requireNonNull(name, "name must not be null");
     this.description = Objects.requireNonNull(description, "description must not be null");
@@ -29,7 +29,7 @@ public abstract class Item extends BaseEntity {
       LocalDateTime createdAt,
       String name,
       String description,
-      double startingPrice,
+      long startingPrice,
       Long sellerId) {
     super(id, createdAt);
     this.name = name;
@@ -58,11 +58,11 @@ public abstract class Item extends BaseEntity {
     this.description = description;
   }
 
-  public double getStartingPrice() {
+  public long getStartingPrice() {
     return startingPrice;
   }
 
-  public void setStartingPrice(double startingPrice) {
+  public void setStartingPrice(long startingPrice) {
     this.startingPrice = validatePositive(startingPrice, "startingPrice");
   }
 
@@ -76,7 +76,7 @@ public abstract class Item extends BaseEntity {
 
   // giá khởi điểm luôn phải lớn hơn 0
   // fieldName ở đây là startingPrice
-  private static double validatePositive(double value, String fieldName) {
+  private static long validatePositive(long value, String fieldName) {
     if (value <= 0) {
       throw new IllegalArgumentException(fieldName + " must be positive: " + value);
     }

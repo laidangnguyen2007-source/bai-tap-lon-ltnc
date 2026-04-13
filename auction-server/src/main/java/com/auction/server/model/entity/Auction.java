@@ -20,7 +20,7 @@ public class Auction extends BaseEntity {
 
   private Long itemId;
   private Long sellerId;
-  private double currentPrice; // giá cao nhất được đặt hiện tại
+  private long currentPrice; // giá cao nhất được đặt hiện tại
   private Long currentWinnerId; // id của Bidder dẫn đầu, gán null nếu chưa có ai
   private AuctionStatus status; // trạng thái vòng đời của phiên đấu giá
   private LocalDateTime startTime;
@@ -34,7 +34,7 @@ public class Auction extends BaseEntity {
     super();
     this.itemId = Objects.requireNonNull(itemId, "itemId must not be null");
     this.sellerId = Objects.requireNonNull(sellerId, "sellerId must not be null");
-    this.currentPrice = 0.0;
+    this.currentPrice = 0L;
     this.currentWinnerId = null;
     this.status = AuctionStatus.OPEN;
     this.startTime = Objects.requireNonNull(startTime, "startTime must not be null");
@@ -51,7 +51,7 @@ public class Auction extends BaseEntity {
       LocalDateTime createdAt,
       Long itemId,
       Long sellerId,
-      double currentPrice,
+      long currentPrice,
       Long currentWinnerId,
       AuctionStatus status,
       LocalDateTime startTime,
@@ -87,7 +87,7 @@ public class Auction extends BaseEntity {
   }
 
   // cập nhật giá hiện tại và id người dẫn đầu sau 1 lượt đặt giá hợp lệ
-  public void applyBid(double newPrice, Long bidderId) {
+  public void applyBid(long newPrice, Long bidderId) {
     if (!isRunning()) {
       throw new IllegalStateException(
           "Cannot place bid: auction is not RUNNING. Current status: " + status);
@@ -128,11 +128,11 @@ public class Auction extends BaseEntity {
     this.sellerId = sellerId;
   }
 
-  public double getCurrentPrice() {
+  public long getCurrentPrice() {
     return currentPrice;
   }
 
-  public void setCurrentPrice(double currentPrice) {
+  public void setCurrentPrice(long currentPrice) {
     this.currentPrice = currentPrice;
   }
 

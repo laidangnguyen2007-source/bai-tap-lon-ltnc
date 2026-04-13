@@ -4,13 +4,13 @@ import com.auction.server.model.enums.UserRole;
 import java.time.LocalDateTime;
 
 public class Bidder extends User {
-  private double balance;
+  private long balance;
 
   public Bidder() {
     super();
   }
 
-  public Bidder(String username, String passwordHash, String email, double balance) {
+  public Bidder(String username, String passwordHash, String email, long balance) {
     super(username, passwordHash, email);
     this.balance = balance;
   }
@@ -21,7 +21,7 @@ public class Bidder extends User {
       String username,
       String passwordHash,
       String email,
-      double balance) {
+      long balance) {
     super(id, createdAt, username, passwordHash, email);
     this.balance = balance;
   }
@@ -31,18 +31,18 @@ public class Bidder extends User {
     return UserRole.BIDDER;
   }
 
-  public double getBalance() {
+  public long getBalance() {
     return balance;
   }
 
-  public void setBalance(double balance) {
+  public void setBalance(long balance) {
     if (balance < 0) {
       throw new IllegalArgumentException("Balance must not be negative: " + balance);
     }
     this.balance = balance;
   }
 
-  public void deductBalance(double amount) {
+  public void deductBalance(long amount) {
     if (amount <= 0) {
       throw new IllegalArgumentException("Deduction amount must be positive: " + amount);
     }

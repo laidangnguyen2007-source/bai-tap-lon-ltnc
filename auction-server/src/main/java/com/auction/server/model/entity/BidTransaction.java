@@ -10,10 +10,10 @@ public class BidTransaction extends BaseEntity {
   // dùng final để đảm bảo BidTransaction là bất biến sau khi khởi tạo
   private final Long auctionId; // id phiên đấu giá
   private final Long bidderId; // id người đấu giá
-  private final double amount; // số tiền đặt giá
+  private final long amount; // số tiền đặt giá
   private final LocalDateTime timestamp; // thời điểm đặt giá được ghi nhận trên sever
 
-  public BidTransaction(Long auctionId, Long bidderId, double amount) {
+  public BidTransaction(Long auctionId, Long bidderId, long amount) {
     super(); // khởi tạo rỗng của lớp cha BaseEntity
     this.auctionId = Objects.requireNonNull(auctionId, "auctionId must not be null");
     this.bidderId = Objects.requireNonNull(bidderId, "bidderId must not be null");
@@ -29,7 +29,7 @@ public class BidTransaction extends BaseEntity {
       LocalDateTime createdAt,
       Long auctionId,
       Long bidderId,
-      double amount,
+      long amount,
       LocalDateTime timestamp) {
     super(id, createdAt);
     this.auctionId = auctionId;
@@ -46,7 +46,7 @@ public class BidTransaction extends BaseEntity {
     return bidderId;
   }
 
-  public double getAmount() {
+  public long getAmount() {
     return amount;
   }
 

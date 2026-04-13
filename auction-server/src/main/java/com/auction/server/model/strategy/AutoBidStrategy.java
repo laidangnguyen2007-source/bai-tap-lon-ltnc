@@ -9,11 +9,11 @@ import java.time.LocalDateTime;
 
 public class AutoBidStrategy implements BidStrategy {
   public final Long userId;
-  public final double maxBid;
-  public final double increment;
+  public final long maxBid;
+  public final long increment;
   public final LocalDateTime registerAt;
 
-  public AutoBidStrategy(Long userId, double maxBid, double increment, LocalDateTime registerAt) {
+  public AutoBidStrategy(Long userId, long maxBid, long increment, LocalDateTime registerAt) {
     if (maxBid < 0) throw new IllegalArgumentException("The maximum price must be greater than 0!");
     if (increment <= 0)
       throw new IllegalArgumentException("The price increment must be greater than 0!");
@@ -24,10 +24,10 @@ public class AutoBidStrategy implements BidStrategy {
   }
 
   @Override
-  public BidTransaction calculateBid(Auction auction, long bidderId, double requestAmount) {
+  public BidTransaction calculateBid(Auction auction, long bidderId, long requestAmount) {
     validateAuction(auction);
 
-    double nextBid = Math.min(auction.getCurrentPrice() + increment, maxBid);
+    long nextBid = Math.min(auction.getCurrentPrice() + increment, maxBid);
 
     validateAmount(auction, nextBid);
     return new BidTransaction(auction.getId(), bidderId, nextBid);
@@ -46,7 +46,7 @@ public class AutoBidStrategy implements BidStrategy {
     }
   }
 
-  private void validateAmount(Auction auction, double nextBid) {
+  private void validateAmount(Auction auction, long nextBid) {
 
     if (auction.getCurrentPrice() >= maxBid) {
       throw new InvalidBidException("Auto-bid limit reached!");
@@ -62,11 +62,11 @@ public class AutoBidStrategy implements BidStrategy {
     return userId;
   }
 
-  public double getMaxBid() {
+  public long getMaxBid() {
     return maxBid;
   }
 
-  public double getIncrement() {
+  public long getIncrement() {
     return increment;
   }
 
@@ -76,6 +76,6 @@ public class AutoBidStrategy implements BidStrategy {
 
   @Override
   public String toString() {
-    return String.format("Autobid{user='%f', maxBid = %f , increment = %f, registeredAt = %s");
+    return String.format("Autobid{user='%d', maxBid = %d , increment = %d, registeredAt = %s");
   }
 }
