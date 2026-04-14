@@ -3,6 +3,7 @@
 // Seller chỉ được sửa/xóa sản phẩm của chính mình
 package com.auction.server.service.impl;
 
+<<<<<<< HEAD
 import com.auction.server.service.ItemService;
 import com.auction.server.dao.AuctionDao;
 import com.auction.server.dao.ItemDao;
@@ -144,3 +145,6 @@ public class ItemServiceImpl implements ItemService {
     }
   }
 }
+=======
+public class ItemServiceImpl {}
+>>>>>>> 1c13cb2638abb90e9e9a74b8f3ef6a73b84e439b
