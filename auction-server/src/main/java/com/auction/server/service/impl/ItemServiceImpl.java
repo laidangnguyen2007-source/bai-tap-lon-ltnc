@@ -3,13 +3,13 @@
 // Seller chỉ được sửa/xóa sản phẩm của chính mình
 package com.auction.server.service.impl;
 
-import com.auction.server.service.ItemService;
 import com.auction.server.dao.AuctionDao;
 import com.auction.server.dao.ItemDao;
 import com.auction.server.model.entity.item.Item;
 import com.auction.server.model.entity.item.ItemFactory;
 import com.auction.server.model.enums.ItemCategory;
 import com.auction.server.model.exception.AuctionException;
+import com.auction.server.service.ItemService;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -33,9 +33,9 @@ public class ItemServiceImpl implements ItemService {
    * ItemFactory, Service chỉ lo validate và lưu DB.
    *
    * @param category Loại sản phẩm muốn tạo (ARTWORK, ELECTRONICS, VEHICLE)
-   * 
+   *
    * @param params Map chứa các thuộc tính cần thiết tuỳ theo loại
-   * 
+   *
    * @return Item đã được lưu vào database kèm ID được gán tự động
    */
   public Item createItem(ItemCategory category, Map<String, Object> params) {
@@ -62,8 +62,10 @@ public class ItemServiceImpl implements ItemService {
     Objects.requireNonNull(requestingSellerId, "Requesting seller ID must not be null");
 
     // Kiểm tra sản phẩm có tồn tại không
-    Item existingItem = itemDao.findById(item.getId())
-        .orElseThrow(() -> new AuctionException("Item not found with ID: " + item.getId()));
+    Item existingItem =
+        itemDao
+            .findById(item.getId())
+            .orElseThrow(() -> new AuctionException("Item not found with ID: " + item.getId()));
 
     // Kiểm tra quyền: chỉ seller sở hữu sản phẩm mới được sửa
     if (!existingItem.getSellerId().equals(requestingSellerId)) {
@@ -86,8 +88,10 @@ public class ItemServiceImpl implements ItemService {
     Objects.requireNonNull(itemId, "Item ID must not be null");
     Objects.requireNonNull(requestingSellerId, "Requesting seller ID must not be null");
 
-    Item existingItem = itemDao.findById(itemId)
-        .orElseThrow(() -> new AuctionException("Item not found with ID: " + itemId));
+    Item existingItem =
+        itemDao
+            .findById(itemId)
+            .orElseThrow(() -> new AuctionException("Item not found with ID: " + itemId));
 
     // Kiểm tra quyền ownership
     if (!existingItem.getSellerId().equals(requestingSellerId)) {

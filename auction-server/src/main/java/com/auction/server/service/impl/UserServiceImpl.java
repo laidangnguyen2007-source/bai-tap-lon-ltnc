@@ -1,11 +1,11 @@
 package com.auction.server.service.impl;
 
-import com.auction.server.service.UserService;
-import com.auction.server.model.entity.user.User;
-import com.auction.server.model.entity.user.Bidder;
 import com.auction.server.dao.UserDao;
+import com.auction.server.model.entity.user.Bidder;
+import com.auction.server.model.entity.user.User;
 import com.auction.server.model.exception.AuctionException;
 // import com.auction.server.util.PasswordHasher;
+import com.auction.server.service.UserService;
 import java.util.Optional;
 
 public class UserServiceImpl implements UserService {
@@ -33,7 +33,9 @@ public class UserServiceImpl implements UserService {
   }
 
   public User login(String username, String password) throws AuctionException {
-    return userDao.findByUsername(username).filter(user -> user.getPasswordHash().equals(password))
+    return userDao
+        .findByUsername(username)
+        .filter(user -> user.getPasswordHash().equals(password))
         .orElseThrow(() -> new AuctionException("invalid username or password"));
   }
 
@@ -70,8 +72,10 @@ public class UserServiceImpl implements UserService {
 
   // sửa username -> int userId
   public boolean isAuthorized(String username, String requiredRole) {
-    User user = userDao.findByUsername(username)
-        .orElseThrow(() -> new AuctionException("User not found: " + username));
+    User user =
+        userDao
+            .findByUsername(username)
+            .orElseThrow(() -> new AuctionException("User not found: " + username));
     return user.getRole().name().equalsIgnoreCase(requiredRole);
   }
 }
