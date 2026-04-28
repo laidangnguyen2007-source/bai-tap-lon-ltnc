@@ -1,10 +1,16 @@
 package com.auction.client.service;
 
+import com.auction.client.network.AuctionController;
+import com.auction.client.network.BidController;
+import com.auction.client.network.ItemController;
+import com.auction.client.network.UserController;
 import com.auction.client.observer.AuctionObserver;
 import com.auction.server.model.entity.Auction;
 import com.auction.server.model.entity.BidTransaction;
 import com.auction.server.model.entity.item.Item;
 import com.auction.server.model.entity.user.User;
+import java.io.IOException;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -20,7 +26,21 @@ import java.util.List;
  * logic socket/TCP vào bên trong từng phương thức.
  */
 public class ServerService {
-
+  private final UserController userController;
+  private final AuctionController auctionController;
+  private final BidController bidController;
+  private final ItemController itemController;
+  public ServerService() {
+    try {
+      this.userController = new UserController();
+      this.auctionController = new AuctionController();
+      this.bidController = new BidController(this);
+      this.itemController = new ItemController();
+    } catch (Exception e) {
+      e.printStackTrace();
+      throw new RuntimeException("Unable to connect to the server: " + e.getMessage());
+    }
+  }
   // Danh sách các observer đang lắng nghe cập nhật realtime từ server.
   // Trong kiến trúc này, BiddingRoomController sẽ đăng ký vào danh sách này.
   private final List<AuctionObserver> observers = new ArrayList<>();
@@ -82,7 +102,7 @@ public class ServerService {
    */
   public User login(String username, String password) {
     // STUB: TV3 thay bằng gửi request LOGIN qua socket và nhận response
-    return null;
+    return userController.login(username, password);
   }
 
   /**
@@ -98,7 +118,7 @@ public class ServerService {
   public boolean register(
       String username, String password, String email, String role, String shopName) {
     // STUB: TV3 thay bằng gửi request REGISTER qua socket
-    return false;
+    return register(username, password, email, role, shopName);
   }
 
   /**
@@ -119,7 +139,7 @@ public class ServerService {
    */
   public Item getItemById(Long itemId) {
     // STUB: TV3 thay bằng gửi request GET_ITEM qua socket
-    return null;
+    return itemController.getItemById(itemId);
   }
 
   /**
@@ -130,7 +150,7 @@ public class ServerService {
    */
   public List<BidTransaction> getBidHistory(Long auctionId) {
     // STUB: TV3 thay bằng gửi request GET_BID_HISTORY qua socket
-    return new ArrayList<>();
+    return bidController.getBidHistory(auctionId);
   }
 
   /**
@@ -143,7 +163,7 @@ public class ServerService {
    */
   public boolean placeBid(Long auctionId, Long bidderId, long amount) {
     // STUB: TV3 thay bằng gửi request PLACE_BID qua socket và chờ response
-    return false;
+    return bidController.placeBid(auctionId, bidderId, amount);
   }
 
   /**
@@ -154,7 +174,7 @@ public class ServerService {
    */
   public Long createAuction(Auction auction) {
     // STUB: TV3 thay bằng gửi request CREATE_AUCTION qua socket
-    return -1L;
+    return auctionController.createAuction(auction);
   }
 
   /**
@@ -165,6 +185,6 @@ public class ServerService {
    */
   public List<Auction> getAuctionsBySeller(Long sellerId) {
     // STUB: TV3 thay bằng gửi request GET_SELLER_AUCTIONS qua socket
-    return new ArrayList<>();
+    return auctionController.getAuctionsBySeller(sellerId);
   }
 }
