@@ -8,7 +8,7 @@ on:
     branches: ["main"]
 
 permissions:
-  contents: read
+  contents: write
   pull-requests: read
 
 jobs:
@@ -31,12 +31,23 @@ jobs:
           distribution: "temurin"
           cache: maven
 
-      - name: Soi lỗi Format Code (Spotless Check)
+      - name: Tự động format code (Spotless Apply)
         working-directory: auction-server
-        run: mvn spotless:check
-        # Nếu phát hiện code thụt lề sai 2 spaces, đánh trượt ngay
+        run: mvn spotless:apply
+        # Tự động sửa format code cho đúng Google Java Style
+
+      - name: Commit code đã format (nếu có thay đổi)
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "style: auto-format code with Google Java Style"
+          # Nếu spotless:apply sửa file nào, tự commit lại lên GitHub
 
       - name: Kiểm tra chạy thử dự án (Build)
         working-directory: auction-server
         run: mvn clean package -DskipTests
         # Kiểm tra xem code có bị lỗi cú pháp gạch đỏ không
+
+      - name: Chạy Unit Test (JUnit)
+        working-directory: auction-server
+        run: mvn test
+        # Tự động chạy toàn bộ test JUnit mỗi lần push

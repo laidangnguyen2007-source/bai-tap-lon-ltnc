@@ -6,7 +6,7 @@ public class TestBidTransaction {
     // 1. Giả sử: Auction ID là 10, Người đặt giá ID là 99, Số tiền là 1200.5
     Long auctionId = 10L;
     Long bidderId = 99L;
-    double amount = 1200.5;
+    long amount = 1200;
 
     // 2. Tạo bản ghi đặt giá (Sử dụng Constructor 3 tham số)
     BidTransaction bid = new BidTransaction(auctionId, bidderId, amount);
