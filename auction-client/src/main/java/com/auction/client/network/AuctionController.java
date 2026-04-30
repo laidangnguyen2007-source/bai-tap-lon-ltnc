@@ -5,7 +5,7 @@ import java.net.UnknownHostException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import org.json.JSONArray;
+import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import com.auction.server.model.entity.Auction;
@@ -80,7 +80,8 @@ public class AuctionController {
       String json = connection.sendRequest(req.toJSONString());
       JSONObject res = (JSONObject) new JSONParser().parse(json);
 
-      return !"OK".equals(res.get("status")) ?  (Long) res.get("auctionId") : -1L;
+      if(!"OK".equals(res.get("status"))) return -1L;
+      return (Long) res.get("auctionId");
     } catch (Exception e) {
       e.printStackTrace();
       return -1L;

@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Priority?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.VBox?>
+
+<!--
+  View: Màn hình Danh Sách Đấu Giá (dành cho Bidder)
+  Controller tương ứng: AuctionListController.java
+  Bố cục: BorderPane — Header trên, bảng ở giữa, toolbar lọc dưới header
+-->
+<BorderPane
+  xmlns="http://javafx.com/javafx/21"
+  xmlns:fx="http://javafx.com/fxml/1"
+  fx:controller="com.auction.client.controller.AuctionListController"
+  styleClass="root-pane">
+
+  <!-- Header -->
+  <top>
+    <HBox styleClass="top-bar" alignment="CENTER_LEFT" spacing="12">
+      <padding><Insets top="14" right="20" bottom="14" left="20"/></padding>
+      <Label text="🔨 Online Auction" styleClass="app-title"/>
+      <Region HBox.hgrow="ALWAYS"/>
+      <Label fx:id="welcomeLabel" styleClass="welcome-label"/>
+      <Button
+        fx:id="logoutButton"
+        text="Đăng Xuất"
+        onAction="#handleLogout"
+        styleClass="danger-button"/>
+    </HBox>
+  </top>
+
+  <!-- Nội dung chính -->
+  <center>
+    <VBox spacing="12">
+      <padding><Insets top="20" right="24" bottom="20" left="24"/></padding>
+
+      <Label text="Danh Sách Phiên Đấu Giá" styleClass="section-title"/>
+
+      <!-- Thanh lọc và refresh -->
+      <HBox spacing="10" alignment="CENTER_LEFT">
+        <Label text="Lọc theo trạng thái:" styleClass="field-label"/>
+        <ComboBox fx:id="statusFilterCombo" prefWidth="220" styleClass="combo-box"/>
+        <Button
+          fx:id="refreshButton"
+          text="🔄 Làm mới"
+          onAction="#handleRefresh"
+          styleClass="secondary-button"/>
+        <Region HBox.hgrow="ALWAYS"/>
+        <Button
+          fx:id="viewDetailButton"
+          text="Xem Chi Tiết →"
+          onAction="#handleViewDetail"
+          styleClass="primary-button"/>
+      </HBox>
+
+      <!-- Bảng danh sách phiên đấu giá -->
+      <TableView fx:id="auctionTable" VBox.vgrow="ALWAYS" styleClass="data-table">
+        <columns>
+          <TableColumn fx:id="idColumn" text="Mã phiên" prefWidth="90"/>
+          <TableColumn fx:id="statusColumn" text="Trạng thái" prefWidth="160"/>
+          <TableColumn fx:id="currentPriceColumn" text="Giá hiện tại (VNĐ)" prefWidth="180"/>
+          <TableColumn fx:id="startTimeColumn" text="Bắt đầu" prefWidth="160"/>
+          <TableColumn fx:id="endTimeColumn" text="Kết thúc" prefWidth="160"/>
+        </columns>
+        <!-- Thông báo khi bảng rỗng -->
+        <placeholder>
+          <Label text="Không có phiên đấu giá nào. Nhấn 'Làm mới' để tải lại." styleClass="placeholder-label"/>
+        </placeholder>
+      </TableView>
+
+    </VBox>
+  </center>
+
+</BorderPane>
