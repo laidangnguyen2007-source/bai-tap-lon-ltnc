@@ -74,7 +74,7 @@ public class UserController {
         yield bidder; // yield = return
       }
       
-      case "Seller" -> {
+      case "SELLER" -> {
         String shopName = (String) json.get("shopName");
         Seller seller = new Seller(username, hash, email, shopName);
         seller.setId(id);

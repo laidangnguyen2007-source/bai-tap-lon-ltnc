@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.DatePicker?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.Separator?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.VBox?>
+
+<!--
+  View: Dashboard của Seller — Tạo phiên đấu giá và xem phiên đã tạo
+  Controller tương ứng: SellerDashboardController.java
+-->
+<BorderPane
+  xmlns="http://javafx.com/javafx/21"
+  xmlns:fx="http://javafx.com/fxml/1"
+  fx:controller="com.auction.client.controller.SellerDashboardController"
+  styleClass="root-pane">
+
+  <!-- Header -->
+  <top>
+    <HBox styleClass="top-bar" alignment="CENTER_LEFT" spacing="12">
+      <padding><Insets top="14" right="20" bottom="14" left="20"/></padding>
+      <Label text="🏪 Seller Dashboard" styleClass="app-title"/>
+      <Region HBox.hgrow="ALWAYS"/>
+      <Label fx:id="sellerNameLabel" styleClass="welcome-label"/>
+      <Button fx:id="logoutButton" text="Đăng Xuất" onAction="#handleLogout" styleClass="danger-button"/>
+    </HBox>
+  </top>
+
+  <!-- Nội dung chia 2 cột -->
+  <center>
+    <HBox spacing="20">
+      <padding><Insets top="20" right="24" bottom="20" left="24"/></padding>
+
+      <!-- Cột trái: Form tạo phiên đấu giá mới -->
+      <VBox styleClass="info-card" spacing="14" prefWidth="360">
+        <padding><Insets top="20" right="20" bottom="20" left="20"/></padding>
+
+        <Label text="➕ Tạo Phiên Đấu Giá Mới" styleClass="section-title"/>
+        <Separator/>
+
+        <GridPane hgap="12" vgap="12">
+          <Label text="Mã sản phẩm (Item ID):" styleClass="field-label"
+                 GridPane.columnIndex="0" GridPane.rowIndex="0"/>
+          <TextField fx:id="itemIdField" promptText="Nhập ID sản phẩm..."
+                     styleClass="text-field" GridPane.columnIndex="1" GridPane.rowIndex="0"/>
+
+          <Label text="Giá khởi điểm (VNĐ):" styleClass="field-label"
+                 GridPane.columnIndex="0" GridPane.rowIndex="1"/>
+          <TextField fx:id="startingPriceField" promptText="Ví dụ: 500000"
+                     styleClass="text-field" GridPane.columnIndex="1" GridPane.rowIndex="1"/>
+
+          <Label text="Ngày bắt đầu:" styleClass="field-label"
+                 GridPane.columnIndex="0" GridPane.rowIndex="2"/>
+          <DatePicker fx:id="startDatePicker"
+                      GridPane.columnIndex="1" GridPane.rowIndex="2"/>
+
+          <Label text="Ngày kết thúc:" styleClass="field-label"
+                 GridPane.columnIndex="0" GridPane.rowIndex="3"/>
+          <DatePicker fx:id="endDatePicker"
+                      GridPane.columnIndex="1" GridPane.rowIndex="3"/>
+        </GridPane>
+
+        <!-- Thông báo kết quả tạo phiên -->
+        <Label fx:id="formResultLabel" text="" styleClass="info-label" wrapText="true"/>
+
+        <Button
+          fx:id="createAuctionButton"
+          text="🚀 Tạo Phiên Đấu Giá"
+          onAction="#handleCreateAuction"
+          styleClass="primary-button"
+          maxWidth="Infinity"/>
+      </VBox>
+
+      <!-- Cột phải: Danh sách phiên đấu giá của Seller -->
+      <VBox HBox.hgrow="ALWAYS" spacing="12">
+        <Label text="📋 Các Phiên Đấu Giá Của Tôi" styleClass="section-title"/>
+
+        <HBox spacing="10">
+          <Button fx:id="refreshButton" text="🔄 Làm mới" onAction="#handleRefresh" styleClass="secondary-button"/>
+        </HBox>
+
+        <TableView fx:id="myAuctionsTable" VBox.vgrow="ALWAYS" styleClass="data-table">
+          <columns>
+            <TableColumn fx:id="idCol" text="Mã phiên" prefWidth="100"/>
+            <TableColumn fx:id="priceCol" text="Giá hiện tại" prefWidth="160"/>
+            <TableColumn fx:id="statusCol" text="Trạng thái" prefWidth="160"/>
+          </columns>
+          <placeholder>
+            <Label text="Bạn chưa tạo phiên đấu giá nào." styleClass="placeholder-label"/>
+          </placeholder>
+        </TableView>
+      </VBox>
+
+    </HBox>
+  </center>
+
+</BorderPane>

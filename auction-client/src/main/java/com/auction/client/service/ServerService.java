@@ -9,8 +9,6 @@ import com.auction.server.model.entity.Auction;
 import com.auction.server.model.entity.BidTransaction;
 import com.auction.server.model.entity.item.Item;
 import com.auction.server.model.entity.user.User;
-import java.io.IOException;
-import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -118,7 +116,7 @@ public class ServerService {
   public boolean register(
       String username, String password, String email, String role, String shopName) {
     // STUB: TV3 thay bằng gửi request REGISTER qua socket
-    return register(username, password, email, role, shopName);
+    return userController.register(username, password, email, role, shopName);
   }
 
   /**
@@ -128,7 +126,7 @@ public class ServerService {
    */
   public List<Auction> getAllAuctions() {
     // STUB: TV3 thay bằng gửi request GET_AUCTIONS qua socket
-    return new ArrayList<>();
+    return auctionController.getAllAuctions();
   }
 
   /**

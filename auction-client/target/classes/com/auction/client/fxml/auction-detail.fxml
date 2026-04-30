@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.Separator?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.VBox?>
+
+<!--
+  View: Màn hình Chi Tiết Sản Phẩm / Phiên Đấu Giá
+  Controller tương ứng: AuctionDetailController.java
+  Dữ liệu được điền từ AuctionSessionState bởi Controller — FXML chỉ khai báo vị trí hiển thị.
+-->
+<BorderPane
+  xmlns="http://javafx.com/javafx/21"
+  xmlns:fx="http://javafx.com/fxml/1"
+  fx:controller="com.auction.client.controller.AuctionDetailController"
+  styleClass="root-pane">
+
+  <!-- Header -->
+  <top>
+    <HBox styleClass="top-bar" alignment="CENTER_LEFT" spacing="12">
+      <padding><Insets top="14" right="20" bottom="14" left="20"/></padding>
+      <Button fx:id="backButton" text="← Danh Sách" onAction="#handleBack" styleClass="secondary-button"/>
+      <Label text="Chi Tiết Sản Phẩm" styleClass="app-title"/>
+    </HBox>
+  </top>
+
+  <!-- Nội dung chính chia 2 cột: bên trái = thông tin sản phẩm, bên phải = thông tin phiên -->
+  <center>
+    <HBox spacing="24">
+      <padding><Insets top="24" right="28" bottom="24" left="28"/></padding>
+
+      <!-- Panel trái: Thông tin sản phẩm -->
+      <VBox styleClass="info-card" spacing="14" HBox.hgrow="ALWAYS">
+        <padding><Insets top="20" right="20" bottom="20" left="20"/></padding>
+
+        <Label text="📦 Thông Tin Sản Phẩm" styleClass="section-title"/>
+        <Separator/>
+
+        <GridPane hgap="12" vgap="10">
+          <Label text="Tên sản phẩm:" styleClass="info-key" GridPane.columnIndex="0" GridPane.rowIndex="0"/>
+          <Label fx:id="itemNameLabel" text="—" styleClass="info-value" GridPane.columnIndex="1" GridPane.rowIndex="0"/>
+
+          <Label text="Danh mục:" styleClass="info-key" GridPane.columnIndex="0" GridPane.rowIndex="1"/>
+          <Label fx:id="itemCategoryLabel" text="—" styleClass="info-value" GridPane.columnIndex="1" GridPane.rowIndex="1"/>
+
+          <Label text="Mô tả:" styleClass="info-key" GridPane.columnIndex="0" GridPane.rowIndex="2"/>
+          <Label fx:id="itemDescriptionLabel" text="—" styleClass="info-value" wrapText="true"
+                 maxWidth="300" GridPane.columnIndex="1" GridPane.rowIndex="2"/>
+        </GridPane>
+      </VBox>
+
+      <!-- Panel phải: Thông tin phiên đấu giá -->
+      <VBox styleClass="info-card" spacing="14" prefWidth="320">
+        <padding><Insets top="20" right="20" bottom="20" left="20"/></padding>
+
+        <Label text="🏷️ Thông Tin Phiên Đấu Giá" styleClass="section-title"/>
+        <Separator/>
+
+        <Label fx:id="auctionIdLabel" text="Mã phiên: —" styleClass="info-value"/>
+        <Label fx:id="statusLabel" text="Trạng thái: —" styleClass="status-badge"/>
+
+        <!-- Giá hiện tại nổi bật -->
+        <VBox styleClass="price-box" spacing="4">
+          <padding><Insets top="12" right="12" bottom="12" left="12"/></padding>
+          <Label text="Giá hiện tại" styleClass="field-label"/>
+          <Label fx:id="currentPriceLabel" text="— VNĐ" styleClass="price-label-large"/>
+        </VBox>
+
+        <Label fx:id="startTimeLabel" text="Bắt đầu: —" styleClass="info-value"/>
+        <Label fx:id="endTimeLabel" text="Kết thúc: —" styleClass="info-value"/>
+        <Label fx:id="sellerInfoLabel" text="Người bán: —" styleClass="info-value"/>
+
+        <Region VBox.vgrow="ALWAYS"/>
+
+        <!-- Nút tham gia đấu giá -->
+        <Button
+          fx:id="joinBiddingButton"
+          text="🔥 Tham Gia Đấu Giá"
+          onAction="#handleJoinBidding"
+          styleClass="primary-button"
+          maxWidth="Infinity"/>
+
+      </VBox>
+    </HBox>
+  </center>
+
+</BorderPane>

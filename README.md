@@ -31,7 +31,8 @@ Dự án này sử dụng CSDL **MySQL (Client-Server)** để demo chức năng
 Mở Terminal tại thư mục gốc của bài tập, di chuyển vào phần Server và đóng gói thư viện:
 ```bash
 cd auction-server
-mvn clean install
+mvn clean install -DskipTests
+mvn exec:java
 ```
 *(Ngay lần bật Server đầu tiên, mã nguồn Java sẽ tự động dò tìm cấu hình, tạo một Database tên là `auction_db` và xây dựng cấu trúc các Bảng).*
 
