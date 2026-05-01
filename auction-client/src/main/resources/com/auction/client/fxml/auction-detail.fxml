@@ -75,6 +75,7 @@
         <Label fx:id="startTimeLabel" text="Bắt đầu: —" styleClass="info-value"/>
         <Label fx:id="endTimeLabel" text="Kết thúc: —" styleClass="info-value"/>
         <Label fx:id="sellerInfoLabel" text="Người bán: —" styleClass="info-value"/>
+        <Label fx:id="timeLeftLabel" text="Thời gian còn lại: —" styleClass="countdown-label"/>
 
         <Region VBox.vgrow="ALWAYS"/>
 

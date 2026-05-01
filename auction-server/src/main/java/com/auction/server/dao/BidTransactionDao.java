@@ -20,4 +20,7 @@ public interface BidTransactionDao extends GenericDao<BidTransaction> {
 
   // Đếm số lượt đặt giá trong 1 phiên
   long countByAuctionId(Long auctionId);
+
+  // Xóa toàn bộ lịch sử đặt giá của 1 phiên (dùng để Reset phiên đấu giá)
+  void deleteByAuctionId(Long auctionId);
 }

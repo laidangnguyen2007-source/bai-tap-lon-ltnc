@@ -5,6 +5,8 @@ import com.auction.client.service.ServerService;
 import com.auction.client.util.FxmlLoader;
 import com.auction.server.model.entity.Auction;
 import com.auction.server.model.entity.item.Item;
+import com.auction.server.model.entity.user.User;
+import com.auction.server.model.entity.user.Seller;
 import java.io.IOException;
 import java.time.format.DateTimeFormatter;
 import javafx.event.ActionEvent;
@@ -40,9 +42,14 @@ public class AuctionDetailController {
 
   @FXML private Label endTimeLabel;
 
+  @FXML private Label timeLeftLabel;
+
   @FXML private Label statusLabel;
 
   @FXML private Label sellerInfoLabel;
+
+  // -- Bộ đếm thời gian thực --
+  private javafx.animation.Timeline countdownTimeline;
 
   // Nút điều hướng
   @FXML private Button joinBiddingButton;
@@ -96,11 +103,26 @@ public class AuctionDetailController {
       itemDescriptionLabel.setText("Mô tả sản phẩm sẽ hiển thị sau khi kết nối server.");
     }
 
+    // Lấy thông tin người bán
+    User seller = serverService.getUserById(auction.getSellerId());
+    if (seller != null) {
+        String displayName = seller.getUsername();
+        if (seller instanceof Seller) {
+            displayName = ((Seller) seller).getShopName() + " (" + seller.getUsername() + ")";
+        }
+        sellerInfoLabel.setText("Người bán: " + displayName);
+    } else {
+        sellerInfoLabel.setText("Người bán: ID #" + auction.getSellerId());
+    }
+
     // Chỉ hiển thị nút đấu giá nếu phiên đang RUNNING
     joinBiddingButton.setDisable(!auction.isRunning());
     if (!auction.isRunning()) {
       joinBiddingButton.setText("Phiên không còn nhận giá");
     }
+
+    // [Tính năng 1] Bắt đầu đồng hồ đếm ngược
+    startCountdown(auction);
   }
 
   /**
@@ -111,6 +133,7 @@ public class AuctionDetailController {
    */
   @FXML
   private void handleJoinBidding(ActionEvent event) {
+    stopTimer();
     try {
       Stage stage = (Stage) joinBiddingButton.getScene().getWindow();
       // Auction đã được lưu trong session, BiddingRoomController sẽ tự đọc
@@ -128,6 +151,7 @@ public class AuctionDetailController {
    */
   @FXML
   private void handleBack(ActionEvent event) {
+    stopTimer();
     try {
       Stage stage = (Stage) backButton.getScene().getWindow();
       FxmlLoader.navigateTo(
@@ -135,5 +159,53 @@ public class AuctionDetailController {
     } catch (IOException e) {
       e.printStackTrace();
     }
+  }
+
+  /**
+   * [Tính năng 1] Khởi tạo và chạy bộ đếm ngược thời gian thực.
+   */
+  private void startCountdown(Auction auction) {
+      if (auction.getStatus() == com.auction.server.model.enums.AuctionStatus.FINISHED) {
+          timeLeftLabel.setText("Thời gian còn lại: Đã kết thúc");
+          return;
+      }
+
+      countdownTimeline = new javafx.animation.Timeline(
+          new javafx.animation.KeyFrame(javafx.util.Duration.seconds(1), event -> {
+              String timeLeft = formatTimeLeft(auction);
+              timeLeftLabel.setText("Thời gian còn lại: " + timeLeft);
+
+              // Nếu hết giờ, vô hiệu hóa nút đấu giá ngay lập tức
+              if (timeLeft.equals("Đã kết thúc")) {
+                  joinBiddingButton.setDisable(true);
+                  joinBiddingButton.setText("Phiên đã kết thúc");
+              }
+          })
+      );
+      countdownTimeline.setCycleCount(javafx.animation.Timeline.INDEFINITE);
+      countdownTimeline.play();
+  }
+
+  /**
+   * [Tính năng 1] Helper tính toán chuỗi hiển thị thời gian còn lại.
+   */
+  private String formatTimeLeft(Auction a) {
+      java.time.Duration d = java.time.Duration.between(java.time.LocalDateTime.now(), a.getEndTime());
+      if (d.isNegative() || d.isZero()) return "Đã kết thúc";
+
+      long hours = d.toHours();
+      long minutes = d.toMinutesPart();
+      long seconds = d.toSecondsPart();
+
+      return String.format("%02d:%02d:%02d", hours, minutes, seconds);
+  }
+
+  /**
+   * [Tính năng 1] Dừng bộ đếm thời gian để giải phóng tài nguyên.
+   */
+  private void stopTimer() {
+      if (countdownTimeline != null) {
+          countdownTimeline.stop();
+      }
   }
 }

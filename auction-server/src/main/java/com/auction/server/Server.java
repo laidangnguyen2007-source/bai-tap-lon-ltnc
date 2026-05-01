@@ -143,6 +143,7 @@ public class Server {
         case "GET_AUCTIONS_BY_SELLER" -> handleGetAuctionBySeller(req);
         case "DELETE_AUCTION" -> handleDeleteAuction(req);
         case "ADMIN_UPDATE_AUCTION" -> handleAdminUpdateAuction(req);
+        case "RESET_AUCTION" -> handleResetAuction(req);
         default -> errorResponse("Invalid action: " + action);
       };
     } catch (Exception e) {
@@ -331,6 +332,7 @@ public class Server {
     Long auctionId = req.getLong("auctionId");
     Long newPrice = req.getLong("currentPrice");
     AuctionStatus newStatus = AuctionStatus.valueOf(req.getString("status"));
+    LocalDateTime newStartTime = LocalDateTime.parse(req.getString("startTime"));
     LocalDateTime newEndTime = LocalDateTime.parse(req.getString("endTime"));
     String newCategory = req.getString("category");
 
@@ -342,6 +344,7 @@ public class Server {
     // 1. Cập nhật Auction
     auction.setCurrentPrice(newPrice);
     auction.setStatus(newStatus);
+    auction.setStartTime(newStartTime);
     auction.setEndTime(newEndTime);
     auctionDao.update(auction);
 
@@ -371,6 +374,47 @@ public class Server {
     JSONObject res = new JSONObject();
     res.put("status", "OK");
     return res.toString();
+  }
+
+  private static String handleResetAuction(JSONObject req) {
+    Long auctionId = req.getLong("auctionId");
+    
+    Optional<Auction> auctionOpt = auctionDao.findById(auctionId);
+    if (auctionOpt.isEmpty()) return errorResponse("Không tìm thấy đấu giá #" + auctionId);
+    
+    Auction auction = auctionOpt.get();
+    Optional<com.auction.server.model.entity.item.Item> itemOpt = itemDao.findById(auction.getItemId());
+    
+    if (itemOpt.isPresent()) {
+      // 1. Xóa sạch lịch sử bid trong DB
+      bidTransactionDao.deleteByAuctionId(auctionId);
+      
+      // 2. Reset giá về khởi điểm
+      long startingPrice = itemOpt.get().getStartingPrice();
+      auction.setCurrentPrice(startingPrice);
+      auction.setCurrentWinnerId(null);
+      auctionDao.update(auction);
+      
+      // 3. Đồng bộ RAM (Nếu đang chạy thì cập nhật lại thông tin trong AuctionManager)
+      if (auction.getStatus() == AuctionStatus.RUNNING) {
+        AuctionManager.getInstance().restoreRunningAuction(auction);
+      }
+      
+      System.out.println("ADMIN ACTION: Reset auction #" + auctionId + " to price=" + startingPrice);
+      
+      // 4. Broadcast tới tất cả client để họ cập nhật biểu đồ và giá (Gửi lệnh REFRESH)
+      JSONObject push = new JSONObject();
+      push.put("type", "AUCTION_RESET");
+      push.put("auctionId", auctionId);
+      push.put("newPrice", startingPrice);
+      broadcast(push.toString());
+      
+      JSONObject res = new JSONObject();
+      res.put("status", "OK");
+      return res.toString();
+    } else {
+      return errorResponse("Không tìm thấy sản phẩm liên quan để lấy giá khởi điểm.");
+    }
   }
 
   private static String handleGetAllAuctions(JSONObject req) {
