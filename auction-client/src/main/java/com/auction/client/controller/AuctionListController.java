@@ -39,9 +39,11 @@ public class AuctionListController {
 
   @FXML private TableColumn<Auction, Long> idColumn;
 
+  @FXML private TableColumn<Auction, String> itemNameColumn;
+
   @FXML private TableColumn<Auction, String> statusColumn;
 
-  @FXML private TableColumn<Auction, Double> currentPriceColumn;
+  @FXML private TableColumn<Auction, String> currentPriceColumn;
 
   @FXML private TableColumn<Auction, String> startTimeColumn;
 
@@ -81,13 +83,24 @@ public class AuctionListController {
 
     // Thiết lập từng cột của TableView — liên kết với thuộc tính của Auction object
     idColumn.setCellValueFactory(new PropertyValueFactory<>("id"));
+    
+    // Cột tên sản phẩm: dùng lambda để ép hiển thị, tránh lỗi reflection
+    itemNameColumn.setCellValueFactory(cellData -> {
+        String name = cellData.getValue().getItemName();
+        return new SimpleStringProperty(name != null ? name : "Sản phẩm #" + cellData.getValue().getItemId());
+    });
 
     // Cột trạng thái: hiển thị tên tiếng Việt thay vì tên enum tiếng Anh
     statusColumn.setCellValueFactory(
         cellData ->
             new SimpleStringProperty(translateStatus(cellData.getValue().getStatus())));
 
-    currentPriceColumn.setCellValueFactory(new PropertyValueFactory<>("currentPrice"));
+    // Cột giá: định dạng số có dấu phân cách hàng nghìn và thêm đơn vị VNĐ
+    currentPriceColumn.setCellValueFactory(
+        cellData -> {
+          long price = cellData.getValue().getCurrentPrice();
+          return new SimpleStringProperty(String.format("%,d VNĐ", price));
+        });
 
     // Cột thời gian: format LocalDateTime thành chuỗi có thể đọc được
     startTimeColumn.setCellValueFactory(
@@ -104,6 +117,8 @@ public class AuctionListController {
 
     // Gắn dữ liệu vào bảng — mọi thay đổi của auctionData tự động cập nhật bảng
     auctionTable.setItems(auctionData);
+    // Giãn đều các cột để không còn ô trống thừa ở cuối bảng
+    auctionTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
 
     // Cấu hình ComboBox lọc trạng thái
     statusFilterCombo.setItems(

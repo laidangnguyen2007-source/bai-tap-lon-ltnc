@@ -13,12 +13,21 @@ import com.auction.server.model.entity.BidTransaction;
 
 public class BidController {
   private final SocketConnection connection;
-  private final ServerService serverService; // call notify
+  private final ServerService serverService;
+  // Lưu callback để có thể hủy đăng ký khi cần
+  private final java.util.function.Consumer<String> pushHandler;
 
   public BidController(ServerService serverService) throws UnknownHostException, IOException {
     this.connection = SocketConnection.getInstance();
     this.serverService = serverService;
-    startListening(); //Khởi động thread lắng nghe push từ server  
+    // Tạo handler và đăng ký vào SocketConnection toàn cục
+    this.pushHandler = this::handlePushMessage;
+    connection.addPushListener(this.pushHandler);
+  }
+
+  /** Hủy đăng ký listener (gọi khi ServerService không còn dùng nữa). */
+  public void dispose() {
+    connection.removePushListener(this.pushHandler);
   }
 
   public boolean placeBid(Long auctionId, Long bidderId, long amount) {
@@ -29,15 +38,12 @@ public class BidController {
       req.put("bidderId", bidderId);
       req.put("amount", amount);
 
-      String json = connection.sendRequest(req.toJSONString(req));
-      JSONObject res = (JSONObject) new JSONParser().parse(json);
-
-      if (!"OK".equals(res.get("status"))) {
-        return false;
-      }
-      return true;
+      // Gửi lệnh đến server — không cần chờ response đồng bộ.
+      // Kết quả (thành công/thất bại) sẽ được xác nhận qua BID_UPDATE push notification.
+      connection.sendOneWay(req.toJSONString(req));
+      return true; // Luôn trả về true — UI sẽ reset nếu không nhận được BID_UPDATE
     } catch (Exception e) {
-      e.printStackTrace();
+      System.err.println("Lỗi gửi PLACE_BID: " + e.getMessage());
       return false;
     }
   }
@@ -67,42 +73,46 @@ public class BidController {
     
   }
   private BidTransaction mapToBid(JSONObject json) {
-    Long id = (Long) json.get("id");
-    LocalDateTime createAt = LocalDateTime.parse((String) json.get("createAt"));
-    Long auctionId = (Long) json.get("auctionId");
-    Long bidderId = (Long) json.get("bidderId");
-    long amount = ((Long) json.get("amount")).longValue();
-    LocalDateTime timestamp = LocalDateTime.parse((String) json.get("timestamp"));
+    Long id = json.get("id") != null ? ((Number) json.get("id")).longValue() : -1L;
+    
+    LocalDateTime createdAt;
+    try {
+        createdAt = LocalDateTime.parse((String) json.get("createdAt"));
+    } catch (Exception e) {
+        createdAt = LocalDateTime.now(); // Fallback nếu format có vấn đề
+    }
 
-    return new BidTransaction(id, createAt, auctionId, bidderId, amount, timestamp);
+    Long auctionId = json.get("auctionId") != null ? ((Number) json.get("auctionId")).longValue() : -1L;
+    Long bidderId = json.get("bidderId") != null ? ((Number) json.get("bidderId")).longValue() : -1L;
+    long amount = json.get("amount") != null ? ((Number) json.get("amount")).longValue() : 0L;
+    
+    LocalDateTime timestamp;
+    try {
+        timestamp = LocalDateTime.parse((String) json.get("timestamp"));
+    } catch (Exception e) {
+        timestamp = LocalDateTime.now(); // Fallback
+    }
+
+    return new BidTransaction(id, createdAt, auctionId, bidderId, amount, timestamp);
   }
 
-  private void startListening() {
-    Thread listener = new Thread(() -> {
-      try {
-        String line;
-        JSONParser parser = new JSONParser();
-        while ((line = connection.getReader().readLine()) != null) {
-          JSONObject push = (JSONObject) parser.parse(line);
-          String type = (String) push.get("type");
 
-          if ("BID_UPDATE".equals(type)) {
-            BidTransaction bid = mapToBid((JSONObject) push.get("bid"));
-            serverService.notifyBidUpdated(bid);
+  /** Xử lý mọi push message đến từ server (được gọi bởi GlobalNetworkListener). */
+  private void handlePushMessage(String line) {
+    try {
+      JSONObject push = (JSONObject) new JSONParser().parse(line);
+      String type = (String) push.get("type");
 
-          } else if ("AUCTION_STATUS_CHANGED".equals(type)) {
-            Long auctionId = (Long) push.get("auctionId");
-            String status = (String) push.get("newStatus");
-            serverService.notifyAuctionStatusChanged(auctionId, status);
-          } 
-        }
-      } catch (Exception e) {
-        System.err.println("NetworkListener mất kết nối: " + e.getMessage());
+      if ("BID_UPDATE".equals(type)) {
+        BidTransaction bid = mapToBid((JSONObject) push.get("bid"));
+        serverService.notifyBidUpdated(bid);
+      } else if ("AUCTION_STATUS_CHANGED".equals(type)) {
+        Long auctionId = ((Number) push.get("auctionId")).longValue();
+        String status = (String) push.get("newStatus");
+        serverService.notifyAuctionStatusChanged(auctionId, status);
       }
-    }, "NetworkListener");
-    listener.setDaemon(true);
-    listener.start();
+    } catch (Exception e) {
+      System.err.println("[BidController] Lỗi xử lý push: " + e.getMessage());
+    }
   }
-
-  
 }

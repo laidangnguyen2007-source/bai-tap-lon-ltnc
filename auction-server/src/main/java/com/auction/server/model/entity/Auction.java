@@ -25,6 +25,7 @@ public class Auction extends BaseEntity {
   private AuctionStatus status; // trạng thái vòng đời của phiên đấu giá
   private LocalDateTime startTime;
   private LocalDateTime endTime;
+  private String itemName; // Tên sản phẩm (để hiển thị ở danh sách)
 
   public Auction() {
     super();
@@ -166,6 +167,14 @@ public class Auction extends BaseEntity {
 
   public void setEndTime(LocalDateTime endTime) {
     this.endTime = endTime;
+  }
+
+  public String getItemName() {
+    return itemName;
+  }
+
+  public void setItemName(String itemName) {
+    this.itemName = itemName;
   }
 
   @Override

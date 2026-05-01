@@ -7,8 +7,12 @@ import com.auction.client.util.FxmlLoader;
 import com.auction.server.model.entity.Auction;
 import com.auction.server.model.entity.BidTransaction;
 import java.io.IOException;
+import java.time.Duration;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -83,6 +87,9 @@ public class BiddingRoomController implements AuctionObserver {
   // Đếm số lượt bid để làm trục X (thứ tự lần đặt giá: 1, 2, 3, ...)
   private int bidCount = 0;
 
+  private Timer countdownTimer;
+  private volatile long pendingBidAmount = -1;
+
   private static final DateTimeFormatter TIME_FORMAT = DateTimeFormatter.ofPattern("HH:mm:ss");
 
   /**
@@ -121,6 +128,35 @@ public class BiddingRoomController implements AuctionObserver {
       bidAmountField.setDisable(true);
       infoLabel.setText("Phiên đấu giá này không còn nhận giá mới.");
     }
+
+    // Bắt đầu đếm ngược thời gian còn lại
+    startCountdownTimer(auction);
+  }
+
+  /** Khởi động timer đếm ngược đến endTime của phiên. */
+  private void startCountdownTimer(Auction auction) {
+    if (auction.getEndTime() == null) return;
+    countdownTimer = new Timer(true);
+    countdownTimer.scheduleAtFixedRate(new TimerTask() {
+      @Override
+      public void run() {
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime end = auction.getEndTime();
+        if (now.isAfter(end)) {
+          Platform.runLater(() -> timeRemainingLabel.setText("Đã kết thúc"));
+          countdownTimer.cancel();
+          return;
+        }
+        Duration remaining = Duration.between(now, end);
+        long hours = remaining.toHours();
+        long minutes = remaining.toMinutesPart();
+        long seconds = remaining.toSecondsPart();
+        String text = hours > 0
+            ? String.format("%02d:%02d:%02d", hours, minutes, seconds)
+            : String.format("%02d:%02d", minutes, seconds);
+        Platform.runLater(() -> timeRemainingLabel.setText(text));
+      }
+    }, 0, 1000);
   }
 
   // ===== MỤC 3.2.5: BID HISTORY VISUALIZATION =====
@@ -209,7 +245,6 @@ public class BiddingRoomController implements AuctionObserver {
    */
   @Override
   public void onBidUpdated(BidTransaction bid) {
-    // Lập trình phòng thủ: bỏ qua nếu bid không thuộc phiên đang xem
     Auction currentAuction = session.getSelectedAuction();
     if (currentAuction == null || !currentAuction.getId().equals(bid.getAuctionId())) {
       return;
@@ -230,6 +265,12 @@ public class BiddingRoomController implements AuctionObserver {
           // Cập nhật giá hiện tại trong session model
           currentAuction.setCurrentPrice(bid.getAmount());
           currentAuction.setCurrentWinnerId(bid.getBidderId());
+
+          // Nếu bid này là của chính mình, hiện thông báo thành công
+          if (pendingBidAmount > 0 && bid.getAmount() == pendingBidAmount) {
+            infoLabel.setText("✅ Đặt giá " + String.format("%,d", bid.getAmount()) + " VNĐ thành công!");
+            pendingBidAmount = -1;
+          }
         });
   }
 
@@ -304,15 +345,35 @@ public class BiddingRoomController implements AuctionObserver {
     }
 
     Long bidderId = session.getCurrentUser().getId();
-    boolean accepted = serverService.placeBid(auction.getId(), bidderId, amount);
+    final long finalAmount = amount;
+    // Lưu lại để nhận diện khi BID_UPDATE về
+    pendingBidAmount = finalAmount;
+    infoLabel.setText("Đang gửi giá " + String.format("%,d", finalAmount) + " VNĐ...");
+    placeBidButton.setDisable(true);
+    bidAmountField.clear();
 
-    if (accepted) {
-      // Server chấp nhận: UI sẽ tự cập nhật qua onBidUpdated() — không cần làm gì thêm ở đây
-      infoLabel.setText("Đặt giá thành công! Chờ cập nhật...");
-      bidAmountField.clear();
-    } else {
-      infoLabel.setText("Đặt giá thất bại. Giá có thể đã bị vượt qua hoặc phiên đã đóng.");
+    // Gửi đi (fire-and-forget), kết quả xác nhận qua BID_UPDATE push
+    boolean sent = serverService.placeBid(auction.getId(), bidderId, finalAmount);
+    if (!sent) {
+      // Không gửi được (mất kết nối)
+      infoLabel.setText("❌ Không thể kết nối server.");
+      placeBidButton.setDisable(false);
+      pendingBidAmount = -1;
+      return;
     }
+
+    // Sau 6 giây, nếu BID_UPDATE chưa về thì báo thất bại
+    new Thread(() -> {
+      try { Thread.sleep(6000); } catch (InterruptedException ignored) {}
+      Platform.runLater(() -> {
+        placeBidButton.setDisable(false);
+        if (pendingBidAmount == finalAmount) {
+          // Chưa nhận được BID_UPDATE → bid bị từ chối hoặc mạng lag
+          infoLabel.setText("❌ Đặt giá thất bại. Giá có thể đã bị vượt qua.");
+          pendingBidAmount = -1;
+        }
+      });
+    }).start();
   }
 
   /**
@@ -325,6 +386,7 @@ public class BiddingRoomController implements AuctionObserver {
   private void handleBack(ActionEvent event) {
     // Quan trọng: hủy đăng ký Observer khi rời màn hình để tránh memory leak
     serverService.removeObserver(this);
+    if (countdownTimer != null) countdownTimer.cancel();
 
     try {
       Stage stage = (Stage) backButton.getScene().getWindow();

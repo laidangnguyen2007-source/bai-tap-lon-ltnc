@@ -19,19 +19,11 @@ import java.sql.Statement;
 public class DatabaseConfig {
 
   // Đường dẫn tới MySQL Server
-  private static final String DB_URL = "jdbc:mysql://localhost:3306/auction_db";
-  // jdbc:mysql:// là giao thức Protocol kết nối tới MySQL
-  // localhost là địa chỉ IP của máy chủ MySQL
-  // 3306 là cổng (Port) mặc định của MySQL khi dùng XAMPP trên toàn thế giới
-  // auction_db là tên database cụ thể ta đang thao tác
-  // createDatabaseIfNotExist=true là ép MySQL tự động tạo database nếu chưa tồn tại trên máy khách
-  // useSSL=false để vượt tường lửa chứng chỉ mã hóa SSL bảo mật của MySQL
-  // allowPublicKeyRetrieval=true là cho phép MySQL lấy public key để mã hóa
-  // serverTimezone=UTC để đồng bộ múi giờ UTC tránh sai lệch thời gian
-
-  // Tài khoản mặc định của XAMPP / MySQL Local
+  private static final String DB_URL =
+      "jdbc:mysql://localhost:3306/auction_db?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC";
+  // Tài khoản mặc định của MySQL Local
   private static final String DB_USER = "root";
-  private static final String DB_PASSWORD = "";
+  private static final String DB_PASSWORD = "1234";
 
   // Instance duy nhất — Singleton Pattern
   private static volatile DatabaseConfig instance;

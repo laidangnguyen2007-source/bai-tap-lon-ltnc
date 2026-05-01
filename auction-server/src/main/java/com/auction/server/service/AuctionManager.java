@@ -59,6 +59,15 @@ public class AuctionManager {
   }
 
   /*
+   * Khôi phục phiên đấu giá đang chạy từ Database vào bộ nhớ đệm (gọi khi Server khởi động).
+   */
+  public synchronized void restoreRunningAuction(Auction auction) {
+    if (AuctionStatus.RUNNING.equals(auction.getStatus())) {
+      activeAuctions.put(auction.getId(), auction);
+    }
+  }
+
+  /*
    * Đặt giá vào phiên đấu giá. Bao gồm kiểm tra hợp lệ và logic Anti-sniping. Dùng synchronized
    * trên auction cụ thể để tránh Race Condition khi nhiều Bidder đặt giá cùng lúc vào cùng một
    * phiên.

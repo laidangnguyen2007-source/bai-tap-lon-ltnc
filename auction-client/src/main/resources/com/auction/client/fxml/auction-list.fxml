@@ -66,6 +66,7 @@
       <TableView fx:id="auctionTable" VBox.vgrow="ALWAYS" styleClass="data-table">
         <columns>
           <TableColumn fx:id="idColumn" text="Mã phiên" prefWidth="90"/>
+          <TableColumn fx:id="itemNameColumn" text="Tên sản phẩm" prefWidth="180"/>
           <TableColumn fx:id="statusColumn" text="Trạng thái" prefWidth="160"/>
           <TableColumn fx:id="currentPriceColumn" text="Giá hiện tại (VNĐ)" prefWidth="180"/>
           <TableColumn fx:id="startTimeColumn" text="Bắt đầu" prefWidth="160"/>
