@@ -30,6 +30,7 @@ import com.auction.server.model.entity.user.Bidder;
 import com.auction.server.model.entity.user.Seller;
 import com.auction.server.model.entity.user.User;
 import com.auction.server.service.AuctionManager;
+
 public class Server {
   private static final int PORT = 8888;
 
