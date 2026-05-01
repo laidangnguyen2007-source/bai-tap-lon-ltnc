@@ -127,7 +127,7 @@ public class Server {
   /** Phân phối request tới handler tương ứng theo trường "action". */
   private static String dispatch(String rawJson) {
     try {
-      JSONObject req = new JSONObject();
+      JSONObject req = new JSONObject(rawJson);
       String action = req.getString("action");
       System.out.println("ACTION: " + action);
 
@@ -152,7 +152,6 @@ public class Server {
   private static String handleLogin(JSONObject req) {
     String username = req.getString("username");
     String password = req.getString("password");
-
     Optional<User> userOpt = userDao.findByUsername(username);
     if (userOpt.isEmpty()) return errorResponse("Incorrect username or password.");
 
