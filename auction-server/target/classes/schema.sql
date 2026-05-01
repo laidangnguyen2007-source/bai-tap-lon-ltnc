@@ -177,7 +177,7 @@ CREATE TABLE IF NOT EXISTS bid_transactions (
 -- Mật khẩu của tất cả tài khoản mẫu đều là: "123456"
 -- SHA-256("123456") = 8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92
 
-INSERT INTO users (username, password_hash, email, role, balance, shop_name, rating, access_level)
+INSERT IGNORE INTO users (username, password_hash, email, role, balance, shop_name, rating, access_level)
 VALUES
     -- Bidder
     ('bidder1',  '8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92',
@@ -197,7 +197,7 @@ VALUES
 
 
 -- Sản phẩm mẫu (seller1 = id 3, seller2 = id 4)
-INSERT INTO items (name, description, starting_price, seller_id, category,
+INSERT IGNORE INTO items (name, description, starting_price, seller_id, category,
                    brand, warranty_months, power_watts,
                    artist, art_year, medium,
                    make, vehicle_year, mileage)
@@ -235,7 +235,7 @@ VALUES
 
 
 -- Phiên đấu giá mẫu
-INSERT INTO auctions (item_id, seller_id, current_price, status, start_time, end_time)
+INSERT IGNORE INTO auctions (item_id, seller_id, current_price, status, start_time, end_time)
 VALUES
     -- Phiên đang RUNNING (Laptop Dell)
     (1, 3, 15000000, 'RUNNING',
@@ -260,7 +260,7 @@ VALUES
 
 -- Lịch sử bid mẫu cho phiên 1 (Laptop Dell) — dùng để vẽ LineChart
 -- bidder1 = id 1, bidder2 = id 2
-INSERT INTO bid_transactions (auction_id, bidder_id, amount, timestamp)
+INSERT IGNORE INTO bid_transactions (auction_id, bidder_id, amount, timestamp)
 VALUES
     (1, 1, 15500000, DATE_SUB(NOW(), INTERVAL 50 MINUTE)),
     (1, 2, 16000000, DATE_SUB(NOW(), INTERVAL 45 MINUTE)),

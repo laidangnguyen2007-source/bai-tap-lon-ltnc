@@ -17,12 +17,20 @@ import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
+import javafx.scene.control.Dialog;
 import javafx.scene.control.Label;
 
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
+import javafx.scene.control.TextField;
+import javafx.scene.control.ButtonType;
+import javafx.scene.control.ButtonBar;
 import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.layout.GridPane;
+import javafx.scene.layout.HBox;
 import javafx.stage.Stage;
+import javafx.util.Pair;
+import javafx.geometry.Insets;
 
 /**
  * Controller cho màn hình Danh Sách Đấu Giá (auction-list.fxml).
@@ -48,6 +56,8 @@ public class AuctionListController {
   @FXML private TableColumn<Auction, String> startTimeColumn;
 
   @FXML private TableColumn<Auction, String> endTimeColumn;
+
+  @FXML private TableColumn<Auction, Void> actionsColumn;
 
   @FXML private ComboBox<String> statusFilterCombo;
 
@@ -114,6 +124,43 @@ public class AuctionListController {
           LocalDateTime t = cellData.getValue().getEndTime();
           return new SimpleStringProperty(t != null ? t.format(DISPLAY_FORMAT) : "—");
         });
+
+    // Cấu hình cột Thao tác cho Admin
+    if (session.isLoggedIn() && session.getCurrentUser().getRole() == com.auction.server.model.enums.UserRole.ADMIN) {
+        actionsColumn.setCellFactory(param -> new javafx.scene.control.TableCell<>() {
+            private final Button deleteBtn = new Button("🗑 Xóa");
+            private final Button editBtn = new Button("⚙ Sửa");
+            private final HBox container = new HBox(8, editBtn, deleteBtn);
+            {
+                deleteBtn.getStyleClass().add("danger-button");
+                editBtn.getStyleClass().add("secondary-button");
+                
+                deleteBtn.setOnAction(event -> {
+                    Auction auction = getTableView().getItems().get(getIndex());
+                    boolean success = serverService.deleteAuction(auction.getId());
+                    if (success) loadAuctions();
+                });
+
+                editBtn.setOnAction(event -> {
+                    Auction auction = getTableView().getItems().get(getIndex());
+                    showEditDialog(auction);
+                });
+            }
+
+            @Override
+            protected void updateItem(Void item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty) {
+                    setGraphic(null);
+                } else {
+                    setGraphic(container);
+                }
+            }
+        });
+    } else {
+        // Nếu không phải Admin, ẩn cột Thao tác đi cho đẹp
+        actionsColumn.setVisible(false);
+    }
 
     // Gắn dữ liệu vào bảng — mọi thay đổi của auctionData tự động cập nhật bảng
     auctionTable.setItems(auctionData);
@@ -202,6 +249,65 @@ public class AuctionListController {
     } catch (IOException e) {
       e.printStackTrace();
     }
+  }
+
+  /**
+   * Hiển thị hộp thoại chỉnh sửa phiên đấu giá dành cho Admin.
+   */
+  private void showEditDialog(Auction auction) {
+      Dialog<Pair<String, String>> dialog = new Dialog<>();
+      dialog.setTitle("⚙ Quản Lý Phiên Đấu Giá #" + auction.getId());
+      dialog.setHeaderText("Chỉnh sửa thông số phiên đấu giá vi phạm hoặc cần điều chỉnh.");
+
+      ButtonType saveButtonType = new ButtonType("Lưu thay đổi", ButtonBar.ButtonData.OK_DONE);
+      dialog.getDialogPane().getButtonTypes().addAll(saveButtonType, ButtonType.CANCEL);
+
+      GridPane grid = new GridPane();
+      grid.setHgap(10);
+      grid.setVgap(10);
+      grid.setPadding(new Insets(20, 150, 10, 10));
+
+      TextField priceField = new TextField(String.valueOf(auction.getCurrentPrice()));
+      ComboBox<String> statusCombo = new ComboBox<>(FXCollections.observableArrayList("OPEN", "RUNNING", "FINISHED", "PAID", "CANCELED"));
+      statusCombo.setValue(auction.getStatus().name());
+      
+      TextField endTimeField = new TextField(auction.getEndTime().toString());
+      
+      // Lấy Category hiện tại (mặc định ELECTRONICS nếu không tìm thấy)
+      ComboBox<String> categoryCombo = new ComboBox<>(FXCollections.observableArrayList("ELECTRONICS", "ARTWORK", "VEHICLE"));
+      categoryCombo.setValue("ELECTRONICS"); // Default
+
+      grid.add(new Label("Giá hiện tại:"), 0, 0);
+      grid.add(priceField, 1, 0);
+      grid.add(new Label("Trạng thái:"), 0, 1);
+      grid.add(statusCombo, 1, 1);
+      grid.add(new Label("Thời gian kết thúc:"), 0, 2);
+      grid.add(endTimeField, 1, 2);
+      grid.add(new Label("Loại sản phẩm:"), 0, 3);
+      grid.add(categoryCombo, 1, 3);
+
+      dialog.getDialogPane().setContent(grid);
+
+      dialog.setResultConverter(dialogButton -> {
+          if (dialogButton == saveButtonType) {
+              try {
+                  long price = Long.parseLong(priceField.getText());
+                  String status = statusCombo.getValue();
+                  String endTime = endTimeField.getText();
+                  String category = categoryCombo.getValue();
+                  
+                  boolean success = serverService.updateAuctionAdmin(auction.getId(), price, status, endTime, category);
+                  if (success) {
+                      loadAuctions();
+                  }
+              } catch (Exception e) {
+                  e.printStackTrace();
+              }
+          }
+          return null;
+      });
+
+      dialog.showAndWait();
   }
 
   /**

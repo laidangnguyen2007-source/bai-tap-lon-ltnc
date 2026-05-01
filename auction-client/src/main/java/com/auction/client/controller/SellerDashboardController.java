@@ -53,19 +53,20 @@ public class SellerDashboardController {
   @FXML private TableView<Auction> myAuctionsTable;
 
   @FXML private TableColumn<Auction, Long> idCol;
-
+  @FXML private TableColumn<Auction, String> itemNameCol;
   @FXML private TableColumn<Auction, Long> priceCol;
-
   @FXML private TableColumn<Auction, String> statusCol;
+  @FXML private TableColumn<Auction, String> startTimeCol;
+  @FXML private TableColumn<Auction, String> endTimeCol;
 
   // Header
   @FXML private Label sellerNameLabel;
-
   @FXML private Button logoutButton;
-
   @FXML private Button refreshButton;
 
   // -- Dữ liệu & Dependency --
+  private final java.time.format.DateTimeFormatter formatter = 
+      java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
 
   private final ServerService serverService = new ServerService();
   private final AuctionSessionState session = AuctionSessionState.getInstance();
@@ -83,11 +84,42 @@ public class SellerDashboardController {
 
     // Cấu hình cột bảng
     idCol.setCellValueFactory(new PropertyValueFactory<>("id"));
+    itemNameCol.setCellValueFactory(new PropertyValueFactory<>("itemName"));
+    
+    priceCol.setCellFactory(column -> new javafx.scene.control.TableCell<>() {
+      @Override
+      protected void updateItem(Long price, boolean empty) {
+        super.updateItem(price, empty);
+        if (empty || price == null) {
+          setText(null);
+        } else {
+          setText(String.format("%,d VNĐ", price));
+        }
+      }
+    });
     priceCol.setCellValueFactory(new PropertyValueFactory<>("currentPrice"));
+
     statusCol.setCellValueFactory(
-        cell ->
-            new javafx.beans.property.SimpleStringProperty(
-                cell.getValue().getStatus().name()));
+        cell -> {
+          String s = cell.getValue().getStatus().name();
+          String vietnameseStatus = switch (s) {
+            case "OPEN" -> "Đang mở";
+            case "RUNNING" -> "Đang diễn ra";
+            case "FINISHED" -> "Đã kết thúc";
+            case "PAID" -> "Đã thanh toán";
+            case "CANCELED" -> "Đã hủy";
+            default -> s;
+          };
+          return new javafx.beans.property.SimpleStringProperty(vietnameseStatus);
+        });
+
+    startTimeCol.setCellValueFactory(
+        cell -> new javafx.beans.property.SimpleStringProperty(
+            cell.getValue().getStartTime().format(formatter)));
+            
+    endTimeCol.setCellValueFactory(
+        cell -> new javafx.beans.property.SimpleStringProperty(
+            cell.getValue().getEndTime().format(formatter)));
 
     myAuctionsTable.setItems(myAuctions);
 
@@ -137,8 +169,21 @@ public class SellerDashboardController {
       return;
     }
 
-    // Chuyển LocalDate (từ DatePicker) sang LocalDateTime (entity dùng)
+    // Chuyển LocalDate (từ DatePicker) sang LocalDateTime
+    LocalDateTime now = LocalDateTime.now();
     LocalDateTime startTime = startDatePicker.getValue().atStartOfDay();
+    
+    // Nếu chọn ngày bắt đầu là hôm nay, lấy luôn giờ hiện tại để bắt đầu ngay
+    if (startDatePicker.getValue().equals(now.toLocalDate())) {
+        startTime = now;
+    }
+    
+    // Validate: không cho phép chọn ngày trong quá khứ
+    if (startTime.plusMinutes(1).isBefore(now)) {
+        formResultLabel.setText("Ngày bắt đầu không được ở trong quá khứ.");
+        return;
+    }
+
     LocalDateTime endTime = endDatePicker.getValue().atTime(23, 59, 59);
 
     // Validate: thời gian kết thúc phải sau thời gian bắt đầu

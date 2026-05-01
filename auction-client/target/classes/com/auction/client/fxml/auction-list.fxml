@@ -71,6 +71,7 @@
           <TableColumn fx:id="currentPriceColumn" text="Giá hiện tại (VNĐ)" prefWidth="180"/>
           <TableColumn fx:id="startTimeColumn" text="Bắt đầu" prefWidth="160"/>
           <TableColumn fx:id="endTimeColumn" text="Kết thúc" prefWidth="160"/>
+          <TableColumn fx:id="actionsColumn" text="Thao tác" prefWidth="120"/>
         </columns>
         <!-- Thông báo khi bảng rỗng -->
         <placeholder>

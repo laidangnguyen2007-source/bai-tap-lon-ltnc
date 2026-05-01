@@ -185,4 +185,18 @@ public class ServerService {
     // STUB: TV3 thay bằng gửi request GET_SELLER_AUCTIONS qua socket
     return auctionController.getAuctionsBySeller(sellerId);
   }
+
+  /**
+   * Admin xóa phiên đấu giá vi phạm.
+   *
+   * @param auctionId ID của phiên cần xóa
+   * @return true nếu xóa thành công
+   */
+  public boolean deleteAuction(Long auctionId) {
+    return auctionController.deleteAuction(auctionId);
+  }
+
+  public boolean updateAuctionAdmin(Long auctionId, long price, String status, String endTime, String category) {
+    return auctionController.updateAuctionAdmin(auctionId, price, status, endTime, category);
+  }
 }

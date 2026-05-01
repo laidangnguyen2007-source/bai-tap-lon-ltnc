@@ -93,7 +93,7 @@ public class JdbcItemDao implements ItemDao {
   @Override
   public Item update(Item item) {
     String sql =
-        "UPDATE items SET name=?, description=?, starting_price=?,"
+        "UPDATE items SET name=?, description=?, starting_price=?, category=?,"
             + " brand=?, warranty_months=?, power_watts=?,"
             + " artist=?, art_year=?, medium=?,"
             + " make=?, model=?, vehicle_year=?, mileage=?"
@@ -102,8 +102,9 @@ public class JdbcItemDao implements ItemDao {
       ps.setString(1, item.getName());
       ps.setString(2, item.getDescription());
       ps.setLong(3, item.getStartingPrice());
-      bindItemTypeFieldsForUpdate(ps, item, 4);
-      ps.setLong(14, item.getId());
+      ps.setString(4, item.getCategory().name());
+      bindItemTypeFieldsForUpdate(ps, item, 5);
+      ps.setLong(15, item.getId());
       ps.executeUpdate();
       return item;
     } catch (SQLException e) {

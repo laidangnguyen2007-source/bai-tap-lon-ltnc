@@ -25,6 +25,7 @@ public class Vehicle extends Item {
       int mileageKm,
       String fuelType) {
     super(name, description, startingPrice, sellerId);
+    setCategory(ItemCategory.VEHICLE);
     this.manufacturer = manufacturer;
     this.yearManufactured = yearManufactured;
     this.mileageKm = mileageKm;
@@ -44,16 +45,14 @@ public class Vehicle extends Item {
       int mileageKm,
       String fuelType) {
     super(id, createdAt, name, description, startingPrice, sellerId);
+    setCategory(ItemCategory.VEHICLE);
     this.manufacturer = manufacturer;
     this.yearManufactured = yearManufactured;
     this.mileageKm = mileageKm;
     this.fuelType = fuelType;
   }
 
-  @Override
-  public ItemCategory getCategory() {
-    return ItemCategory.VEHICLE;
-  }
+
 
   public String getManufacturer() {
     return manufacturer;

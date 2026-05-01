@@ -23,6 +23,7 @@ public class Artwork extends Item {
       int yearCreated,
       String medium) {
     super(name, description, startingPrice, sellerId);
+    setCategory(ItemCategory.ARTWORK);
     this.artistName = artistName;
     this.yearCreated = yearCreated;
     this.medium = medium;
@@ -40,15 +41,13 @@ public class Artwork extends Item {
       int yearCreated,
       String medium) {
     super(id, createdAt, name, description, startingPrice, sellerId);
+    setCategory(ItemCategory.ARTWORK);
     this.artistName = artistName;
     this.yearCreated = yearCreated;
     this.medium = medium;
   }
 
-  @Override
-  public ItemCategory getCategory() {
-    return ItemCategory.ARTWORK;
-  }
+
 
   public String getArtistName() {
     return artistName;

@@ -11,6 +11,7 @@ public abstract class Item extends BaseEntity {
   private String description;
   private long startingPrice;
   private Long sellerId;
+  private ItemCategory category;
 
   protected Item() {
     super();
@@ -40,7 +41,13 @@ public abstract class Item extends BaseEntity {
 
   // giống như user phải getRole(), item cũng phải khai báo bản thân để chương
   // trình dễ quản lý
-  public abstract ItemCategory getCategory();
+  public ItemCategory getCategory() {
+    return category;
+  }
+
+  public void setCategory(ItemCategory category) {
+    this.category = category;
+  }
 
   public String getName() {
     return name;
