@@ -23,6 +23,7 @@ public class Electronics extends Item {
       int warrantyMonths,
       double powerWatts) {
     super(name, description, startingPrice, sellerId);
+    setCategory(ItemCategory.ELECTRONICS);
     this.brand = brand;
     this.warrantyMonths = warrantyMonths;
     this.powerWatts = powerWatts;
@@ -40,15 +41,13 @@ public class Electronics extends Item {
       int warrantyMonths,
       double powerWatts) {
     super(id, createdAt, name, description, startingPrice, sellerId);
+    setCategory(ItemCategory.ELECTRONICS);
     this.brand = brand;
     this.warrantyMonths = warrantyMonths;
     this.powerWatts = powerWatts;
   }
 
-  @Override
-  public ItemCategory getCategory() {
-    return ItemCategory.ELECTRONICS;
-  }
+
 
   public String getBrand() {
     return brand;

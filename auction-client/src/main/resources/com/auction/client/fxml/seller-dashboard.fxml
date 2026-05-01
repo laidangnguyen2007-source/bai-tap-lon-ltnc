@@ -90,9 +90,12 @@
 
         <TableView fx:id="myAuctionsTable" VBox.vgrow="ALWAYS" styleClass="data-table">
           <columns>
-            <TableColumn fx:id="idCol" text="Mã phiên" prefWidth="100"/>
-            <TableColumn fx:id="priceCol" text="Giá hiện tại" prefWidth="160"/>
-            <TableColumn fx:id="statusCol" text="Trạng thái" prefWidth="160"/>
+            <TableColumn fx:id="idCol" text="Mã phiên" prefWidth="80"/>
+            <TableColumn fx:id="itemNameCol" text="Tên sản phẩm" prefWidth="180"/>
+            <TableColumn fx:id="priceCol" text="Giá hiện tại" prefWidth="140"/>
+            <TableColumn fx:id="statusCol" text="Trạng thái" prefWidth="120"/>
+            <TableColumn fx:id="startTimeCol" text="Bắt đầu" prefWidth="150"/>
+            <TableColumn fx:id="endTimeCol" text="Kết thúc" prefWidth="150"/>
           </columns>
           <placeholder>
             <Label text="Bạn chưa tạo phiên đấu giá nào." styleClass="placeholder-label"/>

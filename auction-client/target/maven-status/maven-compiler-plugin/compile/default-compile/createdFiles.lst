@@ -9,11 +9,13 @@ com\auction\client\controller\SellerDashboardController.class
 com\auction\client\network\UserController.class
 com\auction\client\network\ItemController.class
 com\auction\client\controller\BiddingRoomController$1.class
+com\auction\client\controller\SellerDashboardController$1.class
 com\auction\client\observer\AuctionObserver.class
 com\auction\client\network\ItemController$1.class
 com\auction\client\Launcher.class
 com\auction\client\util\FxmlLoader.class
 com\auction\client\service\ServerService.class
+com\auction\client\controller\AuctionListController$2.class
 com\auction\client\controller\LoginController.class
 com\auction\client\network\BidController.class
 com\auction\client\controller\AuctionDetailController.class

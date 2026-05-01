@@ -7,6 +7,7 @@ import com.auction.server.model.entity.Auction;
 import com.auction.server.model.entity.BidTransaction;
 import com.auction.server.model.entity.item.*;
 import com.auction.server.model.entity.user.*;
+import com.auction.server.model.enums.AuctionStatus;
 import com.auction.server.service.AuctionManager;
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -140,7 +141,9 @@ public class Server {
         case "PLACE_BID" -> handlePlaceBid(req);
         case "CREATE_AUCTION" -> handleCreateAuction(req);
         case "GET_ALL_AUCTIONS" -> handleGetAllAuctions(req);
-        case "GET_AUCTION_BY_SELLER" -> handleGetAuctionBySeller(req);
+        case "GET_AUCTIONS_BY_SELLER" -> handleGetAuctionBySeller(req);
+        case "DELETE_AUCTION" -> handleDeleteAuction(req);
+        case "ADMIN_UPDATE_AUCTION" -> handleAdminUpdateAuction(req);
         default -> errorResponse("Invalid action: " + action);
       };
     } catch (Exception e) {
@@ -264,16 +267,101 @@ public class Server {
     Long startingPrice = req.getLong("startingPrice");
     LocalDateTime startTime = LocalDateTime.parse(req.getString("startTime"));
     LocalDateTime endTime = LocalDateTime.parse(req.getString("endTime"));
+    LocalDateTime now = LocalDateTime.now();
+
+    // KIỂM TRA: Sản phẩm phải tồn tại mới cho tạo đấu giá
+    if (itemDao.findById(itemId).isEmpty()) {
+      return errorResponse("Sản phẩm #" + itemId + " không tồn tại!");
+    }
+
+    // KIỂM TRA: Thời gian bắt đầu không được ở quá khứ (Cho phép lệch 1 phút để tránh sai số đồng hồ)
+    if (startTime.plusMinutes(1).isBefore(now)) {
+      return errorResponse("Thời gian bắt đầu không được ở trong quá khứ!");
+    }
 
     Auction auction = new Auction(itemId, sellerId, startTime, endTime);
     auction.setCurrentPrice(startingPrice);
+
+    // TỰ ĐỘNG CHUYỂN TRẠNG THÁI: Nếu giờ tạo nằm trong khoảng bắt đầu-kết thúc
+    if (now.isAfter(startTime) && now.isBefore(endTime)) {
+      auction.setStatus(AuctionStatus.RUNNING);
+    } else if (now.isAfter(endTime)) {
+      auction.setStatus(AuctionStatus.FINISHED);
+    } else {
+      auction.setStatus(AuctionStatus.OPEN);
+    }
+
     auctionDao.save(auction);
 
-    System.out.println("CREATE_AUCTION: auction #" + auction.getId() + "| item #" + itemId);
+    // ĐƯA VÀO QUẢN LÝ: Nếu đang chạy thì đưa vào AuctionManager để cho phép đặt giá ngay
+    if (auction.getStatus() == AuctionStatus.RUNNING) {
+      AuctionManager.getInstance().restoreRunningAuction(auction);
+    }
+
+    System.out.println("CREATE_AUCTION: auction #" + auction.getId() + " | status: " + auction.getStatus());
 
     JSONObject res = new JSONObject();
     res.put("status", "OK");
     res.put("auctionId", auction.getId());
+    return res.toString();
+  }
+
+  private static String handleDeleteAuction(JSONObject req) {
+    Long auctionId = req.getLong("auctionId");
+    
+    // 1. Xóa trong RAM (nếu đang chạy)
+    AuctionManager.getInstance().closeAuction(auctionId);
+    
+    // 2. Xóa trong Database
+    boolean deleted = auctionDao.deleteById(auctionId);
+    
+    if (deleted) {
+      System.out.println("ADMIN ACTION: Deleted auction #" + auctionId);
+      JSONObject res = new JSONObject();
+      res.put("status", "OK");
+      return res.toString();
+    } else {
+      return errorResponse("Không tìm thấy phiên đấu giá #" + auctionId + " để xóa.");
+    }
+  }
+
+  private static String handleAdminUpdateAuction(JSONObject req) {
+    Long auctionId = req.getLong("auctionId");
+    Long newPrice = req.getLong("currentPrice");
+    AuctionStatus newStatus = AuctionStatus.valueOf(req.getString("status"));
+    LocalDateTime newEndTime = LocalDateTime.parse(req.getString("endTime"));
+    String newCategory = req.getString("category");
+
+    Optional<Auction> auctionOpt = auctionDao.findById(auctionId);
+    if (auctionOpt.isEmpty()) return errorResponse("Không tìm thấy đấu giá #" + auctionId);
+
+    Auction auction = auctionOpt.get();
+    
+    // 1. Cập nhật Auction
+    auction.setCurrentPrice(newPrice);
+    auction.setStatus(newStatus);
+    auction.setEndTime(newEndTime);
+    auctionDao.update(auction);
+
+    // 2. Cập nhật Item (Category)
+    Optional<Item> itemOpt = itemDao.findById(auction.getItemId());
+    if (itemOpt.isPresent()) {
+      Item item = itemOpt.get();
+      item.setCategory(com.auction.server.model.enums.ItemCategory.valueOf(newCategory));
+      itemDao.update(item);
+    }
+
+    // 3. Đồng bộ RAM (AuctionManager)
+    if (newStatus == AuctionStatus.RUNNING) {
+      AuctionManager.getInstance().restoreRunningAuction(auction);
+    } else {
+      AuctionManager.getInstance().closeAuction(auctionId);
+    }
+
+    System.out.println("ADMIN ACTION: Updated auction #" + auctionId + " to price=" + newPrice + ", status=" + newStatus);
+    
+    JSONObject res = new JSONObject();
+    res.put("status", "OK");
     return res.toString();
   }
 

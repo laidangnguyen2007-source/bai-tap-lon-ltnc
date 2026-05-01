@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.net.UnknownHostException;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
+import com.auction.server.model.entity.user.Admin;
 import com.auction.server.model.entity.user.Bidder;
 import com.auction.server.model.entity.user.Seller;
 import com.auction.server.model.entity.user.User;
@@ -79,6 +80,12 @@ public class UserController {
         Seller seller = new Seller(username, hash, email, shopName);
         seller.setId(id);
         yield seller;
+      }
+
+      case "ADMIN" -> {
+        Admin admin = new Admin(username, hash, email, 1);
+        admin.setId(id);
+        yield admin;
       }
 
       default -> throw new IllegalArgumentException("Unknown role: " + role);
