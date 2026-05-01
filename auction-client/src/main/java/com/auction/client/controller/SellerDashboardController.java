@@ -3,6 +3,7 @@ package com.auction.client.controller;
 import com.auction.client.model.AuctionSessionState;
 import com.auction.client.service.ServerService;
 import com.auction.client.util.FxmlLoader;
+import com.auction.client.util.NotificationUtils;
 import com.auction.server.model.entity.Auction;
 import com.auction.server.service.AuctionManager;
 
@@ -15,6 +16,7 @@ import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 
+import javafx.scene.control.ComboBox;
 import javafx.scene.control.DatePicker;
 import javafx.scene.control.Label;
 import javafx.scene.control.TableColumn;
@@ -44,7 +46,12 @@ public class SellerDashboardController {
   @FXML private DatePicker startDatePicker;
 
   @FXML private DatePicker endDatePicker;
-
+  
+  @FXML private ComboBox<Integer> startHourCombo;
+  @FXML private ComboBox<Integer> startMinuteCombo;
+  @FXML private ComboBox<Integer> endHourCombo;
+  @FXML private ComboBox<Integer> endMinuteCombo;
+  
   @FXML private Button createAuctionButton;
 
   @FXML private Label formResultLabel;
@@ -123,6 +130,23 @@ public class SellerDashboardController {
 
     myAuctionsTable.setItems(myAuctions);
 
+    // Khởi tạo ComboBox giờ và phút cho Form
+    ObservableList<Integer> hours = FXCollections.observableArrayList();
+    for (int i = 0; i < 24; i++) hours.add(i);
+    ObservableList<Integer> minutes = FXCollections.observableArrayList();
+    for (int i = 0; i < 60; i++) minutes.add(i);
+
+    startHourCombo.setItems(hours);
+    startMinuteCombo.setItems(minutes);
+    endHourCombo.setItems(hours);
+    endMinuteCombo.setItems(minutes);
+
+    // Mặc định chọn giờ đẹp
+    startHourCombo.setValue(LocalDateTime.now().getHour());
+    startMinuteCombo.setValue(LocalDateTime.now().getMinute());
+    endHourCombo.setValue(23);
+    endMinuteCombo.setValue(59);
+
     // Load danh sách phiên của seller hiện tại
     loadMyAuctions();
   }
@@ -148,8 +172,12 @@ public class SellerDashboardController {
     // Validate: các trường bắt buộc không được rỗng
     if (itemIdText.isEmpty() || priceText.isEmpty()
         || startDatePicker.getValue() == null
-        || endDatePicker.getValue() == null) {
-      formResultLabel.setText("Vui lòng điền đầy đủ thông tin trước khi tạo phiên.");
+        || endDatePicker.getValue() == null
+        || startHourCombo.getValue() == null
+        || startMinuteCombo.getValue() == null
+        || endHourCombo.getValue() == null
+        || endMinuteCombo.getValue() == null) {
+      formResultLabel.setText("Vui lòng điền đầy đủ ngày và giờ.");
       return;
     }
 
@@ -169,22 +197,21 @@ public class SellerDashboardController {
       return;
     }
 
-    // Chuyển LocalDate (từ DatePicker) sang LocalDateTime
+    // [Xử lý thời gian] Chuyển đổi dữ liệu từ DatePicker và ComboBox Giờ/Phút sang đối tượng LocalDateTime
     LocalDateTime now = LocalDateTime.now();
-    LocalDateTime startTime = startDatePicker.getValue().atStartOfDay();
+    LocalDateTime startTime = startDatePicker.getValue().atTime(
+        startHourCombo.getValue(), startMinuteCombo.getValue());
     
-    // Nếu chọn ngày bắt đầu là hôm nay, lấy luôn giờ hiện tại để bắt đầu ngay
-    if (startDatePicker.getValue().equals(now.toLocalDate())) {
-        startTime = now;
-    }
-    
-    // Validate: không cho phép chọn ngày trong quá khứ
-    if (startTime.plusMinutes(1).isBefore(now)) {
-        formResultLabel.setText("Ngày bắt đầu không được ở trong quá khứ.");
+    // [Validation] Chống tạo phiên đấu giá trong quá khứ. 
+    // Chúng ta cho phép sai số 10 giây để bù đắp cho độ trễ khi thao tác form.
+    if (startTime.isBefore(now.minusSeconds(10))) {
+        formResultLabel.setText("Lỗi: Thời gian bắt đầu không được ở trong quá khứ!");
         return;
     }
-
-    LocalDateTime endTime = endDatePicker.getValue().atTime(23, 59, 59);
+    
+    // Tương tự cho thời gian kết thúc
+    LocalDateTime endTime = endDatePicker.getValue().atTime(
+        endHourCombo.getValue(), endMinuteCombo.getValue());
 
     // Validate: thời gian kết thúc phải sau thời gian bắt đầu
     if (!endTime.isAfter(startTime)) {
@@ -193,6 +220,19 @@ public class SellerDashboardController {
     }
 
     Long sellerId = session.getCurrentUser().getId();
+
+    // [Thêm bước xác nhận] Hỏi bạn trước khi tạo phiên đấu giá chính thức
+    javafx.scene.control.Alert confirmAlert = new javafx.scene.control.Alert(javafx.scene.control.Alert.AlertType.CONFIRMATION);
+    NotificationUtils.styleAlert(confirmAlert);
+    confirmAlert.setGraphic(null); // Bỏ dấu "?"
+    confirmAlert.setTitle("Xác Nhận Tạo Phiên");
+    confirmAlert.setHeaderText("Bạn có chắc chắn muốn tạo phiên đấu giá mới này không?");
+    confirmAlert.setContentText("Vui lòng kiểm tra kỹ Item ID và thời gian trước khi nhấn OK.");
+
+    java.util.Optional<javafx.scene.control.ButtonType> confirmResult = confirmAlert.showAndWait();
+    if (confirmResult.isEmpty() || confirmResult.get() != javafx.scene.control.ButtonType.OK) {
+        return; // Hủy tạo phiên
+    }
 
     // Tạo đối tượng Auction mới từ dữ liệu form
     Auction newAuction = new Auction(itemId, sellerId, startTime, endTime);
@@ -230,12 +270,22 @@ public class SellerDashboardController {
    */
   @FXML
   private void handleLogout(ActionEvent event) {
-    session.clearSession();
-    try {
-      Stage stage = (Stage) logoutButton.getScene().getWindow();
-      FxmlLoader.navigateTo(stage, "login.fxml", "Online Auction System — Đăng Nhập");
-    } catch (IOException e) {
-      e.printStackTrace();
+    // [Thêm bước xác nhận] Hỏi bạn trước khi đăng xuất
+    javafx.scene.control.Alert alert = new javafx.scene.control.Alert(javafx.scene.control.Alert.AlertType.CONFIRMATION);
+    NotificationUtils.styleAlert(alert);
+    alert.setGraphic(null); // Bỏ dấu "?"
+    alert.setTitle("Xác Nhận Đăng Xuất");
+    alert.setHeaderText("Bạn có thực sự muốn đăng xuất không?");
+    
+    java.util.Optional<javafx.scene.control.ButtonType> result = alert.showAndWait();
+    if (result.isPresent() && result.get() == javafx.scene.control.ButtonType.OK) {
+        session.clearSession();
+        try {
+          Stage stage = (Stage) logoutButton.getScene().getWindow();
+          FxmlLoader.navigateTo(stage, "login.fxml", "Online Auction System — Đăng Nhập");
+        } catch (IOException e) {
+          e.printStackTrace();
+        }
     }
   }
 
@@ -245,5 +295,8 @@ public class SellerDashboardController {
     startingPriceField.clear();
     startDatePicker.setValue(null);
     endDatePicker.setValue(null);
+    // Reset giờ về hiện tại
+    startHourCombo.setValue(LocalDateTime.now().getHour());
+    startMinuteCombo.setValue(LocalDateTime.now().getMinute());
   }
 }

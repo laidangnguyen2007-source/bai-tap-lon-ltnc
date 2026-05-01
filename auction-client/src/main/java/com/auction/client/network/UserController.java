@@ -61,6 +61,26 @@ public class UserController {
     }
   }
 
+  public User getUserById(Long id) {
+    try {
+      JSONObject req = new JSONObject();
+      req.put("action", "GET_USER");
+      req.put("id", id);
+
+      String response = connection.sendRequest(req.toJSONString());
+      JSONObject res = (JSONObject) new JSONParser().parse(response);
+
+      if (!"OK".equals(res.get("status"))) {
+        return null;
+      }
+
+      return mapToUser(res);
+    } catch (Exception e) {
+      e.printStackTrace();
+      return null;
+    }
+  }
+
   //JSON -> User 
   private User mapToUser(JSONObject json) {
     String role = (String) json.get("role");

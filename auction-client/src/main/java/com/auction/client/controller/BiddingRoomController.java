@@ -4,6 +4,7 @@ import com.auction.client.model.AuctionSessionState;
 import com.auction.client.observer.AuctionObserver;
 import com.auction.client.service.ServerService;
 import com.auction.client.util.FxmlLoader;
+import com.auction.client.util.NotificationUtils;
 import com.auction.server.model.entity.Auction;
 import com.auction.server.model.entity.BidTransaction;
 import java.io.IOException;
@@ -269,7 +270,11 @@ public class BiddingRoomController implements AuctionObserver {
           // Nếu bid này là của chính mình, hiện thông báo thành công
           if (pendingBidAmount > 0 && bid.getAmount() == pendingBidAmount) {
             infoLabel.setText("✅ Đặt giá " + String.format("%,d", bid.getAmount()) + " VNĐ thành công!");
+            NotificationUtils.showSuccess((Stage) bidChart.getScene().getWindow(), "Bạn đã dẫn đầu với giá " + String.format("%,d", bid.getAmount()) + " VNĐ");
             pendingBidAmount = -1;
+          } else {
+            // [Tính năng 4] Thông báo khi có người khác đặt giá
+            NotificationUtils.showToast((Stage) bidChart.getScene().getWindow(), "📣 Có người vừa đặt giá mới: " + String.format("%,d", bid.getAmount()) + " VNĐ", false);
           }
         });
   }
@@ -291,6 +296,8 @@ public class BiddingRoomController implements AuctionObserver {
     Platform.runLater(
         () -> {
           statusLabel.setText(newStatus);
+          // [Tính năng 4] Hiện thông báo trạng thái
+          NotificationUtils.showToast((Stage) bidChart.getScene().getWindow(), "🔔 Phiên #" + auctionId + ": " + newStatus, newStatus.equals("CANCELED"));
 
           // Nếu phiên kết thúc, vô hiệu hóa các control đặt giá
           if ("FINISHED".equals(newStatus)
@@ -346,6 +353,21 @@ public class BiddingRoomController implements AuctionObserver {
 
     Long bidderId = session.getCurrentUser().getId();
     final long finalAmount = amount;
+
+    // [Thêm bước xác nhận] Hỏi bạn trước khi đặt giá (tránh ấn nhầm)
+    javafx.scene.control.Alert confirmAlert = new javafx.scene.control.Alert(javafx.scene.control.Alert.AlertType.CONFIRMATION);
+    NotificationUtils.styleAlert(confirmAlert);
+    confirmAlert.setGraphic(null); // Bỏ dấu "?" phèn phèn
+    confirmAlert.setTitle("Xác Nhận Đặt Giá");
+    confirmAlert.setHeaderText("Bạn có chắc chắn muốn đặt giá cho phiên này?");
+    confirmAlert.setContentText("Số tiền đặt: " + String.format("%,d", finalAmount) + " VNĐ\nLưu ý: Hành động này không thể hoàn tác!");
+
+    java.util.Optional<javafx.scene.control.ButtonType> result = confirmAlert.showAndWait();
+    if (result.isEmpty() || result.get() != javafx.scene.control.ButtonType.OK) {
+        infoLabel.setText("Đã hủy lệnh đặt giá.");
+        return;
+    }
+
     // Lưu lại để nhận diện khi BID_UPDATE về
     pendingBidAmount = finalAmount;
     infoLabel.setText("Đang gửi giá " + String.format("%,d", finalAmount) + " VNĐ...");

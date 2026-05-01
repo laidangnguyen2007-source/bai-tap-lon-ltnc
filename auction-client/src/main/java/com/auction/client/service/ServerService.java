@@ -196,7 +196,21 @@ public class ServerService {
     return auctionController.deleteAuction(auctionId);
   }
 
-  public boolean updateAuctionAdmin(Long auctionId, long price, String status, String endTime, String category) {
-    return auctionController.updateAuctionAdmin(auctionId, price, status, endTime, category);
+  public boolean updateAuctionAdmin(Long auctionId, long price, String status, String startTime, String endTime, String category) {
+    return auctionController.updateAuctionAdmin(auctionId, price, status, startTime, endTime, category);
+  }
+
+  public User getUserById(Long id) {
+    return userController.getUserById(id);
+  }
+
+  /**
+   * Reset phiên đấu giá: xóa lịch sử bid và đưa giá về khởi điểm (dùng để dọn rác).
+   *
+   * @param auctionId ID của phiên cần reset
+   * @return true nếu reset thành công
+   */
+  public boolean resetAuction(Long auctionId) {
+    return auctionController.resetAuction(auctionId);
   }
 }

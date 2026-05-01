@@ -104,15 +104,32 @@ public class AuctionController {
     }
   }
 
-  public boolean updateAuctionAdmin(Long auctionId, long price, String status, String endTime, String category) {
+  public boolean updateAuctionAdmin(Long auctionId, long price, String status, String startTime, String endTime, String category) {
     try {
       JSONObject req = new JSONObject();
       req.put("action", "ADMIN_UPDATE_AUCTION");
       req.put("auctionId", auctionId);
       req.put("currentPrice", price);
       req.put("status", status);
+      req.put("startTime", startTime);
       req.put("endTime", endTime);
       req.put("category", category);
+
+      String json = connection.sendRequest(req.toJSONString());
+      JSONObject res = (JSONObject) new JSONParser().parse(json);
+
+      return "OK".equals(res.get("status"));
+    } catch (Exception e) {
+      e.printStackTrace();
+      return false;
+    }
+  }
+
+  public boolean resetAuction(Long auctionId) {
+    try {
+      JSONObject req = new JSONObject();
+      req.put("action", "RESET_AUCTION");
+      req.put("auctionId", auctionId);
 
       String json = connection.sendRequest(req.toJSONString());
       JSONObject res = (JSONObject) new JSONParser().parse(json);
