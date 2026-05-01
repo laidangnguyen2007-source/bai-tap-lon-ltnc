@@ -1,20 +1,6 @@
 package com.auction.server;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
-import java.net.ServerSocket;
-import java.net.Socket;
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Optional;
-import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import com.auction.server.config.DatabaseConfig;
-import org.json.JSONArray;
-import org.json.JSONObject;
 import com.auction.server.dao.*;
 import com.auction.server.dao.impl.JdbcAuctionDao;
 import com.auction.server.dao.impl.JdbcBidTransactionDao;
@@ -30,6 +16,20 @@ import com.auction.server.model.entity.user.Bidder;
 import com.auction.server.model.entity.user.Seller;
 import com.auction.server.model.entity.user.User;
 import com.auction.server.service.AuctionManager;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.PrintWriter;
+import java.net.ServerSocket;
+import java.net.Socket;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Optional;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 public class Server {
   private static final int PORT = 8888;
@@ -48,7 +48,7 @@ public class Server {
     System.out.println("═══════════════════════════════════════");
     System.out.println("   AUCTION SERVER — Starting...");
     System.out.println("═══════════════════════════════════════");
-    //Khởi tạo DAO (kết nối MySQL, tạo schema nếu chưa có)
+    // Khởi tạo DAO (kết nối MySQL, tạo schema nếu chưa có)
     try {
       userDao = new JdbcUserDao();
       auctionDao = new JdbcAuctionDao();
@@ -62,17 +62,18 @@ public class Server {
     }
 
     // Đăng ký shutdown hook: đóng DB connection khi server tắt
-    Runtime.getRuntime().addShutdownHook(
-      new Thread(
-        () -> {
-          System.out.println("\nServer is shutting down - closing DB connection...");
-          try {
-            DatabaseConfig.getInstance().close();
-          } catch (Exception ignored) {
-            ignored.printStackTrace();
-          }
-        }));
-  
+    Runtime.getRuntime()
+        .addShutdownHook(
+            new Thread(
+                () -> {
+                  System.out.println("\nServer is shutting down - closing DB connection...");
+                  try {
+                    DatabaseConfig.getInstance().close();
+                  } catch (Exception ignored) {
+                    ignored.printStackTrace();
+                  }
+                }));
+
     // Mở ServerSocket và vào vòng lập chấp nhận Client
     ExecutorService threadPool = Executors.newCachedThreadPool();
     try (ServerSocket serverSocket = new ServerSocket(PORT)) {
@@ -92,16 +93,17 @@ public class Server {
   }
 
   // ─── XỬ LÝ TỪNG CLIENT ──────────────────────────────────────────
- 
+
   /**
-   * Vòng lặp đọc/ghi cho 1 client. Chạy trên thread riêng do threadPool cấp. Khi client ngắt
-   * kết nối, writer được xóa khỏi connectedClients để tránh memory leak.
+   * Vòng lặp đọc/ghi cho 1 client. Chạy trên thread riêng do threadPool cấp. Khi client ngắt kết
+   * nối, writer được xóa khỏi connectedClients để tránh memory leak.
    */
   private static void handleClient(Socket socket) {
     PrintWriter out = null;
     try {
-      BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream(), "UTF-8"));
-      out = new PrintWriter(socket.getOutputStream(),true);
+      BufferedReader in =
+          new BufferedReader(new InputStreamReader(socket.getInputStream(), "UTF-8"));
+      out = new PrintWriter(socket.getOutputStream(), true);
       connectedClients.add(out); // Đăng ký nhận broadcast
 
       String line;
@@ -115,12 +117,13 @@ public class Server {
       if (out != null) connectedClients.remove(out);
       try {
         socket.close();
-      } catch (IOException ignored) {}
+      } catch (IOException ignored) {
+      }
     }
   }
 
   // ─── DISPATCHER ─────────────────────────────────────────────────
- 
+
   /** Phân phối request tới handler tương ứng theo trường "action". */
   private static String dispatch(String rawJson) {
     try {
@@ -182,12 +185,15 @@ public class Server {
     if (userDao.existsByUsername(username)) return errorResponse("Username already exists!");
     if (userDao.existsByEmail(email)) return errorResponse("Email has already been used!");
 
-    User newUser = "SELLER".equals(role) ? new Seller(username, password, email, shopName) : new Bidder(username, password, email, 0L);
+    User newUser =
+        "SELLER".equals(role)
+            ? new Seller(username, password, email, shopName)
+            : new Bidder(username, password, email, 0L);
     userDao.save(newUser);
     System.out.println("REGISTER OK:" + username + " (" + role + ")");
 
     JSONObject res = new JSONObject();
-    res.put("status","OK");
+    res.put("status", "OK");
 
     return res.toString();
   }
@@ -226,7 +232,7 @@ public class Server {
       // AuctionManager xử lí concurrency + anti-snipe và trả về auction đã cập nhập
       Auction auction = AuctionManager.getInstance().placeBid(auctionId, bidderId, amount);
 
-      // Lưu BidTransaction vào Database 
+      // Lưu BidTransaction vào Database
       BidTransaction bid = new BidTransaction(auctionId, bidderId, amount);
       bidTransactionDao.save(bid);
 
@@ -239,7 +245,8 @@ public class Server {
       push.put("bid", bidToJSON(bid));
       broadcast(push.toString());
 
-      System.out.println("BID: auction #" + auctionId + " | bidder #" + bidderId + " | " + amount + " VND");
+      System.out.println(
+          "BID: auction #" + auctionId + " | bidder #" + bidderId + " | " + amount + " VND");
       JSONObject res = new JSONObject();
       res.put("status", "OK");
       return res.toString();
@@ -248,7 +255,6 @@ public class Server {
       System.out.println("BID REJECTED: " + e.getMessage());
       return errorResponse(e.getMessage());
     }
-    
   }
 
   private static String handleCreateAuction(JSONObject req) {
@@ -287,7 +293,7 @@ public class Server {
   private static String handleGetAuctionBySeller(JSONObject req) {
     Long sellerId = req.getLong("sellerId");
     List<Auction> auctions = auctionDao.findBySellerId(sellerId);
-    
+
     JSONArray arr = new JSONArray();
     for (Auction auction : auctions) {
       arr.put(auctionToJSON(auction));
@@ -305,6 +311,7 @@ public class Server {
     res.put("message", message != null ? message : "Unknown error!");
     throw new UnsupportedOperationException("Unimplemented method 'errorResponse'");
   }
+
   // JSON Serializers
   // BidTransaction -> JSON
   private static JSONObject bidToJSON(BidTransaction bid) {
@@ -325,7 +332,7 @@ public class Server {
     json.put("createdAt", auction.getCreatedAt().toString());
     json.put("itemId", auction.getId());
     json.put("sellerId", auction.getSellerId());
-    json.put("currentPrice",  auction.getCurrentPrice());
+    json.put("currentPrice", auction.getCurrentPrice());
     json.put("currentWinnerId", auction.getCurrentWinnerId());
     json.put("status", auction.getStatus());
     json.put("startTime", auction.getStartTime().toString());
@@ -359,10 +366,11 @@ public class Server {
     }
     return json;
   }
+
   // BroadCast
   /**
-   * Gửi message tới tất cả client đang online. Dùng CopyOnWriteArrayList nên an toàn khi
-   * iterate đồng thời có client ngắt kết nối.
+   * Gửi message tới tất cả client đang online. Dùng CopyOnWriteArrayList nên an toàn khi iterate
+   * đồng thời có client ngắt kết nối.
    */
   private static void broadcast(String message) {
     for (PrintWriter client : connectedClients) {
