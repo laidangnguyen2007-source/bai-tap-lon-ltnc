@@ -35,7 +35,10 @@ public class JdbcAuctionDao implements AuctionDao {
             + " current_winner_id, status, start_time, end_time)"
             + " VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
 
-    try (PreparedStatement ps = DatabaseConfig.getInstance().getConnection().prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+    try (PreparedStatement ps =
+        DatabaseConfig.getInstance()
+            .getConnection()
+            .prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
       ps.setTimestamp(1, Timestamp.valueOf(auction.getCreatedAt()));
       ps.setLong(2, auction.getItemId());
       ps.setLong(3, auction.getSellerId());
@@ -66,7 +69,8 @@ public class JdbcAuctionDao implements AuctionDao {
   public Optional<Auction> findById(Long id) {
     // FOR UPDATE: Khóa dòng này lại cho đến khi transaction kết thúc
     String sql = "SELECT * FROM auctions WHERE id = ? FOR UPDATE";
-    try (PreparedStatement ps = DatabaseConfig.getInstance().getConnection().prepareStatement(sql)) {
+    try (PreparedStatement ps =
+        DatabaseConfig.getInstance().getConnection().prepareStatement(sql)) {
       ps.setLong(1, id);
       try (ResultSet rs = ps.executeQuery()) {
         if (rs.next()) return Optional.of(mapRow(rs));
@@ -82,7 +86,7 @@ public class JdbcAuctionDao implements AuctionDao {
     List<Auction> list = new ArrayList<>();
     String sql = "SELECT * FROM auctions";
     try (Statement st = DatabaseConfig.getInstance().getConnection().createStatement();
-         ResultSet rs = st.executeQuery(sql)) {
+        ResultSet rs = st.executeQuery(sql)) {
       while (rs.next()) list.add(mapRow(rs));
     } catch (SQLException e) {
       throw new AuctionException("Database error fetching all Auctions", e);
@@ -95,7 +99,8 @@ public class JdbcAuctionDao implements AuctionDao {
     String sql =
         "UPDATE auctions SET current_price=?, current_winner_id=?, status=?, end_time=?"
             + " WHERE id=?";
-    try (PreparedStatement ps = DatabaseConfig.getInstance().getConnection().prepareStatement(sql)) {
+    try (PreparedStatement ps =
+        DatabaseConfig.getInstance().getConnection().prepareStatement(sql)) {
       ps.setLong(1, auction.getCurrentPrice());
       setNullableLong(ps, 2, auction.getCurrentWinnerId());
       ps.setString(3, auction.getStatus().name());
@@ -111,7 +116,8 @@ public class JdbcAuctionDao implements AuctionDao {
   @Override
   public boolean deleteById(Long id) {
     String sql = "DELETE FROM auctions WHERE id = ?";
-    try (PreparedStatement ps = DatabaseConfig.getInstance().getConnection().prepareStatement(sql)) {
+    try (PreparedStatement ps =
+        DatabaseConfig.getInstance().getConnection().prepareStatement(sql)) {
       ps.setLong(1, id);
       return ps.executeUpdate() > 0;
     } catch (SQLException e) {
@@ -122,7 +128,8 @@ public class JdbcAuctionDao implements AuctionDao {
   @Override
   public boolean existsById(Long id) {
     String sql = "SELECT COUNT(1) FROM auctions WHERE id = ?";
-    try (PreparedStatement ps = DatabaseConfig.getInstance().getConnection().prepareStatement(sql)) {
+    try (PreparedStatement ps =
+        DatabaseConfig.getInstance().getConnection().prepareStatement(sql)) {
       ps.setLong(1, id);
       try (ResultSet rs = ps.executeQuery()) {
         return rs.next() && rs.getInt(1) > 0;
@@ -136,7 +143,7 @@ public class JdbcAuctionDao implements AuctionDao {
   public long count() {
     String sql = "SELECT COUNT(1) FROM auctions";
     try (Statement st = DatabaseConfig.getInstance().getConnection().createStatement();
-         ResultSet rs = st.executeQuery(sql)) {
+        ResultSet rs = st.executeQuery(sql)) {
       return rs.next() ? rs.getLong(1) : 0L;
     } catch (SQLException e) {
       throw new AuctionException("Database error counting Auctions", e);
@@ -151,7 +158,8 @@ public class JdbcAuctionDao implements AuctionDao {
   public List<Auction> findByStatus(AuctionStatus status) {
     List<Auction> list = new ArrayList<>();
     String sql = "SELECT * FROM auctions WHERE status = ?";
-    try (PreparedStatement ps = DatabaseConfig.getInstance().getConnection().prepareStatement(sql)) {
+    try (PreparedStatement ps =
+        DatabaseConfig.getInstance().getConnection().prepareStatement(sql)) {
       ps.setString(1, status.name());
       try (ResultSet rs = ps.executeQuery()) {
         while (rs.next()) list.add(mapRow(rs));
@@ -165,7 +173,8 @@ public class JdbcAuctionDao implements AuctionDao {
   @Override
   public Optional<Auction> findByItemId(Long itemId) {
     String sql = "SELECT * FROM auctions WHERE item_id = ?";
-    try (PreparedStatement ps = DatabaseConfig.getInstance().getConnection().prepareStatement(sql)) {
+    try (PreparedStatement ps =
+        DatabaseConfig.getInstance().getConnection().prepareStatement(sql)) {
       ps.setLong(1, itemId);
       try (ResultSet rs = ps.executeQuery()) {
         if (rs.next()) return Optional.of(mapRow(rs));
@@ -180,7 +189,8 @@ public class JdbcAuctionDao implements AuctionDao {
   public List<Auction> findBySellerId(Long sellerId) {
     List<Auction> list = new ArrayList<>();
     String sql = "SELECT * FROM auctions WHERE seller_id = ?";
-    try (PreparedStatement ps = DatabaseConfig.getInstance().getConnection().prepareStatement(sql)) {
+    try (PreparedStatement ps =
+        DatabaseConfig.getInstance().getConnection().prepareStatement(sql)) {
       ps.setLong(1, sellerId);
       try (ResultSet rs = ps.executeQuery()) {
         while (rs.next()) list.add(mapRow(rs));
@@ -201,7 +211,7 @@ public class JdbcAuctionDao implements AuctionDao {
     List<Auction> list = new ArrayList<>();
     String sql = "SELECT * FROM auctions WHERE status IN ('OPEN', 'RUNNING')";
     try (Statement st = DatabaseConfig.getInstance().getConnection().createStatement();
-         ResultSet rs = st.executeQuery(sql)) {
+        ResultSet rs = st.executeQuery(sql)) {
       while (rs.next()) list.add(mapRow(rs));
     } catch (SQLException e) {
       throw new AuctionException("Database error finding active Auctions", e);

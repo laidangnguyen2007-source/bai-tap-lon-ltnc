@@ -47,8 +47,6 @@ public class Artwork extends Item {
     this.medium = medium;
   }
 
-
-
   public String getArtistName() {
     return artistName;
   }

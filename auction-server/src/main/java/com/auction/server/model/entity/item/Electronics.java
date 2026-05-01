@@ -47,8 +47,6 @@ public class Electronics extends Item {
     this.powerWatts = powerWatts;
   }
 
-
-
   public String getBrand() {
     return brand;
   }

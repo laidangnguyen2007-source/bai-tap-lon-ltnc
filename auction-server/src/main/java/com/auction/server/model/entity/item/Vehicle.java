@@ -52,8 +52,6 @@ public class Vehicle extends Item {
     this.fuelType = fuelType;
   }
 
-
-
   public String getManufacturer() {
     return manufacturer;
   }
