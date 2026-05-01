@@ -48,14 +48,13 @@ public class Server {
       itemDao = new JdbcItemDao();
       bidTransactionDao = new JdbcBidTransactionDao();
       System.out.println("MySQL connection successful — auction_db is ready.");
-      
+
       // Nạp các phiên đấu giá đang chạy vào bộ nhớ đệm
       List<Auction> runningAuctions = auctionDao.findRunningAuctions();
       for (Auction a : runningAuctions) {
         AuctionManager.getInstance().restoreRunningAuction(a);
       }
       System.out.println("Loaded " + runningAuctions.size() + " running auctions into memory.");
-
 
     } catch (Exception e) {
       System.err.println("Unable to connect to MySql: " + e.getMessage());
@@ -161,7 +160,8 @@ public class Server {
 
     User user = userOpt.get();
     // Sử dụng PasswordUtil để kiểm tra mật khẩu đã được hash
-    if (!com.auction.server.service.util.PasswordUtil.verifyPassword(password, user.getPasswordHash())) {
+    if (!com.auction.server.service.util.PasswordUtil.verifyPassword(
+        password, user.getPasswordHash())) {
       return errorResponse("Incorrect username or password.");
     }
 
@@ -274,7 +274,8 @@ public class Server {
       return errorResponse("Sản phẩm #" + itemId + " không tồn tại!");
     }
 
-    // KIỂM TRA: Thời gian bắt đầu không được ở quá khứ (Cho phép lệch 1 phút để tránh sai số đồng hồ)
+    // KIỂM TRA: Thời gian bắt đầu không được ở quá khứ (Cho phép lệch 1 phút để tránh sai số đồng
+    // hồ)
     if (startTime.plusMinutes(1).isBefore(now)) {
       return errorResponse("Thời gian bắt đầu không được ở trong quá khứ!");
     }
@@ -298,7 +299,8 @@ public class Server {
       AuctionManager.getInstance().restoreRunningAuction(auction);
     }
 
-    System.out.println("CREATE_AUCTION: auction #" + auction.getId() + " | status: " + auction.getStatus());
+    System.out.println(
+        "CREATE_AUCTION: auction #" + auction.getId() + " | status: " + auction.getStatus());
 
     JSONObject res = new JSONObject();
     res.put("status", "OK");
@@ -308,13 +310,13 @@ public class Server {
 
   private static String handleDeleteAuction(JSONObject req) {
     Long auctionId = req.getLong("auctionId");
-    
+
     // 1. Xóa trong RAM (nếu đang chạy)
     AuctionManager.getInstance().closeAuction(auctionId);
-    
+
     // 2. Xóa trong Database
     boolean deleted = auctionDao.deleteById(auctionId);
-    
+
     if (deleted) {
       System.out.println("ADMIN ACTION: Deleted auction #" + auctionId);
       JSONObject res = new JSONObject();
@@ -336,7 +338,7 @@ public class Server {
     if (auctionOpt.isEmpty()) return errorResponse("Không tìm thấy đấu giá #" + auctionId);
 
     Auction auction = auctionOpt.get();
-    
+
     // 1. Cập nhật Auction
     auction.setCurrentPrice(newPrice);
     auction.setStatus(newStatus);
@@ -358,8 +360,14 @@ public class Server {
       AuctionManager.getInstance().closeAuction(auctionId);
     }
 
-    System.out.println("ADMIN ACTION: Updated auction #" + auctionId + " to price=" + newPrice + ", status=" + newStatus);
-    
+    System.out.println(
+        "ADMIN ACTION: Updated auction #"
+            + auctionId
+            + " to price="
+            + newPrice
+            + ", status="
+            + newStatus);
+
     JSONObject res = new JSONObject();
     res.put("status", "OK");
     return res.toString();
@@ -420,11 +428,13 @@ public class Server {
     json.put("id", auction.getId());
     json.put("createdAt", auction.getCreatedAt().toString());
     json.put("itemId", auction.getItemId());
-    
+
     // Thêm tên sản phẩm (có fallback nếu không tìm thấy)
-    String name = itemDao.findById(auction.getItemId())
-                        .map(item -> item.getName())
-                        .orElse("Sản phẩm #" + auction.getItemId());
+    String name =
+        itemDao
+            .findById(auction.getItemId())
+            .map(item -> item.getName())
+            .orElse("Sản phẩm #" + auction.getItemId());
     json.put("itemName", name);
     json.put("sellerId", auction.getSellerId());
     json.put("currentPrice", auction.getCurrentPrice());

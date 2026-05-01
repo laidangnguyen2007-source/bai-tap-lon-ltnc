@@ -33,7 +33,10 @@ public class JdbcBidTransactionDao implements BidTransactionDao {
     String sql =
         "INSERT INTO bid_transactions (created_at, auction_id, bidder_id, amount, timestamp)"
             + " VALUES (?, ?, ?, ?, ?)";
-    try (PreparedStatement ps = DatabaseConfig.getInstance().getConnection().prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+    try (PreparedStatement ps =
+        DatabaseConfig.getInstance()
+            .getConnection()
+            .prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
       ps.setTimestamp(1, Timestamp.valueOf(bid.getCreatedAt()));
       ps.setLong(2, bid.getAuctionId());
       ps.setLong(3, bid.getBidderId());
@@ -53,7 +56,8 @@ public class JdbcBidTransactionDao implements BidTransactionDao {
   @Override
   public Optional<BidTransaction> findById(Long id) {
     String sql = "SELECT * FROM bid_transactions WHERE id = ?";
-    try (PreparedStatement ps = DatabaseConfig.getInstance().getConnection().prepareStatement(sql)) {
+    try (PreparedStatement ps =
+        DatabaseConfig.getInstance().getConnection().prepareStatement(sql)) {
       ps.setLong(1, id);
       try (ResultSet rs = ps.executeQuery()) {
         if (rs.next()) return Optional.of(mapRow(rs));
@@ -85,7 +89,8 @@ public class JdbcBidTransactionDao implements BidTransactionDao {
   @Override
   public boolean deleteById(Long id) {
     String sql = "DELETE FROM bid_transactions WHERE id = ?";
-    try (PreparedStatement ps = DatabaseConfig.getInstance().getConnection().prepareStatement(sql)) {
+    try (PreparedStatement ps =
+        DatabaseConfig.getInstance().getConnection().prepareStatement(sql)) {
       ps.setLong(1, id);
       return ps.executeUpdate() > 0;
     } catch (SQLException e) {
@@ -96,7 +101,8 @@ public class JdbcBidTransactionDao implements BidTransactionDao {
   @Override
   public boolean existsById(Long id) {
     String sql = "SELECT COUNT(1) FROM bid_transactions WHERE id = ?";
-    try (PreparedStatement ps = DatabaseConfig.getInstance().getConnection().prepareStatement(sql)) {
+    try (PreparedStatement ps =
+        DatabaseConfig.getInstance().getConnection().prepareStatement(sql)) {
       ps.setLong(1, id);
       try (ResultSet rs = ps.executeQuery()) {
         return rs.next() && rs.getInt(1) > 0;
@@ -125,7 +131,8 @@ public class JdbcBidTransactionDao implements BidTransactionDao {
   public List<BidTransaction> findByAuctionId(Long auctionId) {
     List<BidTransaction> list = new ArrayList<>();
     String sql = "SELECT * FROM bid_transactions WHERE auction_id = ? ORDER BY timestamp ASC";
-    try (PreparedStatement ps = DatabaseConfig.getInstance().getConnection().prepareStatement(sql)) {
+    try (PreparedStatement ps =
+        DatabaseConfig.getInstance().getConnection().prepareStatement(sql)) {
       ps.setLong(1, auctionId);
       try (ResultSet rs = ps.executeQuery()) {
         while (rs.next()) list.add(mapRow(rs));
@@ -140,7 +147,8 @@ public class JdbcBidTransactionDao implements BidTransactionDao {
   public List<BidTransaction> findByBidderId(Long bidderId) {
     List<BidTransaction> list = new ArrayList<>();
     String sql = "SELECT * FROM bid_transactions WHERE bidder_id = ? ORDER BY timestamp DESC";
-    try (PreparedStatement ps = DatabaseConfig.getInstance().getConnection().prepareStatement(sql)) {
+    try (PreparedStatement ps =
+        DatabaseConfig.getInstance().getConnection().prepareStatement(sql)) {
       ps.setLong(1, bidderId);
       try (ResultSet rs = ps.executeQuery()) {
         while (rs.next()) list.add(mapRow(rs));
@@ -154,7 +162,8 @@ public class JdbcBidTransactionDao implements BidTransactionDao {
   @Override
   public Optional<BidTransaction> findHighestBidByAuctionId(Long auctionId) {
     String sql = "SELECT * FROM bid_transactions WHERE auction_id = ? ORDER BY amount DESC LIMIT 1";
-    try (PreparedStatement ps = DatabaseConfig.getInstance().getConnection().prepareStatement(sql)) {
+    try (PreparedStatement ps =
+        DatabaseConfig.getInstance().getConnection().prepareStatement(sql)) {
       ps.setLong(1, auctionId);
       try (ResultSet rs = ps.executeQuery()) {
         if (rs.next()) return Optional.of(mapRow(rs));
@@ -168,7 +177,8 @@ public class JdbcBidTransactionDao implements BidTransactionDao {
   @Override
   public long countByAuctionId(Long auctionId) {
     String sql = "SELECT COUNT(1) FROM bid_transactions WHERE auction_id = ?";
-    try (PreparedStatement ps = DatabaseConfig.getInstance().getConnection().prepareStatement(sql)) {
+    try (PreparedStatement ps =
+        DatabaseConfig.getInstance().getConnection().prepareStatement(sql)) {
       ps.setLong(1, auctionId);
       try (ResultSet rs = ps.executeQuery()) {
         return rs.next() ? rs.getLong(1) : 0L;
