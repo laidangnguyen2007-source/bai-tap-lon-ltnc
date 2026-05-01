@@ -19,8 +19,7 @@ import java.sql.Statement;
 public class DatabaseConfig {
 
   // Đường dẫn tới MySQL Server
-  private static final String DB_URL =
-      "jdbc:mysql://localhost:3306/auction_db";
+  private static final String DB_URL = "jdbc:mysql://localhost:3306/auction_db";
   // jdbc:mysql:// là giao thức Protocol kết nối tới MySQL
   // localhost là địa chỉ IP của máy chủ MySQL
   // 3306 là cổng (Port) mặc định của MySQL khi dùng XAMPP trên toàn thế giới
