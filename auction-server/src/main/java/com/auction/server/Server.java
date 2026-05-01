@@ -2,6 +2,7 @@ package com.auction.server;
 
 import com.auction.server.config.DatabaseConfig;
 import com.auction.server.dao.*;
+import com.auction.server.dao.impl.*;
 import com.auction.server.model.entity.Auction;
 import com.auction.server.model.entity.BidTransaction;
 import com.auction.server.model.entity.item.*;
