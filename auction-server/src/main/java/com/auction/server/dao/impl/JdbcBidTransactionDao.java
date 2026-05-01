@@ -191,7 +191,8 @@ public class JdbcBidTransactionDao implements BidTransactionDao {
   @Override
   public void deleteByAuctionId(Long auctionId) {
     String sql = "DELETE FROM bid_transactions WHERE auction_id = ?";
-    try (PreparedStatement ps = DatabaseConfig.getInstance().getConnection().prepareStatement(sql)) {
+    try (PreparedStatement ps =
+        DatabaseConfig.getInstance().getConnection().prepareStatement(sql)) {
       ps.setLong(1, auctionId);
       ps.executeUpdate();
     } catch (SQLException e) {
