@@ -26,7 +26,7 @@ public class AuctionController {
       String json = connection.sendRequest(req.toString());
       JSONObject res = (JSONObject) new JSONParser().parse(json);
 
-      if ("!OK".equals(res.get("status"))) {
+      if (!"OK".equals(res.get("status"))) {
         return new ArrayList<>();
       }
 
@@ -100,6 +100,9 @@ public class AuctionController {
     LocalDateTime startTime = LocalDateTime.parse((String) json.get("startTime"));
     LocalDateTime endTime = LocalDateTime.parse((String) json.get("endTime"));
     
-    return new Auction(id, createdAt, itemId, sellerId, currentPrice, currentWinnerId, status, startTime, endTime);
+    Auction auction = new Auction(id, createdAt, itemId, sellerId, currentPrice, currentWinnerId, status, startTime, endTime);
+    Object nameObj = json.get("itemName");
+    auction.setItemName(nameObj != null ? nameObj.toString() : "Sản phẩm #" + itemId);
+    return auction;
   }
 }

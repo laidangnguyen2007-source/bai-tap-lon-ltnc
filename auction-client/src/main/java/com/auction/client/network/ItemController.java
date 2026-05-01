@@ -35,34 +35,36 @@ public class ItemController {
 
   private Item mapToItem(JSONObject json) {
     ItemCategory category = ItemCategory.valueOf((String) json.get("category"));
-    Long id = (Long) json.get("id");
+    Long id = ((Number) json.get("id")).longValue();
     LocalDateTime createdAt = LocalDateTime.parse((String) json.get("createdAt"));
     String name = (String) json.get("name");
     String desc = (String) json.get("description");
-    long price  = (Long) json.get("startingPrice");
-    Long seller = (Long) json.get("sellerId");
+    // Handle potential nulls for description
+    if (desc == null) desc = "Đang cập nhật...";
+    long price  = ((Number) json.get("startingPrice")).longValue();
+    Long seller = ((Number) json.get("sellerId")).longValue();
 
     switch (category) {
       case ELECTRONICS:
         return ItemFactory.reconstructElectronics(
         id, createdAt, name, desc, price, seller,
         (String) json.get("brand"),
-        ((Long) json.get("warrantyMonths")).intValue(),
-        (Double) json.get("powerWatts")
+        json.get("warrantyMonths") != null ? ((Number) json.get("warrantyMonths")).intValue() : 0,
+        json.get("powerWatts") != null ? ((Number) json.get("powerWatts")).doubleValue() : 0.0
       );
       case ARTWORK:
         return ItemFactory.reconstructArtwork(
         id, createdAt, name, desc, price, seller,
         (String) json.get("artistName"),
-        ((Long) json.get("yearCreated")).intValue(),
+        json.get("yearCreated") != null ? ((Number) json.get("yearCreated")).intValue() : 0,
         (String) json.get("medium")
       );
       case VEHICLE:
         return ItemFactory.reconstructVehicle(
         id, createdAt, name, desc, price, seller,
         (String) json.get("manufacturer"),
-        ((Long) json.get("yearManufactured")).intValue(),
-        ((Long) json.get("mileageKm")).intValue(),
+        json.get("yearManufactured") != null ? ((Number) json.get("yearManufactured")).intValue() : 0,
+        json.get("mileageKm") != null ? ((Number) json.get("mileageKm")).intValue() : 0,
         (String) json.get("fuelType")
       );
       default:

@@ -73,7 +73,7 @@ public class AuctionDetailController {
 
     // Hiển thị thông tin phiên đấu giá
     auctionIdLabel.setText("Mã phiên: #" + auction.getId());
-    currentPriceLabel.setText(String.format("%.0f VNĐ", auction.getCurrentPrice()));
+    currentPriceLabel.setText(String.format("%,d VNĐ", auction.getCurrentPrice()));
     statusLabel.setText(auction.getStatus().name());
 
     if (auction.getStartTime() != null) {

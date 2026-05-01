@@ -22,14 +22,8 @@ import java.util.Optional;
  */
 public class JdbcItemDao implements ItemDao {
 
-  private final Connection conn;
-
   public JdbcItemDao() {
-    try {
-      this.conn = DatabaseConfig.getInstance().getConnection();
-    } catch (SQLException e) {
-      throw new AuctionException("Failed to connect to database for JdbcItemDao", e);
-    }
+    // Constructor trống, connection sẽ được lấy trực tiếp trong mỗi method
   }
 
   // ─────────────────────────────────────────────
@@ -44,7 +38,7 @@ public class JdbcItemDao implements ItemDao {
             + " make, model, vehicle_year, mileage)"
             + " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
-    try (PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+    try (PreparedStatement ps = DatabaseConfig.getInstance().getConnection().prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
       ps.setTimestamp(1, Timestamp.valueOf(item.getCreatedAt()));
       ps.setString(2, item.getName());
       ps.setString(3, item.getDescription());
@@ -66,12 +60,18 @@ public class JdbcItemDao implements ItemDao {
   @Override
   public Optional<Item> findById(Long id) {
     String sql = "SELECT * FROM items WHERE id = ?";
-    try (PreparedStatement ps = conn.prepareStatement(sql)) {
-      ps.setLong(1, id);
-      try (ResultSet rs = ps.executeQuery()) {
-        if (rs.next()) return Optional.of(mapRow(rs));
+    try {
+      Connection conn = DatabaseConfig.getInstance().getConnection();
+      try (PreparedStatement ps = conn.prepareStatement(sql)) {
+        ps.setLong(1, id);
+        try (ResultSet rs = ps.executeQuery()) {
+          if (rs.next()) {
+            return Optional.of(mapRow(rs));
+          }
+        }
       }
     } catch (SQLException e) {
+      System.err.println("Database error finding item by id " + id + ": " + e.getMessage());
       throw new AuctionException("Database error finding item by id", e);
     }
     return Optional.empty();
@@ -81,8 +81,8 @@ public class JdbcItemDao implements ItemDao {
   public List<Item> findAll() {
     List<Item> list = new ArrayList<>();
     String sql = "SELECT * FROM items";
-    try (Statement st = conn.createStatement();
-        ResultSet rs = st.executeQuery(sql)) {
+    try (Statement st = DatabaseConfig.getInstance().getConnection().createStatement();
+         ResultSet rs = st.executeQuery(sql)) {
       while (rs.next()) list.add(mapRow(rs));
     } catch (SQLException e) {
       throw new AuctionException("Database error fetching all items", e);
@@ -98,7 +98,7 @@ public class JdbcItemDao implements ItemDao {
             + " artist=?, art_year=?, medium=?,"
             + " make=?, model=?, vehicle_year=?, mileage=?"
             + " WHERE id=?";
-    try (PreparedStatement ps = conn.prepareStatement(sql)) {
+    try (PreparedStatement ps = DatabaseConfig.getInstance().getConnection().prepareStatement(sql)) {
       ps.setString(1, item.getName());
       ps.setString(2, item.getDescription());
       ps.setLong(3, item.getStartingPrice());
@@ -114,7 +114,7 @@ public class JdbcItemDao implements ItemDao {
   @Override
   public boolean deleteById(Long id) {
     String sql = "DELETE FROM items WHERE id = ?";
-    try (PreparedStatement ps = conn.prepareStatement(sql)) {
+    try (PreparedStatement ps = DatabaseConfig.getInstance().getConnection().prepareStatement(sql)) {
       ps.setLong(1, id);
       return ps.executeUpdate() > 0;
     } catch (SQLException e) {
@@ -125,7 +125,7 @@ public class JdbcItemDao implements ItemDao {
   @Override
   public boolean existsById(Long id) {
     String sql = "SELECT COUNT(1) FROM items WHERE id = ?";
-    try (PreparedStatement ps = conn.prepareStatement(sql)) {
+    try (PreparedStatement ps = DatabaseConfig.getInstance().getConnection().prepareStatement(sql)) {
       ps.setLong(1, id);
       try (ResultSet rs = ps.executeQuery()) {
         return rs.next() && rs.getInt(1) > 0;
@@ -138,8 +138,8 @@ public class JdbcItemDao implements ItemDao {
   @Override
   public long count() {
     String sql = "SELECT COUNT(1) FROM items";
-    try (Statement st = conn.createStatement();
-        ResultSet rs = st.executeQuery(sql)) {
+    try (Statement st = DatabaseConfig.getInstance().getConnection().createStatement();
+         ResultSet rs = st.executeQuery(sql)) {
       return rs.next() ? rs.getLong(1) : 0L;
     } catch (SQLException e) {
       throw new AuctionException("Database error counting items", e);
@@ -154,7 +154,7 @@ public class JdbcItemDao implements ItemDao {
   public List<Item> findBySellerId(Long sellerId) {
     List<Item> list = new ArrayList<>();
     String sql = "SELECT * FROM items WHERE seller_id = ?";
-    try (PreparedStatement ps = conn.prepareStatement(sql)) {
+    try (PreparedStatement ps = DatabaseConfig.getInstance().getConnection().prepareStatement(sql)) {
       ps.setLong(1, sellerId);
       try (ResultSet rs = ps.executeQuery()) {
         while (rs.next()) list.add(mapRow(rs));
@@ -169,7 +169,7 @@ public class JdbcItemDao implements ItemDao {
   public List<Item> findByCategory(ItemCategory category) {
     List<Item> list = new ArrayList<>();
     String sql = "SELECT * FROM items WHERE category = ?";
-    try (PreparedStatement ps = conn.prepareStatement(sql)) {
+    try (PreparedStatement ps = DatabaseConfig.getInstance().getConnection().prepareStatement(sql)) {
       ps.setString(1, category.name());
       try (ResultSet rs = ps.executeQuery()) {
         while (rs.next()) list.add(mapRow(rs));
@@ -184,7 +184,7 @@ public class JdbcItemDao implements ItemDao {
   public List<Item> findByNameContaining(String keyword) {
     List<Item> list = new ArrayList<>();
     String sql = "SELECT * FROM items WHERE LOWER(name) LIKE LOWER(?)";
-    try (PreparedStatement ps = conn.prepareStatement(sql)) {
+    try (PreparedStatement ps = DatabaseConfig.getInstance().getConnection().prepareStatement(sql)) {
       ps.setString(1, "%" + keyword + "%");
       try (ResultSet rs = ps.executeQuery()) {
         while (rs.next()) list.add(mapRow(rs));

@@ -25,14 +25,8 @@ import java.util.Optional;
  */
 public class JdbcUserDao implements UserDao {
 
-  private final Connection conn;
-
   public JdbcUserDao() {
-    try {
-      this.conn = DatabaseConfig.getInstance().getConnection();
-    } catch (SQLException e) {
-      throw new AuctionException("Failed to connect to database for JdbcUserDao", e);
-    }
+    // Constructor trống, connection sẽ lấy trực tiếp trong mỗi method
   }
 
   // ─────────────────────────────────────────────
@@ -45,7 +39,7 @@ public class JdbcUserDao implements UserDao {
         "INSERT INTO users (created_at, username, password_hash, email, role,"
             + " balance, shop_name, rating, access_level) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
-    try (PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+    try (PreparedStatement ps = DatabaseConfig.getInstance().getConnection().prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
       ps.setTimestamp(1, Timestamp.valueOf(user.getCreatedAt()));
       ps.setString(2, user.getUsername());
       ps.setString(3, user.getPasswordHash());
@@ -69,7 +63,7 @@ public class JdbcUserDao implements UserDao {
   @Override
   public Optional<User> findById(Long id) {
     String sql = "SELECT * FROM users WHERE id = ?";
-    try (PreparedStatement ps = conn.prepareStatement(sql)) {
+    try (PreparedStatement ps = DatabaseConfig.getInstance().getConnection().prepareStatement(sql)) {
       ps.setLong(1, id);
       try (ResultSet rs = ps.executeQuery()) {
         if (rs.next()) {
@@ -86,7 +80,7 @@ public class JdbcUserDao implements UserDao {
   public List<User> findAll() {
     List<User> users = new ArrayList<>();
     String sql = "SELECT * FROM users";
-    try (Statement st = conn.createStatement();
+    try (Statement st = DatabaseConfig.getInstance().getConnection().createStatement();
         ResultSet rs = st.executeQuery(sql)) {
       while (rs.next()) {
         users.add(mapRow(rs));
@@ -102,7 +96,7 @@ public class JdbcUserDao implements UserDao {
     String sql =
         "UPDATE users SET username=?, password_hash=?, email=?,"
             + " balance=?, shop_name=?, rating=?, access_level=? WHERE id=?";
-    try (PreparedStatement ps = conn.prepareStatement(sql)) {
+    try (PreparedStatement ps = DatabaseConfig.getInstance().getConnection().prepareStatement(sql)) {
       ps.setString(1, user.getUsername());
       ps.setString(2, user.getPasswordHash());
       ps.setString(3, user.getEmail());
@@ -118,7 +112,7 @@ public class JdbcUserDao implements UserDao {
   @Override
   public boolean deleteById(Long id) {
     String sql = "DELETE FROM users WHERE id = ?";
-    try (PreparedStatement ps = conn.prepareStatement(sql)) {
+    try (PreparedStatement ps = DatabaseConfig.getInstance().getConnection().prepareStatement(sql)) {
       ps.setLong(1, id);
       return ps.executeUpdate() > 0;
     } catch (SQLException e) {
@@ -129,7 +123,7 @@ public class JdbcUserDao implements UserDao {
   @Override
   public boolean existsById(Long id) {
     String sql = "SELECT COUNT(1) FROM users WHERE id = ?";
-    try (PreparedStatement ps = conn.prepareStatement(sql)) {
+    try (PreparedStatement ps = DatabaseConfig.getInstance().getConnection().prepareStatement(sql)) {
       ps.setLong(1, id);
       try (ResultSet rs = ps.executeQuery()) {
         return rs.next() && rs.getInt(1) > 0;
@@ -142,7 +136,7 @@ public class JdbcUserDao implements UserDao {
   @Override
   public long count() {
     String sql = "SELECT COUNT(1) FROM users";
-    try (Statement st = conn.createStatement();
+    try (Statement st = DatabaseConfig.getInstance().getConnection().createStatement();
         ResultSet rs = st.executeQuery(sql)) {
       return rs.next() ? rs.getLong(1) : 0L;
     } catch (SQLException e) {
@@ -157,7 +151,7 @@ public class JdbcUserDao implements UserDao {
   @Override
   public Optional<User> findByUsername(String username) {
     String sql = "SELECT * FROM users WHERE username = ?";
-    try (PreparedStatement ps = conn.prepareStatement(sql)) {
+    try (PreparedStatement ps = DatabaseConfig.getInstance().getConnection().prepareStatement(sql)) {
       ps.setString(1, username);
       try (ResultSet rs = ps.executeQuery()) {
         if (rs.next()) return Optional.of(mapRow(rs));
@@ -171,7 +165,7 @@ public class JdbcUserDao implements UserDao {
   @Override
   public Optional<User> findByEmail(String email) {
     String sql = "SELECT * FROM users WHERE email = ?";
-    try (PreparedStatement ps = conn.prepareStatement(sql)) {
+    try (PreparedStatement ps = DatabaseConfig.getInstance().getConnection().prepareStatement(sql)) {
       ps.setString(1, email);
       try (ResultSet rs = ps.executeQuery()) {
         if (rs.next()) return Optional.of(mapRow(rs));
@@ -186,7 +180,7 @@ public class JdbcUserDao implements UserDao {
   public List<User> findByRole(UserRole role) {
     List<User> users = new ArrayList<>();
     String sql = "SELECT * FROM users WHERE role = ?";
-    try (PreparedStatement ps = conn.prepareStatement(sql)) {
+    try (PreparedStatement ps = DatabaseConfig.getInstance().getConnection().prepareStatement(sql)) {
       ps.setString(1, role.name());
       try (ResultSet rs = ps.executeQuery()) {
         while (rs.next()) users.add(mapRow(rs));
@@ -200,7 +194,7 @@ public class JdbcUserDao implements UserDao {
   @Override
   public boolean existsByUsername(String username) {
     String sql = "SELECT COUNT(1) FROM users WHERE username = ?";
-    try (PreparedStatement ps = conn.prepareStatement(sql)) {
+    try (PreparedStatement ps = DatabaseConfig.getInstance().getConnection().prepareStatement(sql)) {
       ps.setString(1, username);
       try (ResultSet rs = ps.executeQuery()) {
         return rs.next() && rs.getInt(1) > 0;
@@ -213,7 +207,7 @@ public class JdbcUserDao implements UserDao {
   @Override
   public boolean existsByEmail(String email) {
     String sql = "SELECT COUNT(1) FROM users WHERE email = ?";
-    try (PreparedStatement ps = conn.prepareStatement(sql)) {
+    try (PreparedStatement ps = DatabaseConfig.getInstance().getConnection().prepareStatement(sql)) {
       ps.setString(1, email);
       try (ResultSet rs = ps.executeQuery()) {
         return rs.next() && rs.getInt(1) > 0;

@@ -17,6 +17,7 @@ import com.auction.server.model.entity.user.Seller;
 import com.auction.server.model.entity.user.User;
 import com.auction.server.service.AuctionManager;
 import java.io.BufferedReader;
+import java.sql.Statement;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
@@ -55,6 +56,27 @@ public class Server {
       itemDao = new JdbcItemDao();
       bidTransactionDao = new JdbcBidTransactionDao();
       System.out.println("MySQL connection successful — auction_db is ready.");
+      
+      // Nạp các phiên đấu giá đang chạy vào bộ nhớ đệm
+      List<Auction> runningAuctions = auctionDao.findRunningAuctions();
+      for (Auction a : runningAuctions) {
+        AuctionManager.getInstance().restoreRunningAuction(a);
+      }
+      System.out.println("Loaded " + runningAuctions.size() + " running auctions into memory.");
+
+      // CƯỠNG CHẾ TẠO BẢNG (Phòng trường hợp schema.sql không chạy lại)
+      try (Statement stmt = DatabaseConfig.getInstance().getConnection().createStatement()) {
+          stmt.execute("CREATE TABLE IF NOT EXISTS bid_transactions (" +
+                  "id BIGINT NOT NULL AUTO_INCREMENT, " +
+                  "created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, " +
+                  "auction_id BIGINT NOT NULL, " +
+                  "bidder_id BIGINT NOT NULL, " +
+                  "amount BIGINT NOT NULL, " +
+                  "timestamp DATETIME NOT NULL, " +
+                  "PRIMARY KEY (id)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;");
+          System.out.println("[FIX] Da cuong che tao bang bid_transactions thanh cong!");
+      }
+      
     } catch (Exception e) {
       System.err.println("Unable to connect to MySql: " + e.getMessage());
       System.err.println("Please make sure XAMPP MySQL is running on port 3306.");
@@ -109,7 +131,7 @@ public class Server {
       String line;
       while ((line = in.readLine()) != null) {
         String response = dispatch(line);
-        out.println(response);
+        if (response != null) out.println(response); // null = no response needed (e.g. PLACE_BID)
       }
     } catch (IOException e) {
       System.out.println("Client disconnected: " + e.getMessage());
@@ -156,8 +178,8 @@ public class Server {
     if (userOpt.isEmpty()) return errorResponse("Incorrect username or password.");
 
     User user = userOpt.get();
-    // So sánh plaintext - nếu server dùng SHA-256 thì dùng PasswordUtil.verifyPassword()
-    if (!user.getPasswordHash().equals(password)) {
+    // Sử dụng PasswordUtil để kiểm tra mật khẩu đã được hash
+    if (!com.auction.server.service.util.PasswordUtil.verifyPassword(password, user.getPasswordHash())) {
       return errorResponse("Incorrect username or password.");
     }
 
@@ -184,10 +206,11 @@ public class Server {
     if (userDao.existsByUsername(username)) return errorResponse("Username already exists!");
     if (userDao.existsByEmail(email)) return errorResponse("Email has already been used!");
 
+    String passwordHash = com.auction.server.service.util.PasswordUtil.hashPassword(password);
     User newUser =
         "SELLER".equals(role)
-            ? new Seller(username, password, email, shopName)
-            : new Bidder(username, password, email, 0L);
+            ? new Seller(username, passwordHash, email, shopName)
+            : new Bidder(username, passwordHash, email, 0L);
     userDao.save(newUser);
     System.out.println("REGISTER OK:" + username + " (" + role + ")");
 
@@ -224,7 +247,7 @@ public class Server {
 
   private static String handlePlaceBid(JSONObject req) {
     Long auctionId = req.getLong("auctionId");
-    Long bidderId = req.getLong("auctionId");
+    Long bidderId = req.getLong("bidderId");
     long amount = req.getLong("amount");
 
     try {
@@ -238,17 +261,22 @@ public class Server {
       // Đồng bộ auction xuống database
       auctionDao.update(auction);
 
-      // Broadcast BID_UPDATE tới tất cả client đang kết nối
+      System.out.println(
+          "BID: auction #" + auctionId + " | bidder #" + bidderId + " | " + amount + " VND");
+      
+      // Gửi phản hồi thành công cho người đặt trước (tránh timeout ở client)
+      JSONObject res = new JSONObject();
+      res.put("status", "OK");
+      String response = res.toString();
+      
+      // Broadcast BID_UPDATE tới tất cả client
       JSONObject push = new JSONObject();
       push.put("type", "BID_UPDATE");
       push.put("bid", bidToJSON(bid));
       broadcast(push.toString());
 
-      System.out.println(
-          "BID: auction #" + auctionId + " | bidder #" + bidderId + " | " + amount + " VND");
-      JSONObject res = new JSONObject();
-      res.put("status", "OK");
-      return res.toString();
+      // Không trả về response — client dùng BID_UPDATE làm xác nhận
+      return null;
     } catch (Exception e) {
       e.printStackTrace();
       System.out.println("BID REJECTED: " + e.getMessage());
@@ -285,7 +313,7 @@ public class Server {
 
     JSONObject res = new JSONObject();
     res.put("status", "OK");
-    res.put("auction", arr);
+    res.put("auctions", arr);
     return res.toString();
   }
 
@@ -308,7 +336,7 @@ public class Server {
     JSONObject res = new JSONObject();
     res.put("status", "ERROR");
     res.put("message", message != null ? message : "Unknown error!");
-    throw new UnsupportedOperationException("Unimplemented method 'errorResponse'");
+    return res.toString();
   }
 
   // JSON Serializers
@@ -329,7 +357,13 @@ public class Server {
     JSONObject json = new JSONObject();
     json.put("id", auction.getId());
     json.put("createdAt", auction.getCreatedAt().toString());
-    json.put("itemId", auction.getId());
+    json.put("itemId", auction.getItemId());
+    
+    // Thêm tên sản phẩm (có fallback nếu không tìm thấy)
+    String name = itemDao.findById(auction.getItemId())
+                        .map(item -> item.getName())
+                        .orElse("Sản phẩm #" + auction.getItemId());
+    json.put("itemName", name);
     json.put("sellerId", auction.getSellerId());
     json.put("currentPrice", auction.getCurrentPrice());
     json.put("currentWinnerId", auction.getCurrentWinnerId());
@@ -367,13 +401,17 @@ public class Server {
   }
 
   // BroadCast
-  /**
-   * Gửi message tới tất cả client đang online. Dùng CopyOnWriteArrayList nên an toàn khi iterate
-   * đồng thời có client ngắt kết nối.
-   */
+  // ─── PHÁT TIN (BROADCAST) ───────────────────────────────────────
+
+  /** Gửi tin nhắn tới toàn bộ client đang kết nối (Realtime update). */
   private static void broadcast(String message) {
     for (PrintWriter client : connectedClients) {
-      client.print(message);
+      try {
+        client.println(message);
+        client.flush(); // Ép gửi ngay lập tức
+      } catch (Exception e) {
+        System.err.println("Lỗi broadcast: " + e.getMessage());
+      }
     }
   }
 }
