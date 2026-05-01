@@ -2,22 +2,12 @@ package com.auction.server;
 
 import com.auction.server.config.DatabaseConfig;
 import com.auction.server.dao.*;
-import com.auction.server.dao.impl.JdbcAuctionDao;
-import com.auction.server.dao.impl.JdbcBidTransactionDao;
-import com.auction.server.dao.impl.JdbcItemDao;
-import com.auction.server.dao.impl.JdbcUserDao;
 import com.auction.server.model.entity.Auction;
 import com.auction.server.model.entity.BidTransaction;
-import com.auction.server.model.entity.item.Artwork;
-import com.auction.server.model.entity.item.Electronics;
-import com.auction.server.model.entity.item.Item;
-import com.auction.server.model.entity.item.Vehicle;
-import com.auction.server.model.entity.user.Bidder;
-import com.auction.server.model.entity.user.Seller;
-import com.auction.server.model.entity.user.User;
+import com.auction.server.model.entity.item.*;
+import com.auction.server.model.entity.user.*;
 import com.auction.server.service.AuctionManager;
 import java.io.BufferedReader;
-import java.sql.Statement;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
@@ -64,19 +54,7 @@ public class Server {
       }
       System.out.println("Loaded " + runningAuctions.size() + " running auctions into memory.");
 
-      // CƯỠNG CHẾ TẠO BẢNG (Phòng trường hợp schema.sql không chạy lại)
-      try (Statement stmt = DatabaseConfig.getInstance().getConnection().createStatement()) {
-          stmt.execute("CREATE TABLE IF NOT EXISTS bid_transactions (" +
-                  "id BIGINT NOT NULL AUTO_INCREMENT, " +
-                  "created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, " +
-                  "auction_id BIGINT NOT NULL, " +
-                  "bidder_id BIGINT NOT NULL, " +
-                  "amount BIGINT NOT NULL, " +
-                  "timestamp DATETIME NOT NULL, " +
-                  "PRIMARY KEY (id)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;");
-          System.out.println("[FIX] Da cuong che tao bang bid_transactions thanh cong!");
-      }
-      
+
     } catch (Exception e) {
       System.err.println("Unable to connect to MySql: " + e.getMessage());
       System.err.println("Please make sure XAMPP MySQL is running on port 3306.");
@@ -263,12 +241,7 @@ public class Server {
 
       System.out.println(
           "BID: auction #" + auctionId + " | bidder #" + bidderId + " | " + amount + " VND");
-      
-      // Gửi phản hồi thành công cho người đặt trước (tránh timeout ở client)
-      JSONObject res = new JSONObject();
-      res.put("status", "OK");
-      String response = res.toString();
-      
+
       // Broadcast BID_UPDATE tới tất cả client
       JSONObject push = new JSONObject();
       push.put("type", "BID_UPDATE");
