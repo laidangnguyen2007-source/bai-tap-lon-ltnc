@@ -2,6 +2,7 @@ package com.auction.client.controller;
 
 import com.auction.client.model.AuctionSessionState;
 import com.auction.client.service.ServerService;
+import com.auction.client.util.ComboBoxPopupWidthSync;
 import com.auction.client.util.FxmlLoader;
 import com.auction.client.util.NotificationUtils;
 import com.auction.server.model.entity.Auction;
@@ -146,6 +147,11 @@ public class SellerDashboardController {
     startMinuteCombo.setValue(LocalDateTime.now().getMinute());
     endHourCombo.setValue(23);
     endMinuteCombo.setValue(59);
+
+    ComboBoxPopupWidthSync.install(startHourCombo);
+    ComboBoxPopupWidthSync.install(startMinuteCombo);
+    ComboBoxPopupWidthSync.install(endHourCombo);
+    ComboBoxPopupWidthSync.install(endMinuteCombo);
 
     // Load danh sách phiên của seller hiện tại
     loadMyAuctions();

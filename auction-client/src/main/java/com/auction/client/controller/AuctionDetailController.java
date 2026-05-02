@@ -5,11 +5,16 @@ import com.auction.client.service.ServerService;
 import com.auction.client.util.FxmlLoader;
 import com.auction.server.model.entity.Auction;
 import com.auction.server.model.entity.item.Item;
+import com.auction.server.model.enums.AuctionStatus;
 import com.auction.server.model.entity.user.User;
 import com.auction.server.model.entity.user.Seller;
 import java.io.IOException;
 import java.time.format.DateTimeFormatter;
+import javafx.animation.KeyFrame;
+import javafx.animation.Timeline;
 import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
+import javafx.util.Duration;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
@@ -90,6 +95,13 @@ public class AuctionDetailController {
       endTimeLabel.setText("Kết thúc: " + auction.getEndTime().format(DISPLAY_FORMAT));
     }
 
+    /*
+     * Nút + “Thời gian còn lại” chỉ phụ thuộc Auction trong session — không cần chờ getItem/getUser.
+     * Đặt trước các lệnh gọi mạng để tránh cảm giác “khựng” vài trăm ms khi vào chi tiết.
+     */
+    applyJoinBiddingButtonState(auction);
+    startCountdown(auction);
+
     // Lấy thông tin sản phẩm từ Server (gọi riêng vì AuctionItem không được nhúng trong Auction)
     Item item = serverService.getItemById(auction.getItemId());
     if (item != null) {
@@ -114,15 +126,6 @@ public class AuctionDetailController {
     } else {
         sellerInfoLabel.setText("Người bán: ID #" + auction.getSellerId());
     }
-
-    // Chỉ hiển thị nút đấu giá nếu phiên đang RUNNING
-    joinBiddingButton.setDisable(!auction.isRunning());
-    if (!auction.isRunning()) {
-      joinBiddingButton.setText("Phiên không còn nhận giá");
-    }
-
-    // [Tính năng 1] Bắt đầu đồng hồ đếm ngược
-    startCountdown(auction);
   }
 
   /**
@@ -161,28 +164,61 @@ public class AuctionDetailController {
     }
   }
 
+  /** Nút chỉ bật khi RUNNING; OPEN ≠ “hết nhận giá” mà là chưa mở phiên. */
+  private void applyJoinBiddingButtonState(Auction auction) {
+    if (auction.isRunning()) {
+      joinBiddingButton.setDisable(false);
+      joinBiddingButton.setText("Tham Gia Đấu Giá");
+      return;
+    }
+    joinBiddingButton.setDisable(true);
+    joinBiddingButton.setText(
+        switch (auction.getStatus()) {
+          case OPEN -> "Phiên chưa bắt đầu";
+          case FINISHED -> "Phiên đã kết thúc";
+          case PAID -> "Phiên đã thanh toán";
+          case CANCELED -> "Phiên đã hủy";
+          default -> "Phiên không còn nhận giá";
+        });
+  }
+
   /**
    * [Tính năng 1] Khởi tạo và chạy bộ đếm ngược thời gian thực.
    */
   private void startCountdown(Auction auction) {
-      if (auction.getStatus() == com.auction.server.model.enums.AuctionStatus.FINISHED) {
+      stopTimer();
+      AuctionStatus s = auction.getStatus();
+      if (s == AuctionStatus.FINISHED) {
           timeLeftLabel.setText("Thời gian còn lại: Đã kết thúc");
           return;
       }
+      if (s == AuctionStatus.OPEN) {
+          timeLeftLabel.setText("Thời gian còn lại: Chưa bắt đầu");
+          return;
+      }
+      if (s == AuctionStatus.PAID) {
+          timeLeftLabel.setText("Thời gian còn lại: Đã thanh toán");
+          return;
+      }
+      if (s == AuctionStatus.CANCELED) {
+          timeLeftLabel.setText("Thời gian còn lại: Đã hủy");
+          return;
+      }
 
-      countdownTimeline = new javafx.animation.Timeline(
-          new javafx.animation.KeyFrame(javafx.util.Duration.seconds(1), event -> {
-              String timeLeft = formatTimeLeft(auction);
-              timeLeftLabel.setText("Thời gian còn lại: " + timeLeft);
+      EventHandler<ActionEvent> onTick =
+          event -> {
+            String timeLeft = formatTimeLeft(auction);
+            timeLeftLabel.setText("Thời gian còn lại: " + timeLeft);
+            if (timeLeft.equals("Đã kết thúc")) {
+              joinBiddingButton.setDisable(true);
+              joinBiddingButton.setText("Phiên đã kết thúc");
+            }
+          };
+      // Một lần ngay lập tức — KeyFrame 1s chỉ chạy sau 1 giây nên không được để mặc định “—”
+      onTick.handle(null);
 
-              // Nếu hết giờ, vô hiệu hóa nút đấu giá ngay lập tức
-              if (timeLeft.equals("Đã kết thúc")) {
-                  joinBiddingButton.setDisable(true);
-                  joinBiddingButton.setText("Phiên đã kết thúc");
-              }
-          })
-      );
-      countdownTimeline.setCycleCount(javafx.animation.Timeline.INDEFINITE);
+      countdownTimeline = new Timeline(new KeyFrame(Duration.seconds(1), onTick));
+      countdownTimeline.setCycleCount(Timeline.INDEFINITE);
       countdownTimeline.play();
   }
 

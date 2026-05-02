@@ -39,7 +39,7 @@
       <VBox styleClass="info-card" spacing="14" HBox.hgrow="ALWAYS">
         <padding><Insets top="20" right="20" bottom="20" left="20"/></padding>
 
-        <Label text="📦 Thông Tin Sản Phẩm" styleClass="section-title"/>
+        <Label text="Thông Tin Sản Phẩm" styleClass="section-title"/>
         <Separator/>
 
         <GridPane hgap="12" vgap="10">
@@ -59,7 +59,7 @@
       <VBox styleClass="info-card" spacing="14" prefWidth="320">
         <padding><Insets top="20" right="20" bottom="20" left="20"/></padding>
 
-        <Label text="🏷️ Thông Tin Phiên Đấu Giá" styleClass="section-title"/>
+        <Label text="Thông Tin Phiên Đấu Giá" styleClass="section-title"/>
         <Separator/>
 
         <Label fx:id="auctionIdLabel" text="Mã phiên: —" styleClass="info-value"/>
@@ -82,7 +82,7 @@
         <!-- Nút tham gia đấu giá -->
         <Button
           fx:id="joinBiddingButton"
-          text="🔥 Tham Gia Đấu Giá"
+          text="Tham Gia Đấu Giá"
           onAction="#handleJoinBidding"
           styleClass="primary-button"
           maxWidth="Infinity"/>

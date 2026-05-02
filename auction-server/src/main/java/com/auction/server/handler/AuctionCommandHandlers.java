@@ -1,0 +1,175 @@
+package com.auction.server.handler;
+
+import com.auction.server.dao.AuctionDao;
+import com.auction.server.dao.BidTransactionDao;
+import com.auction.server.dao.ItemDao;
+import com.auction.server.model.entity.Auction;
+import com.auction.server.model.entity.item.Item;
+import com.auction.server.model.enums.AuctionStatus;
+import com.auction.server.model.enums.ItemCategory;
+import com.auction.server.net.ClientBroadcaster;
+import com.auction.server.net.JsonResponses;
+import com.auction.server.service.AuctionManager;
+import java.time.LocalDateTime;
+import java.util.Optional;
+import org.json.JSONObject;
+
+/**
+ * Các thao tác <b>thay đổi trạng thái</b> phiên đấu giá: tạo, xóa, admin chỉnh, reset lịch sử bid.
+ *
+ * <p>Khác {@link CatalogHandlers} (chỉ đọc), lớp này ghi DB + đồng bộ {@link AuctionManager} trong
+ * RAM để hành vi giữa socket và persistence không lệch.
+ */
+public final class AuctionCommandHandlers {
+
+  private final AuctionDao auctionDao;
+  private final ItemDao itemDao;
+  private final BidTransactionDao bidTransactionDao;
+  private final ClientBroadcaster broadcaster;
+
+  public AuctionCommandHandlers(
+      AuctionDao auctionDao,
+      ItemDao itemDao,
+      BidTransactionDao bidTransactionDao,
+      ClientBroadcaster broadcaster) {
+    this.auctionDao = auctionDao;
+    this.itemDao = itemDao;
+    this.bidTransactionDao = bidTransactionDao;
+    this.broadcaster = broadcaster;
+  }
+
+  public String createAuction(JSONObject req) throws Exception {
+    Long itemId = req.getLong("itemId");
+    Long sellerId = req.getLong("sellerId");
+    Long startingPrice = req.getLong("startingPrice");
+    LocalDateTime startTime = LocalDateTime.parse(req.getString("startTime"));
+    LocalDateTime endTime = LocalDateTime.parse(req.getString("endTime"));
+    LocalDateTime now = LocalDateTime.now();
+
+    if (itemDao.findById(itemId).isEmpty()) {
+      return JsonResponses.error("Sản phẩm #" + itemId + " không tồn tại!");
+    }
+    if (startTime.plusMinutes(1).isBefore(now)) {
+      return JsonResponses.error("Thời gian bắt đầu không được ở trong quá khứ!");
+    }
+
+    Auction auction = new Auction(itemId, sellerId, startTime, endTime);
+    auction.setCurrentPrice(startingPrice);
+
+    if (now.isAfter(startTime) && now.isBefore(endTime)) {
+      auction.setStatus(AuctionStatus.RUNNING);
+    } else if (now.isAfter(endTime)) {
+      auction.setStatus(AuctionStatus.FINISHED);
+    } else {
+      auction.setStatus(AuctionStatus.OPEN);
+    }
+
+    auctionDao.save(auction);
+    if (auction.getStatus() == AuctionStatus.RUNNING) {
+      AuctionManager.getInstance().restoreRunningAuction(auction);
+    }
+
+    System.out.println(
+        "CREATE_AUCTION: auction #" + auction.getId() + " | status: " + auction.getStatus());
+
+    JSONObject res = new JSONObject();
+    res.put("status", "OK");
+    res.put("auctionId", auction.getId());
+    return res.toString();
+  }
+
+  public String deleteAuction(JSONObject req) throws Exception {
+    Long auctionId = req.getLong("auctionId");
+    AuctionManager.getInstance().closeAuction(auctionId);
+    boolean deleted = auctionDao.deleteById(auctionId);
+    if (deleted) {
+      System.out.println("ADMIN ACTION: Deleted auction #" + auctionId);
+      JSONObject res = new JSONObject();
+      res.put("status", "OK");
+      return res.toString();
+    }
+    return JsonResponses.error("Không tìm thấy phiên đấu giá #" + auctionId + " để xóa.");
+  }
+
+  public String adminUpdateAuction(JSONObject req) throws Exception {
+    Long auctionId = req.getLong("auctionId");
+    Long newPrice = req.getLong("currentPrice");
+    AuctionStatus newStatus = AuctionStatus.valueOf(req.getString("status"));
+    LocalDateTime newStartTime = LocalDateTime.parse(req.getString("startTime"));
+    LocalDateTime newEndTime = LocalDateTime.parse(req.getString("endTime"));
+    String newCategory = req.getString("category");
+
+    Optional<Auction> auctionOpt = auctionDao.findById(auctionId);
+    if (auctionOpt.isEmpty()) {
+      return JsonResponses.error("Không tìm thấy đấu giá #" + auctionId);
+    }
+    Auction auction = auctionOpt.get();
+
+    auction.setCurrentPrice(newPrice);
+    auction.setStatus(newStatus);
+    auction.setStartTime(newStartTime);
+    auction.setEndTime(newEndTime);
+    auctionDao.update(auction);
+
+    Optional<Item> itemOpt = itemDao.findById(auction.getItemId());
+    if (itemOpt.isPresent()) {
+      Item item = itemOpt.get();
+      item.setCategory(ItemCategory.valueOf(newCategory));
+      itemDao.update(item);
+    }
+
+    if (newStatus == AuctionStatus.RUNNING) {
+      AuctionManager.getInstance().restoreRunningAuction(auction);
+    } else {
+      AuctionManager.getInstance().closeAuction(auctionId);
+    }
+
+    System.out.println(
+        "ADMIN ACTION: Updated auction #"
+            + auctionId
+            + " to price="
+            + newPrice
+            + ", status="
+            + newStatus);
+
+    JSONObject res = new JSONObject();
+    res.put("status", "OK");
+    return res.toString();
+  }
+
+  public String resetAuction(JSONObject req) throws Exception {
+    Long auctionId = req.getLong("auctionId");
+    Optional<Auction> auctionOpt = auctionDao.findById(auctionId);
+    if (auctionOpt.isEmpty()) {
+      return JsonResponses.error("Không tìm thấy đấu giá #" + auctionId);
+    }
+    Auction auction = auctionOpt.get();
+    Optional<Item> itemOpt = itemDao.findById(auction.getItemId());
+
+    if (itemOpt.isEmpty()) {
+      return JsonResponses.error("Không tìm thấy sản phẩm liên quan để lấy giá khởi điểm.");
+    }
+
+    bidTransactionDao.deleteByAuctionId(auctionId);
+    long startingPrice = itemOpt.get().getStartingPrice();
+    auction.setCurrentPrice(startingPrice);
+    auction.setCurrentWinnerId(null);
+    auctionDao.update(auction);
+
+    if (auction.getStatus() == AuctionStatus.RUNNING) {
+      AuctionManager.getInstance().restoreRunningAuction(auction);
+    }
+
+    System.out.println("ADMIN ACTION: Reset auction #" + auctionId + " to price=" + startingPrice);
+
+    JSONObject push = new JSONObject();
+    push.put("type", "AUCTION_RESET");
+    push.put("auctionId", auctionId);
+    push.put("newPrice", startingPrice);
+    broadcaster.broadcast(push.toString());
+
+    JSONObject res = new JSONObject();
+    res.put("status", "OK");
+    return res.toString();
+  }
+}
