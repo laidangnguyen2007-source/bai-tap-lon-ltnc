@@ -27,9 +27,7 @@ import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-/**
- * Điểm vào (entry point) của backend đấu giá — <b>composition root</b> theo ngôn ngữ DI.
- */
+/** Điểm vào (entry point) của backend đấu giá — <b>composition root</b> theo ngôn ngữ DI. */
 public final class Server {
 
   private static final int PORT = 8888;

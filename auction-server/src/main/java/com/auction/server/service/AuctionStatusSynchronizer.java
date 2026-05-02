@@ -12,8 +12,8 @@ import java.util.Optional;
  *
  * <p>Khi tạo phiên trước giờ mở, server ghi {@link AuctionStatus#OPEN}. Đến {@code startTime} không
  * có tiến trình nền tự chuyển sang {@link AuctionStatus#RUNNING} — client vẫn thấy OPEN / “Chưa bắt
- * đầu” dù đã quá giờ. Lớp này cập nhật DB + {@link AuctionManager} theo {@link
- * LocalDateTime#now()} (lazy, mỗi lần đọc danh sách hoặc đặt giá).
+ * đầu” dù đã quá giờ. Lớp này cập nhật DB + {@link AuctionManager} theo {@link LocalDateTime#now()}
+ * (lazy, mỗi lần đọc danh sách hoặc đặt giá).
  */
 public final class AuctionStatusSynchronizer {
 
