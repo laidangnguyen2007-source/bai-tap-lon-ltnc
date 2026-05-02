@@ -2,6 +2,7 @@ package com.auction.client.controller;
 
 import com.auction.client.model.AuctionSessionState;
 import com.auction.client.service.ServerService;
+import com.auction.client.util.ComboBoxPopupWidthSync;
 import com.auction.client.util.FxmlLoader;
 import com.auction.client.util.NotificationUtils;
 import com.auction.server.model.entity.Auction;
@@ -35,6 +36,7 @@ import javafx.util.Pair;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.DatePicker;
+import javafx.scene.Node;
 
 /**
  * Controller cho màn hình Danh Sách Đấu Giá (auction-list.fxml).
@@ -140,17 +142,34 @@ public class AuctionListController implements com.auction.client.observer.Auctio
           return new SimpleStringProperty(t != null ? t.format(DISPLAY_FORMAT) : "—");
         });
 
-    // [Tính năng mới] Click đúp vào hàng để xem chi tiết luôn
-    auctionTable.setRowFactory(tv -> {
-        javafx.scene.control.TableRow<Auction> row = new javafx.scene.control.TableRow<>();
-        row.setOnMouseClicked(event -> {
-            if (event.getClickCount() == 2 && (!row.isEmpty())) {
-                Auction auction = row.getItem();
-                navigateToDetail(auction);
-            }
+    /*
+     * Click đúp để mở chi tiết phiên.
+     *
+     * <p>Tại sao không gắn {@code setOnMouseClicked} trên từng {@link javafx.scene.control.TableRow}?
+     * Một số phiên bản/skin JavaFX kết hợp {@link TableView#refresh()} định kỳ (bộ đếm thời gian còn
+     * lại) có thể làm {@code row.getItem()} không khớp click, hoặc sự kiện không bubble ổn định qua
+     * cell tùy cột.
+     *
+     * <p>Cách ổn định hơn: lắng nghe ở {@link TableView}, lấy hàng đang chọn qua {@link
+     * javafx.scene.control.TableView.TableViewSelectionModel#getSelectedItem()}. Click đầu của
+     * double-click đã chọn hàng; click thứ hai kích hoạt điều hướng.
+     *
+     * <p>Admin có cột Thao tác chứa {@link Button}: double-click nhanh trên nút không được coi là
+     * “mở chi tiết” — bỏ qua khi target thuộc cây con của {@code Button} (hoặc ComboBox).
+     */
+    auctionTable.setOnMouseClicked(
+        event -> {
+          if (event.getClickCount() != 2) {
+            return;
+          }
+          if (isInteractiveControlTarget(event.getTarget())) {
+            return;
+          }
+          Auction selected = auctionTable.getSelectionModel().getSelectedItem();
+          if (selected != null) {
+            navigateToDetail(selected);
+          }
         });
-        return row;
-    });
 
     // Cấu hình cột Thao tác cho Admin
     if (session.isLoggedIn() && session.getCurrentUser().getRole() == com.auction.server.model.enums.UserRole.ADMIN) {
@@ -259,6 +278,7 @@ public class AuctionListController implements com.auction.client.observer.Auctio
         FXCollections.observableArrayList(
             "Tất cả", "Đang mở (OPEN)", "Đang chạy (RUNNING)", "Đã kết thúc (FINISHED)"));
     statusFilterCombo.setValue("Tất cả");
+    ComboBoxPopupWidthSync.install(statusFilterCombo);
 
     // Load dữ liệu lần đầu ngay khi màn hình khởi tạo
     loadAuctions();
@@ -327,6 +347,22 @@ public class AuctionListController implements com.auction.client.observer.Auctio
       totalValueLabel.setText(String.format("%,d", totalValue));
   }
 
+
+  /**
+   * True nếu điểm bấm nằm trên control “tương tác” (nút, combobox, …) — tránh coi double-click trên
+   * Sửa/Reset/Xóa là lệnh mở màn chi tiết.
+   */
+  private static boolean isInteractiveControlTarget(Object target) {
+    if (!(target instanceof Node)) {
+      return false;
+    }
+    for (Node n = (Node) target; n != null; n = n.getParent()) {
+      if (n instanceof Button || n instanceof ComboBox<?>) {
+        return true;
+      }
+    }
+    return false;
+  }
 
   /**
    * Phương thức chung để chuyển sang màn hình chi tiết phiên đấu giá.
@@ -441,6 +477,13 @@ public class AuctionListController implements com.auction.client.observer.Auctio
       categoryCombo.setValue("ELECTRONICS");
       categoryCombo.setMaxWidth(Double.MAX_VALUE);
 
+      ComboBoxPopupWidthSync.install(statusCombo);
+      ComboBoxPopupWidthSync.install(startHourCombo);
+      ComboBoxPopupWidthSync.install(startMinuteCombo);
+      ComboBoxPopupWidthSync.install(endHourCombo);
+      ComboBoxPopupWidthSync.install(endMinuteCombo);
+      ComboBoxPopupWidthSync.install(categoryCombo);
+
       // Thêm các control vào grid với Label trắng sáng
       grid.add(new Label("Giá hiện tại:"), 0, 0);
       grid.add(priceField, 1, 0);
@@ -542,7 +585,10 @@ public class AuctionListController implements com.auction.client.observer.Auctio
                   // Nếu còn dưới 1 giờ (định dạng 00:mm:ss), tô màu đỏ rực và in đậm
                   if (item.startsWith("00:")) {
                       setStyle("-fx-text-fill: #e74c3c; -fx-font-weight: bold;");
-                  } else if (item.equals("Đã kết thúc") || item.contains("kết thúc")) {
+                  } else if (item.equals("Đã kết thúc")
+                      || item.contains("kết thúc")
+                      || item.equals("Đã thanh toán")
+                      || item.equals("Đã hủy")) {
                       setStyle("-fx-text-fill: #95a5a6;"); // Màu xám cho phiên đã xong
                   } else {
                       setStyle("-fx-text-fill: #27ae60; -fx-font-weight: bold;"); // Màu xanh lá cho phiên còn nhiều thời gian
@@ -568,25 +614,46 @@ public class AuctionListController implements com.auction.client.observer.Auctio
   }
 
   /**
-   * [Tính năng 1] Hàm helper tính toán chuỗi hiển thị thời gian còn lại (Countdown logic).
+   * [Tính năng 1] Chuỗi hiển thị cho cột "Còn lại" (đếm ngược theo {@code endTime}).
+   *
+   * <p><b>Vì sao trước đây vừa "Đã kết thúc" vừa "Đang kết thúc..."?</b> Trạng thái {@code
+   * FINISHED} trong DB chỉ được gán khi server cập nhật (đặt giá sau giờ, admin sửa, v.v.). Nhiều phiên
+   * vẫn là {@code RUNNING} trên DB dù đồng hồ đã quá {@code endTime} — code cũ coi duration âm là
+   * "Đang kết thúc..." và treo mãi. <b>Theo thời gian thực</b>, hết {@code endTime} là hết phiên đấu:
+   * hiển thị "Đã kết thúc" cho đồng nhất với cột trạng thái mà người dùng kỳ vọng.
    */
   private String formatTimeLeft(Auction a) {
-      if (a.getStatus() == AuctionStatus.FINISHED || a.isFinished()) return "Đã kết thúc";
-      if (a.getStatus() == AuctionStatus.OPEN) return "Chưa bắt đầu";
-      
-      // Tính khoảng cách giữa thời điểm hiện tại và lúc kết thúc
-      java.time.Duration d = java.time.Duration.between(LocalDateTime.now(), a.getEndTime());
-      if (d.isNegative() || d.isZero()) return "Đang kết thúc...";
+      if (a.getStatus() == AuctionStatus.FINISHED || a.isFinished()) {
+        return "Đã kết thúc";
+      }
+      if (a.getStatus() == AuctionStatus.PAID) {
+        return "Đã thanh toán";
+      }
+      if (a.getStatus() == AuctionStatus.CANCELED) {
+        return "Đã hủy";
+      }
 
+      LocalDateTime now = LocalDateTime.now();
+      LocalDateTime end = a.getEndTime();
+
+      // Đã quá mốc kết thúc theo lịch — không phụ thuộc DB đã kịp FINISHED hay chưa
+      if (!now.isBefore(end)) {
+        return "Đã kết thúc";
+      }
+
+      if (a.getStatus() == AuctionStatus.OPEN) {
+        return "Chưa bắt đầu";
+      }
+
+      java.time.Duration d = java.time.Duration.between(now, end);
       long days = d.toDays();
       long hours = d.toHoursPart();
       long minutes = d.toMinutesPart();
       long seconds = d.toSecondsPart();
 
-      // Nếu còn trên 1 ngày: Hiện "X ngày HH:mm"
-      if (days > 0) return String.format("%d ngày %02d:%02d", days, hours, minutes);
-      
-      // Nếu dưới 1 ngày: Hiện định dạng đồng hồ "HH:mm:ss"
+      if (days > 0) {
+        return String.format("%d ngày %02d:%02d", days, hours, minutes);
+      }
       return String.format("%02d:%02d:%02d", hours, minutes, seconds);
   }
 

@@ -129,6 +129,23 @@
   /* Không đặt max-height — để combo-box tự căn chỉnh chữ bên trong */
 }
 
+/*
+ * Combo giờ/phút hẹp (seller dashboard): rule chung .combo-box .cell dùng padding 12+12 — với
+ * prefWidth ~65px thì sau nút mũi tên không còn chỗ, số bị cắt hết (trông như chưa chọn).
+ */
+.combo-box.seller-time-combo > .list-cell {
+  -fx-padding: 4 6 4 8;
+}
+
+.combo-box.seller-time-combo .cell {
+  -fx-padding: 0 4 0 6;
+}
+
+/* DatePicker form seller: đủ rộng cho dd/MM/yyyy */
+.date-picker.seller-date-picker > .text-field {
+  -fx-padding: 0 8 0 8;
+}
+
 .text-field, .password-field, .date-picker {
   -fx-background-color: #1e293b;
 }
@@ -536,6 +553,15 @@
     -fx-padding: 20px;
 }
 
+/*
+ * Label trong vùng nội dung (form chỉnh sửa phiên, v.v.): theme Modena gán -fx-text-fill tối cho
+ * Label — trên nền #0f172a chữ bị “chìm”. Phải set trực tiếp lên .label; kế thừa từ .content không đủ.
+ */
+.dialog-pane .content .label {
+    -fx-text-fill: #e2e8f0;
+    -fx-font-size: 14px;
+}
+
 .dialog-pane .button-bar {
     -fx-padding: 10px;
 }
@@ -584,6 +610,109 @@
     -fx-background-radius: 0 5 5 0;
 }
 
+/*
+ * Lịch xổ ra của DatePicker: mặc định các ô ngày dính một khối. Tách ô bằng viền + nền,
+ * đồng bộ dark theme với ComboBox.
+ */
+.date-picker-popup {
+    -fx-background-color: #1e293b;
+    -fx-border-color: #334155;
+    -fx-border-width: 1;
+    -fx-background-radius: 8px;
+    -fx-padding: 4;
+}
+
+.date-picker-popup > .month-year-pane {
+    -fx-background-color: #252f47;
+    -fx-padding: 6 8 8 8;
+    -fx-border-color: #334155;
+    -fx-border-width: 0 0 1 0;
+}
+
+/*
+ * Chữ "May", "2026" trong Spinner tháng/năm: theme tối khiến -fx-text-fill mặc định gần màu nền.
+ */
+.date-picker-popup .month-year-pane .label {
+    -fx-text-fill: #f1f5f9;
+    -fx-font-weight: bold;
+    -fx-font-size: 13px;
+}
+
+.date-picker-popup .month-year-pane .spinner .button {
+    -fx-background-color: #334155;
+    -fx-border-color: #475569;
+    -fx-text-fill: #e2e8f0;
+}
+
+.date-picker-popup .month-year-pane .spinner .button:hover {
+    -fx-background-color: #475569;
+}
+
+/* Spinner tháng/năm đôi khi dùng TextField chỉ đọc thay vì Label */
+.date-picker-popup .month-year-pane .spinner .text-field {
+    -fx-text-fill: #f1f5f9;
+    -fx-background-color: transparent;
+    -fx-border-width: 0;
+    -fx-font-weight: bold;
+    -fx-font-size: 13px;
+}
+
+/* Một số bản dùng class spinner-label trên ô tháng/năm */
+.date-picker-popup .spinner-label {
+    -fx-text-fill: #f1f5f9;
+}
+
+/* Dùng hậu duệ (không chỉ con trực tiếp) để khớp mọi phiên bản skin DatePicker */
+.date-picker-popup .week-number-cell {
+    -fx-text-fill: #64748b;
+    -fx-font-size: 11px;
+    -fx-border-color: #334155;
+    -fx-border-width: 0 1 1 0;
+    -fx-background-color: #1a2332;
+    -fx-alignment: center;
+}
+
+.date-picker-popup .day-name-cell {
+    -fx-text-fill: #94a3b8;
+    -fx-font-weight: bold;
+    -fx-font-size: 11px;
+    -fx-border-color: #334155;
+    -fx-border-width: 0 0 1 0;
+    -fx-padding: 8 4;
+    -fx-background-color: #252f47;
+    -fx-alignment: center;
+}
+
+.date-picker-popup .date-cell {
+    -fx-background-color: #1a2332;
+    -fx-text-fill: #e2e8f0;
+    -fx-border-color: #334155;
+    -fx-border-width: 0.5;
+    -fx-padding: 6 8;
+    -fx-alignment: center;
+}
+
+.date-picker-popup .date-cell:hover {
+    -fx-background-color: #334155;
+}
+
+.date-picker-popup .date-cell.selected {
+    -fx-background-color: #6366f1;
+    -fx-text-fill: white;
+    -fx-border-color: #818cf8;
+}
+
+.date-picker-popup .date-cell.today {
+    -fx-border-color: #818cf8;
+    -fx-border-width: 1;
+}
+
+.date-picker-popup .date-cell.previous-month,
+.date-picker-popup .date-cell.next-month {
+    -fx-text-fill: #64748b;
+    -fx-background-color: #141b26;
+}
+
 /* ── ComboBox Refinement (Hiện lại chữ đã mất) ── */
 .combo-box, .combo-box .cell, .combo-box > .list-cell {
     -fx-text-fill: #f8fafc !important;
@@ -596,30 +725,89 @@
     -fx-max-height: -1;
 }
 
-.combo-box .list-view {
+/*
+ * Popup list: viền 1px khớp ComboBox, padding ngang 0 để cạnh dọc thẳng với ô; bóng nhẹ tránh “nở”
+ * viền nhìn lệch. Chiều rộng popup còn được ép trong code (ComboBoxPopupWidthSync).
+ */
+.combo-box .list-view,
+.combo-box-popup > .list-view,
+.choice-box-popup > .list-view {
     -fx-background-color: #1e293b;
     -fx-background-radius: 8px;
     -fx-border-color: #334155;
-    -fx-padding: 5px;
-    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.5), 15, 0, 0, 10);
+    -fx-border-width: 1;
+    -fx-padding: 4 0 5 0;
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.28), 10, 0, 0, 3);
 }
 
-.combo-box .list-cell {
-    -fx-background-color: transparent;
+/*
+ * Từng mục: không kẻ gạch ngang cứng (dễ “xấu”); dùng nền bo nhẹ + inset để tách hàng mềm.
+ */
+.combo-box .list-view .list-cell,
+.combo-box-popup .list-view .list-cell,
+.choice-box-popup .list-view .list-cell {
     -fx-text-fill: #cbd5e1;
-    -fx-padding: 10 15;
-    -fx-background-radius: 4px;
-    -fx-border-width: 0; /* Bỏ đường kẻ gây lệch */
+    -fx-padding: 9 10;
+    -fx-border-width: 0;
+    -fx-background-radius: 5px;
+    -fx-background-insets: 2 6 2 6;
 }
 
-.combo-box .list-cell:hover {
-    -fx-background-color: #334155;
+.combo-box .list-view .list-cell:odd,
+.combo-box-popup .list-view .list-cell:odd,
+.choice-box-popup .list-view .list-cell:odd {
+    -fx-background-color: #243044;
+}
+
+.combo-box .list-view .list-cell:even,
+.combo-box-popup .list-view .list-cell:even,
+.choice-box-popup .list-view .list-cell:even {
+    -fx-background-color: #1c2636;
+}
+
+.combo-box .list-view .list-cell:hover,
+.combo-box-popup .list-view .list-cell:hover,
+.choice-box-popup .list-view .list-cell:hover {
+    -fx-background-color: #3d4d63;
     -fx-text-fill: white;
 }
 
-.combo-box .list-cell:selected {
+.combo-box .list-view .list-cell:selected,
+.combo-box-popup .list-view .list-cell:selected,
+.choice-box-popup .list-view .list-cell:selected {
     -fx-background-color: #6366f1;
     -fx-text-fill: white;
+}
+
+/* ── ContextMenu / MenuButton (chuột phải, menu xổ) ── */
+.context-menu {
+    -fx-background-color: #1e293b;
+    -fx-border-color: #334155;
+    -fx-border-width: 1;
+    -fx-background-radius: 8px;
+    -fx-padding: 4 0;
+}
+
+.context-menu .menu-item {
+    -fx-padding: 9 16;
+    -fx-border-width: 0;
+    -fx-background-color: transparent;
+    -fx-background-radius: 4px;
+    -fx-background-insets: 1 4 1 4;
+}
+
+.context-menu .menu-item .label {
+    -fx-text-fill: #e2e8f0;
+}
+
+.context-menu .menu-item:hover,
+.context-menu .menu-item:focused {
+    -fx-background-color: #334155;
+}
+
+.context-menu .separator:horizontal .line {
+    -fx-border-color: #334155;
+    -fx-padding: 2 0;
 }
 
 /* ── Time Picker Unit (Gộp nhóm tinh tế) ── */

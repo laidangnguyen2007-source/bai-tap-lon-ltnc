@@ -10,6 +10,7 @@
 .root {
   -fx-background-color: #0f1117;
   -fx-font-family: "Segoe UI", "Arial", sans-serif;
+  -fx-font-size: 14px;
 }
 
 /* ── Root pane (nền toàn màn hình) ── */
@@ -102,22 +103,63 @@
   -fx-font-size: 13px;
 }
 
-/* ── Text Fields & Password Fields ── */
-.text-field, .password-field {
-  -fx-background-color: #0f1117;
-  -fx-border-color: #2d3148;
+/* ── Global Input & Button Standards (Đồng bộ tuyệt đối) ── */
+.text-field, .password-field, .date-picker, .button {
+  -fx-border-color: #334155;
   -fx-border-radius: 8px;
   -fx-background-radius: 8px;
   -fx-border-width: 1;
-  -fx-text-fill: #e2e8f0;
+  -fx-text-fill: #f8fafc;
   -fx-prompt-text-fill: #4a5568;
-  -fx-padding: 10 14 10 14;
-  -fx-font-size: 13px;
+  -fx-padding: 8 12 8 12;
+  -fx-font-size: 14px;
+  -fx-min-height: 38px;
+  -fx-max-height: 38px;
+}
+
+/* ComboBox xử lý riêng vì max-height sẽ cắt mất chữ bên trong */
+.combo-box {
+  -fx-border-color: #334155;
+  -fx-border-radius: 8px;
+  -fx-background-radius: 8px;
+  -fx-border-width: 1;
+  -fx-background-color: #1e293b;
+  -fx-font-size: 14px;
+  -fx-min-height: 38px;
+  /* Không đặt max-height — để combo-box tự căn chỉnh chữ bên trong */
+}
+
+/*
+ * Combo giờ/phút hẹp (seller dashboard): rule chung .combo-box .cell dùng padding 12+12 — với
+ * prefWidth ~65px thì sau nút mũi tên không còn chỗ, số bị cắt hết (trông như chưa chọn).
+ */
+.combo-box.seller-time-combo > .list-cell {
+  -fx-padding: 4 6 4 8;
+}
+
+.combo-box.seller-time-combo .cell {
+  -fx-padding: 0 4 0 6;
+}
+
+/* DatePicker form seller: đủ rộng cho dd/MM/yyyy */
+.date-picker.seller-date-picker > .text-field {
+  -fx-padding: 0 8 0 8;
+}
+
+.text-field, .password-field, .date-picker {
+  -fx-background-color: #1e293b;
+}
+
+.button {
+  -fx-background-color: transparent;
+  -fx-background-insets: 0;
+  -fx-cursor: hand;
 }
 
 /* Hiệu ứng focus khi click vào field */
 .text-field:focused, .password-field:focused {
   -fx-border-color: #6366f1;
+  -fx-background-color: #1e293b;
   -fx-effect: dropshadow(gaussian, rgba(99, 102, 241, 0.3), 8, 0, 0, 0);
 }
 
@@ -128,10 +170,6 @@
   -fx-background-color: linear-gradient(to right, #6366f1, #8b5cf6);
   -fx-text-fill: white;
   -fx-font-weight: bold;
-  -fx-font-size: 13px;
-  -fx-background-radius: 8px;
-  -fx-padding: 10 20 10 20;
-  -fx-cursor: hand;
 }
 
 .primary-button:hover {
@@ -142,13 +180,8 @@
 /* Nút phụ — viền xám */
 .secondary-button {
   -fx-background-color: transparent;
-  -fx-border-color: #2d3148;
-  -fx-border-radius: 8px;
-  -fx-background-radius: 8px;
-  -fx-border-width: 1;
-  -fx-text-fill: #94a3b8;
-  -fx-font-size: 13px;
-  -fx-padding: 8 16 8 16;
+  -fx-border-color: #334155;
+  -fx-text-fill: #cbd5e1;
   -fx-cursor: hand;
 }
 
@@ -197,19 +230,7 @@
   -fx-text-fill: #a5b4fc;
 }
 
-/* ── ComboBox ── */
-.combo-box {
-  -fx-background-color: #1a1d27;
-  -fx-border-color: #2d3148;
-  -fx-border-radius: 8px;
-  -fx-background-radius: 8px;
-  -fx-border-width: 1;
-}
-
-.combo-box .list-cell {
-  -fx-text-fill: #e2e8f0;
-  -fx-background-color: #1a1d27;
-}
+/* ── ComboBox Detail (Xem thêm ở cuối file) ── */
 
 /* ── TableView ── */
 .data-table {
@@ -231,6 +252,7 @@
   -fx-text-fill: #94a3b8;
   -fx-font-weight: bold;
   -fx-font-size: 12px;
+  -fx-alignment: CENTER;
 }
 
 .data-table .table-row-cell {
@@ -248,13 +270,18 @@
 }
 
 .data-table .table-cell {
-  -fx-text-fill: #cbd5e1;
+  -fx-background-color: transparent; /* Quan trọng: Cho phép màu nền của hàng hiện lên */
+  -fx-text-fill: #e2e8f0;
   -fx-font-size: 13px;
+  -fx-padding: 6 10 6 10; /* Giảm đệm ô để hàng mảnh mai hơn */
+  -fx-alignment: CENTER;
 }
 
+/* Thông báo khi bảng rỗng */
 .placeholder-label {
-  -fx-text-fill: #4a5568;
-  -fx-font-size: 13px;
+    -fx-text-fill: #64748b;
+    -fx-font-size: 14px;
+    -fx-font-style: italic;
 }
 
 /* ── Info Card (panel thông tin) ── */
@@ -310,19 +337,48 @@
   -fx-border-width: 1;
 }
 
-/* Nền plot area (vùng vẽ trong chart) */
-.bid-chart .chart-plot-background {
-  -fx-background-color: #0f1117;
+/* ── LineChart Styling (Tân trang biểu đồ) ── */
+.chart {
+    -fx-padding: 10px;
 }
 
-/* Đường lưới dọc */
-.bid-chart .chart-vertical-grid-lines {
-  -fx-stroke: #1e2340;
+.axis {
+    -fx-tick-label-fill: #94a3b8; /* Màu các con số trên trục */
+    -fx-tick-length: 5px;
 }
 
-/* Đường lưới ngang */
-.bid-chart .chart-horizontal-grid-lines {
-  -fx-stroke: #1e2340;
+.axis-label {
+    -fx-text-fill: #e2e8f0; /* Màu nhãn "Lượt đặt giá", "Số tiền" */
+    -fx-font-weight: bold;
+}
+
+.chart-legend {
+   -fx-background-color: transparent;
+   -fx-padding: 15px 0 0 0;
+}
+
+.chart-legend-item {
+    -fx-text-fill: #cbd5e1; /* Màu chữ "Đường giá đấu" */
+}
+
+.chart-plot-background {
+    -fx-background-color: #0f172a;
+}
+
+.chart-vertical-grid-lines, .chart-horizontal-grid-lines {
+    -fx-stroke: #1e293b;
+    -fx-stroke-dash-array: 3 3;
+}
+
+.default-color0.chart-series-line {
+    -fx-stroke: #6366f1; /* Màu đường biểu đồ */
+    -fx-stroke-width: 3px;
+}
+
+.default-color0.chart-line-symbol {
+    -fx-background-color: #6366f1, white;
+    -fx-background-radius: 5px;
+    -fx-padding: 4px;
 }
 
 /* Đường biểu đồ giá — màu tím nổi bật, dày 2px */
@@ -391,15 +447,398 @@
   -fx-background-color: #2d3148;
 }
 
-/* ── DatePicker ── */
-.date-picker {
-  -fx-background-color: #1a1d27;
-  -fx-border-color: #2d3148;
-  -fx-border-radius: 8px;
-  -fx-background-radius: 8px;
-  -fx-border-width: 1;
+/* ── DatePicker Detail (Xem thêm ở cuối file) ── */
+
+/* ── [Tính năng 2 & 5] Premium Admin Dashboard Styles ── */
+
+.stats-container {
+    -fx-padding: 0 0 10 0;
 }
 
-.date-picker .text-field {
-  -fx-text-fill: #e2e8f0;
+.stat-card {
+    -fx-background-color: linear-gradient(to bottom right, #1e293b, #0f172a);
+    -fx-background-radius: 12px;
+    -fx-border-color: rgba(255, 255, 255, 0.05);
+    -fx-border-radius: 12px;
+    -fx-border-width: 1px;
+    -fx-padding: 15px;
+    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.3), 10, 0, 0, 4);
+    -fx-alignment: center;
 }
+
+.stat-label {
+    -fx-text-fill: #94a3b8;
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+    -fx-padding: 0 0 5 0;
+}
+
+.stat-value {
+    -fx-text-fill: #f8fafc;
+    -fx-font-size: 26px;
+    -fx-font-weight: bold;
+}
+
+/* ── [Tính năng 1 & 5] Live Countdown & Interactive Styles ── */
+
+.countdown-label {
+    -fx-text-fill: #f1c40f; /* Màu vàng Gold nổi bật */
+    -fx-font-weight: bold;
+    -fx-font-size: 14px;
+    -fx-padding: 4 8 4 8;
+    -fx-background-color: rgba(241, 196, 15, 0.1);
+    -fx-background-radius: 6px;
+}
+
+/* ── TableView Row Styling (Premium Neon Experience) ── */
+.table-row-cell {
+    -fx-background-color: #1a1d27;
+    -fx-border-color: #1e2340;
+    -fx-border-width: 0 0 1 0;
+    -fx-padding: 8 0 8 0; /* Tăng chiều cao hàng để "thở" */
+    -fx-transition: all 0.2s ease-in-out;
+}
+
+.table-row-cell:odd {
+    -fx-background-color: #141722;
+}
+
+.table-row-cell:hover {
+    -fx-background-color: #242a4d; /* Tô nền full hàng đậm đà hơn */
+    -fx-border-color: #6366f1;     /* Viền xanh Indigo bao quanh 4 phía */
+    -fx-border-width: 1;           /* Hiện viền toàn bộ hàng */
+    -fx-cursor: hand;
+    -fx-effect: null;
+}
+
+.table-row-cell:selected {
+    -fx-background-color: #2e365f;
+    -fx-border-color: #818cf8;
+    -fx-border-width: 1.5;         /* Viền dày hơn khi được chọn */
+}
+
+/* Logout button xịn hơn */
+.logout-button {
+    -fx-background-color: rgba(231, 76, 60, 0.1);
+    -fx-text-fill: #e74c3c;
+    -fx-border-color: #e74c3c;
+    -fx-border-radius: 6px;
+    -fx-font-weight: bold;
+}
+
+.logout-button:hover {
+    -fx-background-color: #e74c3c;
+    -fx-text-fill: white;
+}
+
+/* ── Dialog & Alert Styling (Tân trang hộp thoại) ── */
+.dialog-pane {
+    -fx-background-color: #0f172a;
+    -fx-padding: 10px;
+}
+
+.dialog-pane .header-panel {
+    -fx-background-color: #1e293b;
+}
+
+.dialog-pane .header-panel .label {
+    -fx-text-fill: #f8fafc;
+    -fx-font-weight: bold;
+    -fx-font-size: 16px;
+}
+
+.dialog-pane .content {
+    -fx-text-fill: #cbd5e1;
+    -fx-font-size: 14px;
+    -fx-padding: 20px;
+}
+
+/*
+ * Label trong vùng nội dung (form chỉnh sửa phiên, v.v.): theme Modena gán -fx-text-fill tối cho
+ * Label — trên nền #0f172a chữ bị “chìm”. Phải set trực tiếp lên .label; kế thừa từ .content không đủ.
+ */
+.dialog-pane .content .label {
+    -fx-text-fill: #e2e8f0;
+    -fx-font-size: 14px;
+}
+
+.dialog-pane .button-bar {
+    -fx-padding: 10px;
+}
+
+.dialog-pane .button {
+    -fx-background-color: #334155;
+    -fx-text-fill: white;
+    -fx-background-radius: 6px;
+    -fx-cursor: hand;
+    -fx-padding: 8px 16px;
+}
+
+.dialog-pane .button:hover {
+    -fx-background-color: #475569;
+}
+
+.dialog-pane .button:default {
+    -fx-background-color: #6366f1;
+}
+
+.dialog-pane .button:default:hover {
+    -fx-background-color: #4f46e5;
+}
+
+.dialog-pane > .expandable-content {
+    -fx-background-color: #0f172a;
+}
+
+/* Icon trong Alert */
+.dialog-pane .graphic-container {
+    -fx-padding: 10px;
+}
+
+/* ── DatePicker Popup (chi tiết giao diện khi mở) ── */
+
+/* ── DatePicker Refinement ── */
+.date-picker > .text-field {
+    -fx-background-color: transparent;
+    -fx-border-width: 0;
+    -fx-padding: 0 10;
+    -fx-text-fill: #f8fafc !important;
+}
+
+.date-picker > .button {
+    -fx-background-color: #334155;
+    -fx-background-radius: 0 5 5 0;
+}
+
+/*
+ * Lịch xổ ra của DatePicker: mặc định các ô ngày dính một khối. Tách ô bằng viền + nền,
+ * đồng bộ dark theme với ComboBox.
+ */
+.date-picker-popup {
+    -fx-background-color: #1e293b;
+    -fx-border-color: #334155;
+    -fx-border-width: 1;
+    -fx-background-radius: 8px;
+    -fx-padding: 4;
+}
+
+.date-picker-popup > .month-year-pane {
+    -fx-background-color: #252f47;
+    -fx-padding: 6 8 8 8;
+    -fx-border-color: #334155;
+    -fx-border-width: 0 0 1 0;
+}
+
+/*
+ * Chữ "May", "2026" trong Spinner tháng/năm: theme tối khiến -fx-text-fill mặc định gần màu nền.
+ */
+.date-picker-popup .month-year-pane .label {
+    -fx-text-fill: #f1f5f9;
+    -fx-font-weight: bold;
+    -fx-font-size: 13px;
+}
+
+.date-picker-popup .month-year-pane .spinner .button {
+    -fx-background-color: #334155;
+    -fx-border-color: #475569;
+    -fx-text-fill: #e2e8f0;
+}
+
+.date-picker-popup .month-year-pane .spinner .button:hover {
+    -fx-background-color: #475569;
+}
+
+/* Spinner tháng/năm đôi khi dùng TextField chỉ đọc thay vì Label */
+.date-picker-popup .month-year-pane .spinner .text-field {
+    -fx-text-fill: #f1f5f9;
+    -fx-background-color: transparent;
+    -fx-border-width: 0;
+    -fx-font-weight: bold;
+    -fx-font-size: 13px;
+}
+
+/* Một số bản dùng class spinner-label trên ô tháng/năm */
+.date-picker-popup .spinner-label {
+    -fx-text-fill: #f1f5f9;
+}
+
+/* Dùng hậu duệ (không chỉ con trực tiếp) để khớp mọi phiên bản skin DatePicker */
+.date-picker-popup .week-number-cell {
+    -fx-text-fill: #64748b;
+    -fx-font-size: 11px;
+    -fx-border-color: #334155;
+    -fx-border-width: 0 1 1 0;
+    -fx-background-color: #1a2332;
+    -fx-alignment: center;
+}
+
+.date-picker-popup .day-name-cell {
+    -fx-text-fill: #94a3b8;
+    -fx-font-weight: bold;
+    -fx-font-size: 11px;
+    -fx-border-color: #334155;
+    -fx-border-width: 0 0 1 0;
+    -fx-padding: 8 4;
+    -fx-background-color: #252f47;
+    -fx-alignment: center;
+}
+
+.date-picker-popup .date-cell {
+    -fx-background-color: #1a2332;
+    -fx-text-fill: #e2e8f0;
+    -fx-border-color: #334155;
+    -fx-border-width: 0.5;
+    -fx-padding: 6 8;
+    -fx-alignment: center;
+}
+
+.date-picker-popup .date-cell:hover {
+    -fx-background-color: #334155;
+}
+
+.date-picker-popup .date-cell.selected {
+    -fx-background-color: #6366f1;
+    -fx-text-fill: white;
+    -fx-border-color: #818cf8;
+}
+
+.date-picker-popup .date-cell.today {
+    -fx-border-color: #818cf8;
+    -fx-border-width: 1;
+}
+
+.date-picker-popup .date-cell.previous-month,
+.date-picker-popup .date-cell.next-month {
+    -fx-text-fill: #64748b;
+    -fx-background-color: #141b26;
+}
+
+/* ── ComboBox Refinement (Hiện lại chữ đã mất) ── */
+.combo-box, .combo-box .cell, .combo-box > .list-cell {
+    -fx-text-fill: #f8fafc !important;
+    -fx-background-color: transparent !important;
+}
+
+.combo-box .cell {
+    -fx-padding: 0 12 0 12;
+    -fx-min-height: -1; /* Reset lại chiều cao để không bị cắt chữ */
+    -fx-max-height: -1;
+}
+
+/*
+ * Popup list: viền 1px khớp ComboBox, padding ngang 0 để cạnh dọc thẳng với ô; bóng nhẹ tránh “nở”
+ * viền nhìn lệch. Chiều rộng popup còn được ép trong code (ComboBoxPopupWidthSync).
+ */
+.combo-box .list-view,
+.combo-box-popup > .list-view,
+.choice-box-popup > .list-view {
+    -fx-background-color: #1e293b;
+    -fx-background-radius: 8px;
+    -fx-border-color: #334155;
+    -fx-border-width: 1;
+    -fx-padding: 4 0 5 0;
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.28), 10, 0, 0, 3);
+}
+
+/*
+ * Từng mục: không kẻ gạch ngang cứng (dễ “xấu”); dùng nền bo nhẹ + inset để tách hàng mềm.
+ */
+.combo-box .list-view .list-cell,
+.combo-box-popup .list-view .list-cell,
+.choice-box-popup .list-view .list-cell {
+    -fx-text-fill: #cbd5e1;
+    -fx-padding: 9 10;
+    -fx-border-width: 0;
+    -fx-background-radius: 5px;
+    -fx-background-insets: 2 6 2 6;
+}
+
+.combo-box .list-view .list-cell:odd,
+.combo-box-popup .list-view .list-cell:odd,
+.choice-box-popup .list-view .list-cell:odd {
+    -fx-background-color: #243044;
+}
+
+.combo-box .list-view .list-cell:even,
+.combo-box-popup .list-view .list-cell:even,
+.choice-box-popup .list-view .list-cell:even {
+    -fx-background-color: #1c2636;
+}
+
+.combo-box .list-view .list-cell:hover,
+.combo-box-popup .list-view .list-cell:hover,
+.choice-box-popup .list-view .list-cell:hover {
+    -fx-background-color: #3d4d63;
+    -fx-text-fill: white;
+}
+
+.combo-box .list-view .list-cell:selected,
+.combo-box-popup .list-view .list-cell:selected,
+.choice-box-popup .list-view .list-cell:selected {
+    -fx-background-color: #6366f1;
+    -fx-text-fill: white;
+}
+
+/* ── ContextMenu / MenuButton (chuột phải, menu xổ) ── */
+.context-menu {
+    -fx-background-color: #1e293b;
+    -fx-border-color: #334155;
+    -fx-border-width: 1;
+    -fx-background-radius: 8px;
+    -fx-padding: 4 0;
+}
+
+.context-menu .menu-item {
+    -fx-padding: 9 16;
+    -fx-border-width: 0;
+    -fx-background-color: transparent;
+    -fx-background-radius: 4px;
+    -fx-background-insets: 1 4 1 4;
+}
+
+.context-menu .menu-item .label {
+    -fx-text-fill: #e2e8f0;
+}
+
+.context-menu .menu-item:hover,
+.context-menu .menu-item:focused {
+    -fx-background-color: #334155;
+}
+
+.context-menu .separator:horizontal .line {
+    -fx-border-color: #334155;
+    -fx-padding: 2 0;
+}
+
+/* ── Time Picker Unit (Gộp nhóm tinh tế) ── */
+.time-picker-unit {
+    -fx-background-color: #0f172a;
+    -fx-background-radius: 8px;
+    -fx-padding: 8 12;
+    -fx-border-color: #334155;
+    -fx-border-radius: 8px;
+    -fx-alignment: center-left;
+}
+
+.time-picker-unit .combo-box {
+    -fx-min-width: 75px;
+    -fx-pref-width: 75px;
+    -fx-min-height: 35px;
+    -fx-max-height: 35px;
+}
+
+.time-picker-unit .combo-box .cell {
+    -fx-padding: 0 0 0 5; /* Giảm đệm tối đa để chữ không bị che */
+}
+
+/* ── ScrollBar Styling ── */
+.scroll-bar:vertical {
+    -fx-background-color: transparent;
+    -fx-width: 6px;
+}
+
+.scroll-bar:vertical .thumb {
+    -fx-background-color: #475569;
+    -fx-background-radius: 10px;
+}
+

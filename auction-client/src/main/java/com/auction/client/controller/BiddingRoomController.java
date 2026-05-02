@@ -123,11 +123,18 @@ public class BiddingRoomController implements AuctionObserver {
     // Gắn dữ liệu ListView
     bidHistoryList.setItems(bidHistoryItems);
 
-    // Disable nút đặt giá nếu phiên không ở trạng thái RUNNING
+    // Disable nút đặt giá nếu phiên không RUNNING — phân biệt OPEN (chưa mở) với đã đóng
     if (!auction.isRunning()) {
       placeBidButton.setDisable(true);
       bidAmountField.setDisable(true);
-      infoLabel.setText("Phiên đấu giá này không còn nhận giá mới.");
+      infoLabel.setText(
+          switch (auction.getStatus()) {
+            case OPEN -> "Phiên chưa bắt đầu — chưa thể đặt giá.";
+            case FINISHED -> "Phiên đã kết thúc — không còn nhận giá mới.";
+            case PAID -> "Phiên đã thanh toán.";
+            case CANCELED -> "Phiên đã hủy.";
+            default -> "Phiên đấu giá này không còn nhận giá mới.";
+          });
     }
 
     // Bắt đầu đếm ngược thời gian còn lại

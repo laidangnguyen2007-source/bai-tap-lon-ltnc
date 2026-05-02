@@ -42,7 +42,7 @@
       <padding><Insets top="20" right="24" bottom="20" left="24"/></padding>
 
       <!-- Cột trái: Form tạo phiên đấu giá mới -->
-      <VBox styleClass="info-card" spacing="14" prefWidth="360">
+      <VBox styleClass="info-card" spacing="14" prefWidth="440" minWidth="400">
         <padding><Insets top="20" right="20" bottom="20" left="20"/></padding>
 
         <Label text="➕ Tạo Phiên Đấu Giá Mới" styleClass="section-title"/>
@@ -62,17 +62,17 @@
           <Label text="Ngày bắt đầu:" styleClass="field-label"
                  GridPane.columnIndex="0" GridPane.rowIndex="2"/>
           <HBox spacing="5" GridPane.columnIndex="1" GridPane.rowIndex="2">
-              <DatePicker fx:id="startDatePicker" prefWidth="120"/>
-              <ComboBox fx:id="startHourCombo" prefWidth="65" promptText="Giờ"/>
-              <ComboBox fx:id="startMinuteCombo" prefWidth="65" promptText="Phút"/>
+              <DatePicker fx:id="startDatePicker" prefWidth="175" minWidth="160" styleClass="seller-date-picker"/>
+              <ComboBox fx:id="startHourCombo" prefWidth="78" minWidth="72" promptText="Giờ" styleClass="seller-time-combo"/>
+              <ComboBox fx:id="startMinuteCombo" prefWidth="78" minWidth="72" promptText="Phút" styleClass="seller-time-combo"/>
           </HBox>
 
           <Label text="Ngày kết thúc:" styleClass="field-label"
                  GridPane.columnIndex="0" GridPane.rowIndex="3"/>
           <HBox spacing="5" GridPane.columnIndex="1" GridPane.rowIndex="3">
-              <DatePicker fx:id="endDatePicker" prefWidth="120"/>
-              <ComboBox fx:id="endHourCombo" prefWidth="65" promptText="Giờ"/>
-              <ComboBox fx:id="endMinuteCombo" prefWidth="65" promptText="Phút"/>
+              <DatePicker fx:id="endDatePicker" prefWidth="175" minWidth="160" styleClass="seller-date-picker"/>
+              <ComboBox fx:id="endHourCombo" prefWidth="78" minWidth="72" promptText="Giờ" styleClass="seller-time-combo"/>
+              <ComboBox fx:id="endMinuteCombo" prefWidth="78" minWidth="72" promptText="Phút" styleClass="seller-time-combo"/>
           </HBox>
         </GridPane>
 
