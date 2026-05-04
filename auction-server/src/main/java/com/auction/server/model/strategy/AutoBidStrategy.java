@@ -14,8 +14,7 @@ public class AutoBidStrategy implements BidStrategy {
   public final LocalDateTime registerAt;
 
   public AutoBidStrategy(Long userId, long maxBid, long increment, LocalDateTime registerAt) {
-    if (maxBid < 0)
-      throw new IllegalArgumentException("The maximum price must be greater than 0!");
+    if (maxBid < 0) throw new IllegalArgumentException("The maximum price must be greater than 0!");
     if (increment <= 0)
       throw new IllegalArgumentException("The price increment must be greater than 0!");
     this.userId = userId;
@@ -43,11 +42,14 @@ public class AutoBidStrategy implements BidStrategy {
 
   // Hàm kiểm tra xem Auction có tồn tại hoặc đang chạy hay không.
   private void validateAuction(Auction auction) {
-    if (auction == null)
-      throw new IllegalArgumentException("Auction must not be null!");
+    if (auction == null) throw new IllegalArgumentException("Auction must not be null!");
     if (auction.getStatus() != AuctionStatus.RUNNING) {
-      throw new AuctionClosedException("Auction #" + auction.getId()
-          + " is not currently running (status =" + auction.getStatus() + ").");
+      throw new AuctionClosedException(
+          "Auction #"
+              + auction.getId()
+              + " is not currently running (status ="
+              + auction.getStatus()
+              + ").");
     }
   }
 
