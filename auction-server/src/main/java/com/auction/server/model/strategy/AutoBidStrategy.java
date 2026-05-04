@@ -14,7 +14,8 @@ public class AutoBidStrategy implements BidStrategy {
   public final LocalDateTime registerAt;
 
   public AutoBidStrategy(Long userId, long maxBid, long increment, LocalDateTime registerAt) {
-    if (maxBid < 0) throw new IllegalArgumentException("The maximum price must be greater than 0!");
+    if (maxBid < 0)
+      throw new IllegalArgumentException("The maximum price must be greater than 0!");
     if (increment <= 0)
       throw new IllegalArgumentException("The price increment must be greater than 0!");
     this.userId = userId;
@@ -27,7 +28,14 @@ public class AutoBidStrategy implements BidStrategy {
   public BidTransaction calculateBid(Auction auction, long bidderId, long requestAmount) {
     validateAuction(auction);
 
-    long nextBid = Math.min(auction.getCurrentPrice() + increment, maxBid);
+    long currentPrice = auction.getCurrentPrice();
+
+    // Kiểm tra xem người này có đang dẫn đầu không -> nếu có thì ko cập nhật bid
+    if (auction.getCurrentWinnerId() != null && auction.getCurrentWinnerId().equals(userId)) {
+      return null;
+    }
+
+    long nextBid = Math.min(currentPrice + increment, maxBid);
 
     validateAmount(auction, nextBid);
     return new BidTransaction(auction.getId(), bidderId, nextBid);
@@ -35,22 +43,30 @@ public class AutoBidStrategy implements BidStrategy {
 
   // Hàm kiểm tra xem Auction có tồn tại hoặc đang chạy hay không.
   private void validateAuction(Auction auction) {
-    if (auction == null) throw new IllegalArgumentException("Auction must not be null!");
+    if (auction == null)
+      throw new IllegalArgumentException("Auction must not be null!");
     if (auction.getStatus() != AuctionStatus.RUNNING) {
-      throw new AuctionClosedException(
-          "Auction #"
-              + auction.getId()
-              + " is not currently running (status ="
-              + auction.getStatus()
-              + ").");
+      throw new AuctionClosedException("Auction #" + auction.getId()
+          + " is not currently running (status =" + auction.getStatus() + ").");
     }
   }
 
   private void validateAmount(Auction auction, long nextBid) {
+    if (nextBid <= auction.getCurrentPrice()) {
+      throw new InvalidBidException("Bid must be higher than the current price!");
+    }
 
     if (auction.getCurrentPrice() >= maxBid) {
       throw new InvalidBidException("Auto-bid limit reached!");
     }
+  }
+
+  // Hàm xét độ ưu tiên, nếu có cùng giá trị maxBid -> ưu tiên người đặt giá trước
+  public boolean hasPriorityOver(AutoBidStrategy other) {
+    if (this.maxBid != other.maxBid) {
+      return this.maxBid > other.maxBid;
+    }
+    return this.registerAt.isBefore(other.registerAt);
   }
 
   @Override
