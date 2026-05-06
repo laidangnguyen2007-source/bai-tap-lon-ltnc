@@ -2,18 +2,19 @@ package com.auction.client.network;
 
 import java.io.IOException;
 import java.net.UnknownHostException;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import com.auction.client.service.ServerService;
+import com.auction.client.util.JsonEntityMapper;
 import com.auction.server.model.entity.BidTransaction;
 
 public class BidController {
   private final SocketConnection connection;
   private final ServerService serverService;
+  private final JsonEntityMapper entityMapper = new JsonEntityMapper();
   // Lưu callback để có thể hủy đăng ký khi cần
   private final java.util.function.Consumer<String> pushHandler;
 
@@ -62,7 +63,7 @@ public class BidController {
       }
       List<BidTransaction> result = new ArrayList<>();
       for (Object obj : (JSONArray) res.get("bids")) {
-        result.add(mapToBid((JSONObject) obj));
+        result.add(entityMapper.mapToBid((JSONObject) obj));
       }
       return result;
 
@@ -72,30 +73,6 @@ public class BidController {
     }
     
   }
-  private BidTransaction mapToBid(JSONObject json) {
-    Long id = json.get("id") != null ? ((Number) json.get("id")).longValue() : -1L;
-    
-    LocalDateTime createdAt;
-    try {
-        createdAt = LocalDateTime.parse((String) json.get("createdAt"));
-    } catch (Exception e) {
-        createdAt = LocalDateTime.now(); // Fallback nếu format có vấn đề
-    }
-
-    Long auctionId = json.get("auctionId") != null ? ((Number) json.get("auctionId")).longValue() : -1L;
-    Long bidderId = json.get("bidderId") != null ? ((Number) json.get("bidderId")).longValue() : -1L;
-    long amount = json.get("amount") != null ? ((Number) json.get("amount")).longValue() : 0L;
-    
-    LocalDateTime timestamp;
-    try {
-        timestamp = LocalDateTime.parse((String) json.get("timestamp"));
-    } catch (Exception e) {
-        timestamp = LocalDateTime.now(); // Fallback
-    }
-
-    return new BidTransaction(id, createdAt, auctionId, bidderId, amount, timestamp);
-  }
-
 
   /** Xử lý mọi push message đến từ server (được gọi bởi GlobalNetworkListener). */
   private void handlePushMessage(String line) {
@@ -104,7 +81,7 @@ public class BidController {
       String type = (String) push.get("type");
 
       if ("BID_UPDATE".equals(type)) {
-        BidTransaction bid = mapToBid((JSONObject) push.get("bid"));
+        BidTransaction bid = entityMapper.mapToBid((JSONObject) push.get("bid"));
         serverService.notifyBidUpdated(bid);
       } else if ("AUCTION_STATUS_CHANGED".equals(type)) {
         Long auctionId = ((Number) push.get("auctionId")).longValue();
