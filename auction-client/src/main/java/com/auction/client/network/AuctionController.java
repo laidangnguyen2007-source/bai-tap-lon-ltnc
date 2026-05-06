@@ -2,17 +2,17 @@ package com.auction.client.network;
 
 import java.io.IOException;
 import java.net.UnknownHostException;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
+import com.auction.client.util.JsonEntityMapper;
 import com.auction.server.model.entity.Auction;
-import com.auction.server.model.enums.AuctionStatus;
 
 public class AuctionController {
   private final SocketConnection connection;
+  private final JsonEntityMapper entityMapper = new JsonEntityMapper();
 
   public AuctionController() throws UnknownHostException, IOException {
     this.connection = SocketConnection.getInstance();
@@ -33,7 +33,7 @@ public class AuctionController {
       List<Auction> result = new ArrayList<>();
       JSONArray arr = (JSONArray) res.get("auctions");
       for (Object obj : arr) {
-        result.add(mapToAuction((JSONObject) obj));
+        result.add(entityMapper.mapToAuction((JSONObject) obj));
       }
       return result;
     } catch (Exception e) {
@@ -58,7 +58,7 @@ public class AuctionController {
       List<Auction> result = new ArrayList<>();
       JSONArray arr = (JSONArray) res.get("auctions");
       for (Object obj : arr) {
-        result.add(mapToAuction((JSONObject) obj));
+        result.add(entityMapper.mapToAuction((JSONObject) obj));
       }
       return result;
 
@@ -141,21 +141,5 @@ public class AuctionController {
     }
   }
 
-  // JSON -> Auction
-  private Auction mapToAuction(JSONObject json) {
-    Long id = json.get("id") != null ? Long.parseLong(json.get("id").toString()) : null;
-    LocalDateTime createdAt = LocalDateTime.parse(json.get("createdAt").toString());
-    Long itemId = json.get("itemId") != null ? Long.parseLong(json.get("itemId").toString()) : null;
-    Long sellerId = json.get("sellerId") != null ? Long.parseLong(json.get("sellerId").toString()) : null;
-    long currentPrice = json.get("currentPrice") != null ? Long.parseLong(json.get("currentPrice").toString()) : 0L;
-    Long currentWinnerId = json.get("currentWinnerId") != null ? Long.parseLong(json.get("currentWinnerId").toString()) : null;
-    AuctionStatus status = AuctionStatus.valueOf(json.get("status").toString());
-    LocalDateTime startTime = LocalDateTime.parse(json.get("startTime").toString());
-    LocalDateTime endTime = LocalDateTime.parse(json.get("endTime").toString());
-    
-    Auction auction = new Auction(id, createdAt, itemId, sellerId, currentPrice, currentWinnerId, status, startTime, endTime);
-    Object nameObj = json.get("itemName");
-    auction.setItemName(nameObj != null ? nameObj.toString() : "Sản phẩm #" + itemId);
-    return auction;
-  }
+
 }
