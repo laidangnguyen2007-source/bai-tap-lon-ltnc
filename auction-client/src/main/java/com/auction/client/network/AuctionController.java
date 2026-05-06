@@ -67,15 +67,32 @@ public class AuctionController {
       return new ArrayList<>();
     }
   }
-  public Long createAuction(Auction auction) {
+  /**
+   * Tạo phiên đấu giá mới — gửi tên sản phẩm + loại sản phẩm lên server.
+   * Server sẽ tự tạo Item trong DB rồi tạo Auction gắn với Item đó.
+   * Không cần Auction object — truyền raw params để tránh lỗi itemId=0.
+   *
+   * @param sellerId ID của Seller
+   * @param startingPrice giá khởi điểm
+   * @param startTime thời gian bắt đầu
+   * @param endTime thời gian kết thúc
+   * @param itemName tên sản phẩm do Seller đặt
+   * @param category loại sản phẩm (ELECTRONICS, ARTWORK, VEHICLE, OTHER)
+   * @return ID của phiên đấu giá vừa tạo, -1 nếu thất bại
+   */
+  public Long createAuction(Long sellerId, long startingPrice,
+      java.time.LocalDateTime startTime, java.time.LocalDateTime endTime,
+      String itemName, String category) {
     try {
       JSONObject req = new JSONObject();
       req.put("action", "CREATE_AUCTION");
-      req.put("itemId", auction.getItemId());
-      req.put("sellerId", auction.getSellerId());
-      req.put("startingPrice", auction.getCurrentPrice());
-      req.put("startTime", auction.getStartTime().toString());
-      req.put("endTime", auction.getEndTime().toString());
+      // Gửi tên + loại sản phẩm (server tự tạo Item với ID auto-increment)
+      req.put("itemName", itemName);
+      req.put("category", category);
+      req.put("sellerId", sellerId);
+      req.put("startingPrice", startingPrice);
+      req.put("startTime", startTime.toString());
+      req.put("endTime", endTime.toString());
 
       String json = connection.sendRequest(req.toJSONString());
       JSONObject res = (JSONObject) new JSONParser().parse(json);

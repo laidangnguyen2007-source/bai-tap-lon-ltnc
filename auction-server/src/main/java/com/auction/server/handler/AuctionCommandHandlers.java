@@ -5,6 +5,7 @@ import com.auction.server.dao.BidTransactionDao;
 import com.auction.server.dao.ItemDao;
 import com.auction.server.model.entity.Auction;
 import com.auction.server.model.entity.item.Item;
+import com.auction.server.model.entity.item.ItemFactory;
 import com.auction.server.model.enums.AuctionStatus;
 import com.auction.server.model.enums.ItemCategory;
 import com.auction.server.net.ClientBroadcaster;
@@ -38,24 +39,59 @@ public final class AuctionCommandHandlers {
     this.broadcaster = broadcaster;
   }
 
+  /**
+   * Tạo phiên đấu giá mới — đồng thời tự động tạo Item (sản phẩm) trong database.
+   *
+   * <p><b>Luồng xử lý:</b>
+   * <ol>
+   *   <li>Nhận thông tin từ client: tên sản phẩm, loại sản phẩm, giá, thời gian</li>
+   *   <li>Tạo Item mới qua {@code ItemFactory.createSimpleItem()} và lưu vào DB</li>
+   *   <li>Lấy itemId tự động sinh bởi AUTO_INCREMENT (không bao giờ trùng)</li>
+   *   <li>Tạo Auction gắn với itemId vừa tạo</li>
+   *   <li>Xác định trạng thái dựa trên thời gian bắt đầu</li>
+   * </ol>
+   */
   public String createAuction(JSONObject req) throws Exception {
-    Long itemId = req.getLong("itemId");
+    // --- Đọc dữ liệu từ request JSON ---
+    String itemName = req.getString("itemName");        // Tên sản phẩm do Seller đặt
+    String categoryStr = req.getString("category");     // Loại sản phẩm (ELECTRONICS, ARTWORK, VEHICLE, OTHER)
     Long sellerId = req.getLong("sellerId");
     Long startingPrice = req.getLong("startingPrice");
     LocalDateTime startTime = LocalDateTime.parse(req.getString("startTime"));
     LocalDateTime endTime = LocalDateTime.parse(req.getString("endTime"));
     LocalDateTime now = LocalDateTime.now();
 
-    if (itemDao.findById(itemId).isEmpty()) {
-      return JsonResponses.error("Sản phẩm #" + itemId + " không tồn tại!");
-    }
-    if (startTime.plusMinutes(1).isBefore(now)) {
-      return JsonResponses.error("Thời gian bắt đầu không được ở trong quá khứ!");
+    // --- Validate dữ liệu đầu vào ---
+    if (itemName == null || itemName.trim().isEmpty()) {
+      return JsonResponses.error("Tên sản phẩm không được để trống!");
     }
 
+    // Chuyển đổi chuỗi category thành enum, báo lỗi nếu không hợp lệ
+    ItemCategory category;
+    try {
+      category = ItemCategory.valueOf(categoryStr);
+    } catch (IllegalArgumentException e) {
+      return JsonResponses.error("Loại sản phẩm không hợp lệ: " + categoryStr);
+    }
+
+    // --- Bước 1: Tạo Item mới trong database ---
+    // Sử dụng ItemFactory.createSimpleItem() để tạo Item với giá trị mặc định
+    // cho các trường đặc thù (brand, warranty...). ID được AUTO_INCREMENT tự sinh.
+    Item newItem = ItemFactory.createSimpleItem(category, itemName.trim(), startingPrice, sellerId);
+    itemDao.save(newItem); // Sau lệnh này, newItem.getId() sẽ có giá trị từ DB
+
+    Long itemId = newItem.getId();
+    System.out.println("CREATE_AUCTION: Auto-created item #" + itemId
+        + " [" + category + "] \"" + itemName + "\"");
+
+    // --- Bước 2: Tạo Auction gắn với Item vừa tạo ---
     Auction auction = new Auction(itemId, sellerId, startTime, endTime);
     auction.setCurrentPrice(startingPrice);
 
+    // --- Bước 3: Xác định trạng thái dựa trên thời gian ---
+    // - startTime đã qua & endTime chưa qua → RUNNING (chạy ngay)
+    // - startTime ở tương lai → OPEN (đợi đến giờ)
+    // - endTime đã qua → FINISHED (đã hết hạn)
     if (now.isAfter(startTime) && now.isBefore(endTime)) {
       auction.setStatus(AuctionStatus.RUNNING);
     } else if (now.isAfter(endTime)) {
@@ -64,7 +100,10 @@ public final class AuctionCommandHandlers {
       auction.setStatus(AuctionStatus.OPEN);
     }
 
+    // Lưu Auction vào database
     auctionDao.save(auction);
+
+    // Nếu phiên đang RUNNING thì đưa vào bộ nhớ đệm RAM để xử lý bid realtime
     if (auction.getStatus() == AuctionStatus.RUNNING) {
       AuctionManager.getInstance().restoreRunningAuction(auction);
     }

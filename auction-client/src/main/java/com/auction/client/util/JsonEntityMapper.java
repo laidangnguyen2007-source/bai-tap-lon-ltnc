@@ -83,6 +83,13 @@ public class JsonEntityMapper {
         json.get("mileageKm") != null ? ((Number) json.get("mileageKm")).intValue() : 0,
         (String) json.get("fuelType")
       );
+      // OTHER: Sản phẩm chung — dùng Electronics làm class cụ thể với giá trị mặc định
+      case OTHER: {
+        Item otherItem = ItemFactory.reconstructElectronics(
+            id, createdAt, name, desc, price, seller, "N/A", 0, 0.0);
+        otherItem.setCategory(ItemCategory.OTHER);
+        return otherItem;
+      }
       default:
         throw new IllegalArgumentException("Unknown item: " + category);
     }
@@ -126,8 +133,15 @@ public class JsonEntityMapper {
     LocalDateTime endTime = LocalDateTime.parse(json.get("endTime").toString());
     
     Auction auction = new Auction(id, createdAt, itemId, sellerId, currentPrice, currentWinnerId, status, startTime, endTime);
+    
+    // Tên sản phẩm (server tra cứu từ bảng items)
     Object nameObj = json.get("itemName");
     auction.setItemName(nameObj != null ? nameObj.toString() : "Sản phẩm #" + itemId);
+    
+    // Loại sản phẩm — dùng để hiển thị cột "Loại SP" trên bảng Seller Dashboard
+    Object categoryObj = json.get("itemCategory");
+    auction.setItemCategory(categoryObj != null ? categoryObj.toString() : "OTHER");
+    
     return auction;
   }
 }

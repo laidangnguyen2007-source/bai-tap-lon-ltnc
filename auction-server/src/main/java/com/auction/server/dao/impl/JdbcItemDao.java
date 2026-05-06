@@ -220,7 +220,7 @@ public class JdbcItemDao implements ItemDao {
 
     // Factory Pattern: gọi ItemFactory.reconstruct*() thay vì new trực tiếp
     // Giữ cho DAO không bị phụ thuộc vào cụ thể của từng loại Item
-    return switch (category) {
+    Item result = switch (category) {
       case ELECTRONICS ->
           ItemFactory.reconstructElectronics(
               id,
@@ -255,7 +255,20 @@ public class JdbcItemDao implements ItemDao {
               rs.getInt("vehicle_year"),
               rs.getInt("mileage"),
               ""); // fuelType chưa có cột, để trống
+
+      // OTHER: Sản phẩm chung — dùng Electronics làm class cụ thể với giá trị mặc định
+      // vì Item là abstract, cần 1 class con cụ thể để khởi tạo đối tượng
+      case OTHER -> {
+        Item otherItem = ItemFactory.reconstructElectronics(
+            id, createdAt, name, description, startingPrice, sellerId,
+            rs.getString("brand") != null ? rs.getString("brand") : "N/A",
+            rs.getInt("warranty_months"),
+            rs.getDouble("power_watts"));
+        otherItem.setCategory(ItemCategory.OTHER); // Ghi đè category đúng
+        yield otherItem;
+      }
     };
+    return result;
   }
 
   private void bindItemTypeFields(PreparedStatement ps, Item item) throws SQLException {

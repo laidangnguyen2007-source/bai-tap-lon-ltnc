@@ -26,6 +26,7 @@ public class Auction extends BaseEntity {
   private LocalDateTime startTime;
   private LocalDateTime endTime;
   private String itemName; // Tên sản phẩm (để hiển thị ở danh sách)
+  private String itemCategory; // Loại sản phẩm (để hiển thị ở bảng Seller Dashboard)
 
   public Auction() {
     super();
@@ -175,6 +176,15 @@ public class Auction extends BaseEntity {
 
   public void setItemName(String itemName) {
     this.itemName = itemName;
+  }
+
+  // Loại sản phẩm (transient — chỉ dùng để hiển thị, không lưu trong bảng auctions)
+  public String getItemCategory() {
+    return itemCategory;
+  }
+
+  public void setItemCategory(String itemCategory) {
+    this.itemCategory = itemCategory;
   }
 
   @Override
