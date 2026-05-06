@@ -49,27 +49,38 @@
         <Separator/>
 
         <GridPane hgap="12" vgap="12">
-          <Label text="Mã sản phẩm (Item ID):" styleClass="field-label"
+          <!-- Hàng 0: Chọn loại sản phẩm từ dropdown (thay vì nhập mã ID thủ công) -->
+          <Label text="Loại sản phẩm:" styleClass="field-label"
                  GridPane.columnIndex="0" GridPane.rowIndex="0"/>
-          <TextField fx:id="itemIdField" promptText="Nhập ID sản phẩm..."
-                     styleClass="text-field" GridPane.columnIndex="1" GridPane.rowIndex="0"/>
+          <ComboBox fx:id="categoryCombo" promptText="Chọn loại sản phẩm..."
+                     styleClass="text-field" GridPane.columnIndex="1" GridPane.rowIndex="0"
+                     maxWidth="Infinity"/>
 
-          <Label text="Giá khởi điểm (VNĐ):" styleClass="field-label"
+          <!-- Hàng 1: Đặt tên sản phẩm (Seller tự đặt, thay vì dùng tên từ DB) -->
+          <Label text="Tên sản phẩm:" styleClass="field-label"
                  GridPane.columnIndex="0" GridPane.rowIndex="1"/>
-          <TextField fx:id="startingPriceField" promptText="Ví dụ: 500000"
+          <TextField fx:id="itemNameField" promptText="Nhập tên sản phẩm..."
                      styleClass="text-field" GridPane.columnIndex="1" GridPane.rowIndex="1"/>
 
-          <Label text="Ngày bắt đầu:" styleClass="field-label"
+          <!-- Hàng 2: Giá khởi điểm -->
+          <Label text="Giá khởi điểm (VNĐ):" styleClass="field-label"
                  GridPane.columnIndex="0" GridPane.rowIndex="2"/>
-          <HBox spacing="5" GridPane.columnIndex="1" GridPane.rowIndex="2">
+          <TextField fx:id="startingPriceField" promptText="Ví dụ: 500000"
+                      styleClass="text-field" GridPane.columnIndex="1" GridPane.rowIndex="2"/>
+
+          <!-- Hàng 3: Ngày giờ bắt đầu -->
+          <Label text="Ngày bắt đầu:" styleClass="field-label"
+                 GridPane.columnIndex="0" GridPane.rowIndex="3"/>
+          <HBox spacing="5" GridPane.columnIndex="1" GridPane.rowIndex="3">
               <DatePicker fx:id="startDatePicker" prefWidth="175" minWidth="160" styleClass="seller-date-picker"/>
               <ComboBox fx:id="startHourCombo" prefWidth="78" minWidth="72" promptText="Giờ" styleClass="seller-time-combo"/>
               <ComboBox fx:id="startMinuteCombo" prefWidth="78" minWidth="72" promptText="Phút" styleClass="seller-time-combo"/>
           </HBox>
 
+          <!-- Hàng 4: Ngày giờ kết thúc -->
           <Label text="Ngày kết thúc:" styleClass="field-label"
-                 GridPane.columnIndex="0" GridPane.rowIndex="3"/>
-          <HBox spacing="5" GridPane.columnIndex="1" GridPane.rowIndex="3">
+                 GridPane.columnIndex="0" GridPane.rowIndex="4"/>
+          <HBox spacing="5" GridPane.columnIndex="1" GridPane.rowIndex="4">
               <DatePicker fx:id="endDatePicker" prefWidth="175" minWidth="160" styleClass="seller-date-picker"/>
               <ComboBox fx:id="endHourCombo" prefWidth="78" minWidth="72" promptText="Giờ" styleClass="seller-time-combo"/>
               <ComboBox fx:id="endMinuteCombo" prefWidth="78" minWidth="72" promptText="Phút" styleClass="seller-time-combo"/>
@@ -100,10 +111,12 @@
             <TableView fx:constant="CONSTRAINED_RESIZE_POLICY" />
           </columnResizePolicy>
           <columns>
-            <TableColumn fx:id="idCol" text="Mã phiên" prefWidth="80"/>
-            <TableColumn fx:id="itemNameCol" text="Tên sản phẩm" prefWidth="180"/>
-            <TableColumn fx:id="priceCol" text="Giá hiện tại" prefWidth="140"/>
-            <TableColumn fx:id="statusCol" text="Trạng thái" prefWidth="120"/>
+            <TableColumn fx:id="idCol" text="Mã phiên" prefWidth="70"/>
+            <TableColumn fx:id="itemNameCol" text="Tên sản phẩm" prefWidth="160"/>
+            <!-- Cột loại sản phẩm (mới) — hiển thị ELECTRONICS/ARTWORK/VEHICLE/OTHER -->
+            <TableColumn fx:id="categoryCol" text="Loại SP" prefWidth="100"/>
+            <TableColumn fx:id="priceCol" text="Giá hiện tại" prefWidth="130"/>
+            <TableColumn fx:id="statusCol" text="Trạng thái" prefWidth="110"/>
             <TableColumn fx:id="startTimeCol" text="Bắt đầu" prefWidth="150"/>
             <TableColumn fx:id="endTimeCol" text="Kết thúc" prefWidth="150"/>
           </columns>

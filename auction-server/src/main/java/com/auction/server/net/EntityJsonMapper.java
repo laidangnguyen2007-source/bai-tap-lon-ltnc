@@ -44,12 +44,13 @@ public final class EntityJsonMapper {
     json.put("createdAt", auction.getCreatedAt().toString());
     json.put("itemId", auction.getItemId());
 
-    String name =
-        itemDao
-            .findById(auction.getItemId())
-            .map(Item::getName)
-            .orElse("Sản phẩm #" + auction.getItemId());
+    // Tra cứu Item từ DB để lấy tên + loại sản phẩm hiển thị trên danh sách
+    var itemOpt = itemDao.findById(auction.getItemId());
+    String name = itemOpt.map(Item::getName).orElse("Sản phẩm #" + auction.getItemId());
+    String category = itemOpt.map(i -> i.getCategory().name()).orElse("OTHER");
+
     json.put("itemName", name);
+    json.put("itemCategory", category); // Loại sản phẩm để hiển thị ở bảng Seller Dashboard
     json.put("sellerId", auction.getSellerId());
     json.put("currentPrice", auction.getCurrentPrice());
     json.put("currentWinnerId", auction.getCurrentWinnerId());

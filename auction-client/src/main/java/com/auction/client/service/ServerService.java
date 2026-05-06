@@ -166,13 +166,23 @@ public class ServerService {
 
   /**
    * Tạo phiên đấu giá mới (chỉ dành cho Seller).
+   * Server sẽ tự tạo Item mới từ tên + loại sản phẩm, rồi tạo Auction gắn với Item đó.
+   * Không cần tạo Auction object trên client — truyền trực tiếp các tham số.
    *
-   * @param auction thông tin phiên đấu giá mới
+   * @param sellerId ID của Seller tạo phiên
+   * @param startingPrice giá khởi điểm
+   * @param startTime thời gian bắt đầu
+   * @param endTime thời gian kết thúc
+   * @param itemName tên sản phẩm do Seller đặt
+   * @param category loại sản phẩm (ELECTRONICS, ARTWORK, VEHICLE, OTHER)
    * @return ID của phiên vừa tạo, -1 nếu thất bại
    */
-  public Long createAuction(Auction auction) {
-    // STUB: TV3 thay bằng gửi request CREATE_AUCTION qua socket
-    return auctionController.createAuction(auction);
+  public Long createAuction(Long sellerId, long startingPrice,
+      java.time.LocalDateTime startTime, java.time.LocalDateTime endTime,
+      String itemName, String category) {
+    // Gửi request CREATE_AUCTION kèm itemName + category qua socket
+    return auctionController.createAuction(sellerId, startingPrice, startTime, endTime,
+        itemName, category);
   }
 
   /**

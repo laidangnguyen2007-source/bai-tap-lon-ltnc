@@ -92,7 +92,7 @@ CREATE TABLE IF NOT EXISTS items (
         FOREIGN KEY (seller_id) REFERENCES users(id)
         ON DELETE RESTRICT ON UPDATE CASCADE,
     CONSTRAINT chk_category
-        CHECK (category IN ('ELECTRONICS', 'ARTWORK', 'VEHICLE')),
+        CHECK (category IN ('ELECTRONICS', 'ARTWORK', 'VEHICLE', 'OTHER')),
     CONSTRAINT chk_starting_price
         CHECK (starting_price > 0)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
