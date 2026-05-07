@@ -5,6 +5,7 @@ import com.auction.server.model.entity.user.User;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 
+@SuppressWarnings("unchecked")
 public class UserNetworkHandler {
     private final SocketConnection connection;
 

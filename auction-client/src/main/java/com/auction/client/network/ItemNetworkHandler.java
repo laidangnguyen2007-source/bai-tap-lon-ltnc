@@ -5,6 +5,7 @@ import com.auction.server.model.entity.item.Item;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 
+@SuppressWarnings("unchecked")
 public class ItemNetworkHandler {
     private final SocketConnection connection;
 

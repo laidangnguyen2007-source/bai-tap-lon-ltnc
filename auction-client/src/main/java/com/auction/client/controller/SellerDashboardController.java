@@ -308,11 +308,18 @@ public class SellerDashboardController {
         return; // Hủy tạo phiên
     }
 
-    // Gửi request lên server kèm itemName + category
-    // Server sẽ tự tạo Item (với ID auto-increment) rồi tạo Auction
-    // KHÔNG tạo Auction object giả (Auction(0L,...)) vì itemId=0 gây lỗi
-    Long createdId = serverService.createAuction(
-        sellerId, startingPrice, startTime, endTime, itemName, categoryEnum);
+    // Gửi request lên server
+    // Tạo đối tượng Auction tạm thời để đóng gói dữ liệu
+    Auction newAuction = new Auction();
+    newAuction.setSellerId(sellerId);
+    newAuction.setCurrentPrice(startingPrice);
+    newAuction.setStartTime(startTime);
+    newAuction.setEndTime(endTime);
+    // Lưu tạm itemName và category vào object để Handler lấy ra gửi JSON
+    newAuction.setItemName(itemName);
+    newAuction.setItemCategory(categoryEnum); 
+
+    Long createdId = serverService.createAuction(newAuction);
 
     if (createdId != null && createdId > 0) {
       // [Thông báo trạng thái dựa trên thời gian]

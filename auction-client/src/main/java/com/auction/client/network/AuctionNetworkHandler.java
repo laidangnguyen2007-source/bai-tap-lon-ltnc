@@ -2,13 +2,13 @@ package com.auction.client.network;
 
 import com.auction.client.util.JsonMapper;
 import com.auction.server.model.entity.Auction;
-import com.auction.server.model.enums.AuctionStatus;
 import java.util.ArrayList;
 import java.util.List;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 
+@SuppressWarnings("unchecked")
 public class AuctionNetworkHandler {
     private final SocketConnection connection;
 
@@ -22,13 +22,16 @@ public class AuctionNetworkHandler {
             req.put("action", "GET_ALL_AUCTIONS");
             String json = connection.sendRequest(req.toJSONString());
             JSONObject res = (JSONObject) new JSONParser().parse(json);
-            if (!"OK".equals(res.get("status"))) return new ArrayList<>();
+            if (!"OK".equals(res.get("status")))
+                return new ArrayList<>();
             List<Auction> result = new ArrayList<>();
             for (Object obj : (JSONArray) res.get("auctions")) {
                 result.add(JsonMapper.mapToAuction((JSONObject) obj));
             }
             return result;
-        } catch (Exception e) { return new ArrayList<>(); }
+        } catch (Exception e) {
+            return new ArrayList<>();
+        }
     }
 
     public List<Auction> getAuctionsBySeller(Long sellerId) {
@@ -38,28 +41,38 @@ public class AuctionNetworkHandler {
             req.put("sellerId", sellerId);
             String json = connection.sendRequest(req.toJSONString());
             JSONObject res = (JSONObject) new JSONParser().parse(json);
-            if (!"OK".equals(res.get("status"))) return new ArrayList<>();
+            if (!"OK".equals(res.get("status")))
+                return new ArrayList<>();
             List<Auction> result = new ArrayList<>();
             for (Object obj : (JSONArray) res.get("auctions")) {
                 result.add(JsonMapper.mapToAuction((JSONObject) obj));
             }
             return result;
-        } catch (Exception e) { return new ArrayList<>(); }
+        } catch (Exception e) {
+            return new ArrayList<>();
+        }
     }
 
     public Long createAuction(Auction auction) {
         try {
             JSONObject req = new JSONObject();
             req.put("action", "CREATE_AUCTION");
-            req.put("itemId", auction.getItemId());
+            // Server tự tạo Item từ itemName + category — KHÔNG gửi itemId
+            req.put("itemName", auction.getItemName());
+            req.put("category", auction.getItemCategory());
             req.put("sellerId", auction.getSellerId());
             req.put("startingPrice", auction.getCurrentPrice());
             req.put("startTime", auction.getStartTime().toString());
             req.put("endTime", auction.getEndTime().toString());
             String json = connection.sendRequest(req.toJSONString());
             JSONObject res = (JSONObject) new JSONParser().parse(json);
-            return "OK".equals(res.get("status")) ? (Long) res.get("auctionId") : -1L;
-        } catch (Exception e) { return -1L; }
+            if (!"OK".equals(res.get("status"))) return -1L;
+            // Dùng Number thay vì cast thẳng (Long) để tránh ClassCastException
+            return ((Number) res.get("auctionId")).longValue();
+        } catch (Exception e) {
+            System.err.println("[AuctionHandler] createAuction error: " + e.getMessage());
+            return -1L;
+        }
     }
 
     public boolean deleteAuction(Long auctionId) {
@@ -70,7 +83,9 @@ public class AuctionNetworkHandler {
             String json = connection.sendRequest(req.toJSONString());
             JSONObject res = (JSONObject) new JSONParser().parse(json);
             return "OK".equals(res.get("status"));
-        } catch (Exception e) { return false; }
+        } catch (Exception e) {
+            return false;
+        }
     }
 
     public boolean resetAuction(Long auctionId) {
@@ -81,10 +96,13 @@ public class AuctionNetworkHandler {
             String json = connection.sendRequest(req.toJSONString());
             JSONObject res = (JSONObject) new JSONParser().parse(json);
             return "OK".equals(res.get("status"));
-        } catch (Exception e) { return false; }
+        } catch (Exception e) {
+            return false;
+        }
     }
 
-    public boolean updateAuctionAdmin(Long auctionId, long price, String status, String startTime, String endTime, String category) {
+    public boolean updateAuctionAdmin(Long auctionId, long price, String status, String startTime,
+            String endTime, String category) {
         try {
             JSONObject req = new JSONObject();
             req.put("action", "ADMIN_UPDATE_AUCTION");
@@ -97,6 +115,8 @@ public class AuctionNetworkHandler {
             String json = connection.sendRequest(req.toJSONString());
             JSONObject res = (JSONObject) new JSONParser().parse(json);
             return "OK".equals(res.get("status"));
-        } catch (Exception e) { return false; }
+        } catch (Exception e) {
+            return false;
+        }
     }
 }

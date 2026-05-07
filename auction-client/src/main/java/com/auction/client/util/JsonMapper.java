@@ -14,11 +14,17 @@ import java.time.LocalDateTime;
 import org.json.simple.JSONObject;
 
 /**
- * Utility class chuyên trách việc chuyển đổi JSON sang Object (Mapping).
- * Giúp tuân thủ SRP: Các lớp Network chỉ lo gửi/nhận, lớp này lo parse dữ liệu.
+ * Utility class chuyên trách việc chuyển đổi JSON sang Java Object (Deserialize).
+ * Tuân thủ SRP: Các lớp Network chỉ lo gửi/nhận, lớp này lo parse dữ liệu.
+ *
+ * <p>Tất cả phương thức là static — không cần khởi tạo đối tượng.
+ * Null-safety: tất cả trường số đều ép qua (Number) thay vì (Long) để tránh
+ * ClassCastException khi server trả về Integer hay BigDecimal.
  */
 public final class JsonMapper {
     private JsonMapper() { throw new UnsupportedOperationException(); }
+
+    // ── JSON → User ──────────────────────────────────────────────────
 
     public static User mapToUser(JSONObject json) {
         String role = (String) json.get("role");
@@ -27,60 +33,123 @@ public final class JsonMapper {
         String email = (String) json.get("email");
         return switch (role) {
             case "BIDDER" -> {
-                long balance = json.get("balance") != null ? ((Number) json.get("balance")).longValue() : 0L;
+                long balance = json.get("balance") != null
+                    ? ((Number) json.get("balance")).longValue() : 0L;
                 Bidder b = new Bidder(username, "", email, balance);
-                b.setId(id); yield b;
+                b.setId(id);
+                yield b;
             }
             case "SELLER" -> {
                 Seller s = new Seller(username, "", email, (String) json.get("shopName"));
-                s.setId(id); yield s;
+                s.setId(id);
+                yield s;
             }
             case "ADMIN" -> {
                 Admin a = new Admin(username, "", email, 1);
-                a.setId(id); yield a;
+                a.setId(id);
+                yield a;
             }
             default -> throw new IllegalArgumentException("Unknown role: " + role);
         };
     }
 
+    // ── JSON → Auction ───────────────────────────────────────────────
+
     public static Auction mapToAuction(JSONObject json) {
-        Long id = ((Number) json.get("id")).longValue();
-        LocalDateTime createdAt = LocalDateTime.parse((String) json.get("createdAt"));
-        Long itemId = ((Number) json.get("itemId")).longValue();
-        Long sellerId = ((Number) json.get("sellerId")).longValue();
-        long currentPrice = ((Number) json.get("currentPrice")).longValue();
-        Long currentWinnerId = json.get("currentWinnerId") != null ? ((Number) json.get("currentWinnerId")).longValue() : null;
-        AuctionStatus status = AuctionStatus.valueOf((String) json.get("status"));
-        LocalDateTime startTime = LocalDateTime.parse((String) json.get("startTime"));
-        LocalDateTime endTime = LocalDateTime.parse((String) json.get("endTime"));
-        Auction a = new Auction(id, createdAt, itemId, sellerId, currentPrice, currentWinnerId, status, startTime, endTime);
-        a.setItemName(json.get("itemName") != null ? (String) json.get("itemName") : "Sản phẩm #" + itemId);
+        // Dùng toString() + parse để xử lý cả Integer lẫn Long từ server
+        Long id = json.get("id") != null
+            ? Long.parseLong(json.get("id").toString()) : null;
+        LocalDateTime createdAt = LocalDateTime.parse(json.get("createdAt").toString());
+        Long itemId = json.get("itemId") != null
+            ? Long.parseLong(json.get("itemId").toString()) : null;
+        Long sellerId = json.get("sellerId") != null
+            ? Long.parseLong(json.get("sellerId").toString()) : null;
+        long currentPrice = json.get("currentPrice") != null
+            ? Long.parseLong(json.get("currentPrice").toString()) : 0L;
+        Long currentWinnerId = json.get("currentWinnerId") != null
+            ? Long.parseLong(json.get("currentWinnerId").toString()) : null;
+        AuctionStatus status = AuctionStatus.valueOf(json.get("status").toString());
+        LocalDateTime startTime = LocalDateTime.parse(json.get("startTime").toString());
+        LocalDateTime endTime   = LocalDateTime.parse(json.get("endTime").toString());
+
+        Auction a = new Auction(id, createdAt, itemId, sellerId,
+            currentPrice, currentWinnerId, status, startTime, endTime);
+
+        // Tên + loại sản phẩm do server enrichment đính kèm
+        a.setItemName(json.get("itemName") != null
+            ? json.get("itemName").toString() : "Sản phẩm #" + itemId);
+        a.setItemCategory(json.get("itemCategory") != null
+            ? json.get("itemCategory").toString() : "OTHER");
+
         return a;
     }
 
+    // ── JSON → BidTransaction ────────────────────────────────────────
+
     public static BidTransaction mapToBid(JSONObject json) {
-        Long id = json.get("id") != null ? ((Number) json.get("id")).longValue() : -1L;
-        LocalDateTime createdAt = LocalDateTime.parse((String) json.get("createdAt"));
-        Long auctionId = ((Number) json.get("auctionId")).longValue();
-        Long bidderId = ((Number) json.get("bidderId")).longValue();
-        long amount = ((Number) json.get("amount")).longValue();
-        LocalDateTime timestamp = LocalDateTime.parse((String) json.get("timestamp"));
+        Long id = json.get("id") != null
+            ? ((Number) json.get("id")).longValue() : -1L;
+
+        LocalDateTime createdAt;
+        try {
+            createdAt = LocalDateTime.parse((String) json.get("createdAt"));
+        } catch (Exception e) {
+            createdAt = LocalDateTime.now(); // Fallback nếu format có vấn đề
+        }
+
+        Long auctionId = json.get("auctionId") != null
+            ? ((Number) json.get("auctionId")).longValue() : -1L;
+        Long bidderId = json.get("bidderId") != null
+            ? ((Number) json.get("bidderId")).longValue() : -1L;
+        long amount = json.get("amount") != null
+            ? ((Number) json.get("amount")).longValue() : 0L;
+
+        LocalDateTime timestamp;
+        try {
+            timestamp = LocalDateTime.parse((String) json.get("timestamp"));
+        } catch (Exception e) {
+            timestamp = LocalDateTime.now(); // Fallback
+        }
+
         return new BidTransaction(id, createdAt, auctionId, bidderId, amount, timestamp);
     }
+
+    // ── JSON → Item ──────────────────────────────────────────────────
 
     public static Item mapToItem(JSONObject json) {
         ItemCategory cat = ItemCategory.valueOf((String) json.get("category"));
         Long id = ((Number) json.get("id")).longValue();
         LocalDateTime createdAt = LocalDateTime.parse((String) json.get("createdAt"));
         String name = (String) json.get("name");
-        String desc = json.get("description") != null ? (String) json.get("description") : "Đang cập nhật...";
-        long price = ((Number) json.get("startingPrice")).longValue();
+        String desc = json.get("description") != null
+            ? (String) json.get("description") : "Đang cập nhật...";
+        long price  = ((Number) json.get("startingPrice")).longValue();
         Long seller = ((Number) json.get("sellerId")).longValue();
 
         return switch (cat) {
-            case ELECTRONICS -> ItemFactory.reconstructElectronics(id, createdAt, name, desc, price, seller, (String) json.get("brand"), json.get("warrantyMonths") != null ? ((Number) json.get("warrantyMonths")).intValue() : 0, json.get("powerWatts") != null ? ((Number) json.get("powerWatts")).doubleValue() : 0.0);
-            case ARTWORK -> ItemFactory.reconstructArtwork(id, createdAt, name, desc, price, seller, (String) json.get("artistName"), json.get("yearCreated") != null ? ((Number) json.get("yearCreated")).intValue() : 0, (String) json.get("medium"));
-            case VEHICLE -> ItemFactory.reconstructVehicle(id, createdAt, name, desc, price, seller, (String) json.get("manufacturer"), json.get("yearManufactured") != null ? ((Number) json.get("yearManufactured")).intValue() : 0, json.get("mileageKm") != null ? ((Number) json.get("mileageKm")).intValue() : 0, (String) json.get("fuelType"));
+            case ELECTRONICS -> ItemFactory.reconstructElectronics(
+                id, createdAt, name, desc, price, seller,
+                (String) json.get("brand"),
+                json.get("warrantyMonths") != null ? ((Number) json.get("warrantyMonths")).intValue() : 0,
+                json.get("powerWatts")    != null ? ((Number) json.get("powerWatts")).doubleValue()    : 0.0);
+            case ARTWORK -> ItemFactory.reconstructArtwork(
+                id, createdAt, name, desc, price, seller,
+                (String) json.get("artistName"),
+                json.get("yearCreated") != null ? ((Number) json.get("yearCreated")).intValue() : 0,
+                (String) json.get("medium"));
+            case VEHICLE -> ItemFactory.reconstructVehicle(
+                id, createdAt, name, desc, price, seller,
+                (String) json.get("manufacturer"),
+                json.get("yearManufactured") != null ? ((Number) json.get("yearManufactured")).intValue() : 0,
+                json.get("mileageKm")        != null ? ((Number) json.get("mileageKm")).intValue()        : 0,
+                (String) json.get("fuelType"));
+            case OTHER -> {
+                // OTHER dùng Electronics làm class nền (Item là abstract), ghi đè category
+                Item other = ItemFactory.createSimpleItem(ItemCategory.OTHER, name, price, seller);
+                other.setId(id);
+                yield other;
+            }
+            default -> throw new IllegalArgumentException("Unknown category: " + cat);
         };
     }
 }

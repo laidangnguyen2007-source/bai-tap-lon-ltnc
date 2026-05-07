@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 C:\Users\admin\OneDrive\Máy tính\ASecret\bai-tap-lon-ltnc\auction-server\src\main\java\com\auction\server\config\DatabaseConfig.java
 C:\Users\admin\OneDrive\Máy tính\ASecret\bai-tap-lon-ltnc\auction-server\src\main\java\com\auction\server\dao\AuctionDao.java
 C:\Users\admin\OneDrive\Máy tính\ASecret\bai-tap-lon-ltnc\auction-server\src\main\java\com\auction\server\dao\BidTransactionDao.java
@@ -49,55 +48,3 @@ C:\Users\admin\OneDrive\Máy tính\ASecret\bai-tap-lon-ltnc\auction-server\src\m
 C:\Users\admin\OneDrive\Máy tính\ASecret\bai-tap-lon-ltnc\auction-server\src\main\java\com\auction\server\service\ItemService.java
 C:\Users\admin\OneDrive\Máy tính\ASecret\bai-tap-lon-ltnc\auction-server\src\main\java\com\auction\server\service\UserService.java
 C:\Users\admin\OneDrive\Máy tính\ASecret\bai-tap-lon-ltnc\auction-server\src\main\java\com\auction\server\service\util\PasswordUtil.java
-=======
-C:\Study\Java\BaiTapLon\bai-tap-lon-ltnc\auction-server\src\main\java\com\auction\server\config\DatabaseConfig.java
-C:\Study\Java\BaiTapLon\bai-tap-lon-ltnc\auction-server\src\main\java\com\auction\server\dao\AuctionDao.java
-C:\Study\Java\BaiTapLon\bai-tap-lon-ltnc\auction-server\src\main\java\com\auction\server\dao\BidTransactionDao.java
-C:\Study\Java\BaiTapLon\bai-tap-lon-ltnc\auction-server\src\main\java\com\auction\server\dao\GenericDao.java
-C:\Study\Java\BaiTapLon\bai-tap-lon-ltnc\auction-server\src\main\java\com\auction\server\dao\impl\JdbcAuctionDao.java
-C:\Study\Java\BaiTapLon\bai-tap-lon-ltnc\auction-server\src\main\java\com\auction\server\dao\impl\JdbcBidTransactionDao.java
-C:\Study\Java\BaiTapLon\bai-tap-lon-ltnc\auction-server\src\main\java\com\auction\server\dao\impl\JdbcItemDao.java
-C:\Study\Java\BaiTapLon\bai-tap-lon-ltnc\auction-server\src\main\java\com\auction\server\dao\impl\JdbcUserDao.java
-C:\Study\Java\BaiTapLon\bai-tap-lon-ltnc\auction-server\src\main\java\com\auction\server\dao\ItemDao.java
-C:\Study\Java\BaiTapLon\bai-tap-lon-ltnc\auction-server\src\main\java\com\auction\server\dao\UserDao.java
-C:\Study\Java\BaiTapLon\bai-tap-lon-ltnc\auction-server\src\main\java\com\auction\server\handler\ActionHandler.java
-C:\Study\Java\BaiTapLon\bai-tap-lon-ltnc\auction-server\src\main\java\com\auction\server\handler\AuctionCommandHandlers.java
-C:\Study\Java\BaiTapLon\bai-tap-lon-ltnc\auction-server\src\main\java\com\auction\server\handler\AuthHandlers.java
-C:\Study\Java\BaiTapLon\bai-tap-lon-ltnc\auction-server\src\main\java\com\auction\server\handler\BiddingHandlers.java
-C:\Study\Java\BaiTapLon\bai-tap-lon-ltnc\auction-server\src\main\java\com\auction\server\handler\CatalogHandlers.java
-C:\Study\Java\BaiTapLon\bai-tap-lon-ltnc\auction-server\src\main\java\com\auction\server\handler\RequestRouter.java
-C:\Study\Java\BaiTapLon\bai-tap-lon-ltnc\auction-server\src\main\java\com\auction\server\model\entity\Auction.java
-C:\Study\Java\BaiTapLon\bai-tap-lon-ltnc\auction-server\src\main\java\com\auction\server\model\entity\BaseEntity.java
-C:\Study\Java\BaiTapLon\bai-tap-lon-ltnc\auction-server\src\main\java\com\auction\server\model\entity\BidTransaction.java
-C:\Study\Java\BaiTapLon\bai-tap-lon-ltnc\auction-server\src\main\java\com\auction\server\model\entity\item\Artwork.java
-C:\Study\Java\BaiTapLon\bai-tap-lon-ltnc\auction-server\src\main\java\com\auction\server\model\entity\item\Electronics.java
-C:\Study\Java\BaiTapLon\bai-tap-lon-ltnc\auction-server\src\main\java\com\auction\server\model\entity\item\Item.java
-C:\Study\Java\BaiTapLon\bai-tap-lon-ltnc\auction-server\src\main\java\com\auction\server\model\entity\item\ItemFactory.java
-C:\Study\Java\BaiTapLon\bai-tap-lon-ltnc\auction-server\src\main\java\com\auction\server\model\entity\item\Vehicle.java
-C:\Study\Java\BaiTapLon\bai-tap-lon-ltnc\auction-server\src\main\java\com\auction\server\model\entity\user\Admin.java
-C:\Study\Java\BaiTapLon\bai-tap-lon-ltnc\auction-server\src\main\java\com\auction\server\model\entity\user\Bidder.java
-C:\Study\Java\BaiTapLon\bai-tap-lon-ltnc\auction-server\src\main\java\com\auction\server\model\entity\user\Seller.java
-C:\Study\Java\BaiTapLon\bai-tap-lon-ltnc\auction-server\src\main\java\com\auction\server\model\entity\user\User.java
-C:\Study\Java\BaiTapLon\bai-tap-lon-ltnc\auction-server\src\main\java\com\auction\server\model\enums\AuctionStatus.java
-C:\Study\Java\BaiTapLon\bai-tap-lon-ltnc\auction-server\src\main\java\com\auction\server\model\enums\ItemCategory.java
-C:\Study\Java\BaiTapLon\bai-tap-lon-ltnc\auction-server\src\main\java\com\auction\server\model\enums\UserRole.java
-C:\Study\Java\BaiTapLon\bai-tap-lon-ltnc\auction-server\src\main\java\com\auction\server\model\exception\AuctionClosedException.java
-C:\Study\Java\BaiTapLon\bai-tap-lon-ltnc\auction-server\src\main\java\com\auction\server\model\exception\AuctionException.java
-C:\Study\Java\BaiTapLon\bai-tap-lon-ltnc\auction-server\src\main\java\com\auction\server\model\exception\AuthenticationException.java
-C:\Study\Java\BaiTapLon\bai-tap-lon-ltnc\auction-server\src\main\java\com\auction\server\model\exception\InvalidBidException.java
-C:\Study\Java\BaiTapLon\bai-tap-lon-ltnc\auction-server\src\main\java\com\auction\server\model\strategy\AutoBidStrategy.java
-C:\Study\Java\BaiTapLon\bai-tap-lon-ltnc\auction-server\src\main\java\com\auction\server\model\strategy\BidStrategy.java
-C:\Study\Java\BaiTapLon\bai-tap-lon-ltnc\auction-server\src\main\java\com\auction\server\model\strategy\ManualBidStrategy.java
-C:\Study\Java\BaiTapLon\bai-tap-lon-ltnc\auction-server\src\main\java\com\auction\server\net\ClientBroadcaster.java
-C:\Study\Java\BaiTapLon\bai-tap-lon-ltnc\auction-server\src\main\java\com\auction\server\net\ClientSession.java
-C:\Study\Java\BaiTapLon\bai-tap-lon-ltnc\auction-server\src\main\java\com\auction\server\net\EntityJsonMapper.java
-C:\Study\Java\BaiTapLon\bai-tap-lon-ltnc\auction-server\src\main\java\com\auction\server\net\JsonResponses.java
-C:\Study\Java\BaiTapLon\bai-tap-lon-ltnc\auction-server\src\main\java\com\auction\server\Server.java
-C:\Study\Java\BaiTapLon\bai-tap-lon-ltnc\auction-server\src\main\java\com\auction\server\service\AuctionManager.java
-C:\Study\Java\BaiTapLon\bai-tap-lon-ltnc\auction-server\src\main\java\com\auction\server\service\AuctionStatusSynchronizer.java
-C:\Study\Java\BaiTapLon\bai-tap-lon-ltnc\auction-server\src\main\java\com\auction\server\service\impl\ItemServiceImpl.java
-C:\Study\Java\BaiTapLon\bai-tap-lon-ltnc\auction-server\src\main\java\com\auction\server\service\impl\UserServiceImpl.java
-C:\Study\Java\BaiTapLon\bai-tap-lon-ltnc\auction-server\src\main\java\com\auction\server\service\ItemService.java
-C:\Study\Java\BaiTapLon\bai-tap-lon-ltnc\auction-server\src\main\java\com\auction\server\service\UserService.java
-C:\Study\Java\BaiTapLon\bai-tap-lon-ltnc\auction-server\src\main\java\com\auction\server\service\util\PasswordUtil.java
->>>>>>> 6c4a32b91f848ac1a36f56982ffa546c0398e45a
