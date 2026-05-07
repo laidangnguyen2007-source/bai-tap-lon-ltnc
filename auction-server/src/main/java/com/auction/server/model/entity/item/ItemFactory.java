@@ -73,7 +73,41 @@ public class ItemFactory {
               require(params, "yearManufactured", Integer.class),
               require(params, "mileageKm", Integer.class),
               require(params, "fuelType", String.class));
+
+      // OTHER: Sản phẩm chung không thuộc 3 loại chuyên biệt
+      // Dùng Electronics làm class cụ thể (vì Item là abstract) với giá trị mặc định
+      case OTHER -> {
+        Electronics item =
+            new Electronics(name, description, startingPrice, sellerId, "N/A", 0, 0.0);
+        item.setCategory(ItemCategory.OTHER); // Ghi đè category từ ELECTRONICS → OTHER
+        yield item;
+      }
     };
+  }
+
+  /**
+   * Tạo nhanh một Item đơn giản — dùng khi Seller tạo phiên đấu giá từ Dashboard. Phương thức này
+   * là PUBLIC để các package khác (như handler) có thể gọi được, vì các constructor của
+   * Electronics/Artwork/Vehicle đều là package-private.
+   *
+   * @param category Loại sản phẩm (ELECTRONICS, ARTWORK, VEHICLE, OTHER)
+   * @param name Tên sản phẩm do Seller đặt
+   * @param startingPrice Giá khởi điểm
+   * @param sellerId ID của Seller tạo sản phẩm
+   * @return Item đã khởi tạo, chưa có ID (DAO sẽ gán sau khi INSERT)
+   */
+  public static Item createSimpleItem(
+      ItemCategory category, String name, long startingPrice, Long sellerId) {
+    // Mô tả mặc định nếu Seller không nhập
+    String description = "Sản phẩm được tạo bởi Seller #" + sellerId;
+
+    // Tạo Item với giá trị mặc định cho các trường đặc thù
+    // Dùng Electronics làm class cụ thể (vì Item là abstract, không thể new Item() trực tiếp)
+    Electronics item = new Electronics(name, description, startingPrice, sellerId, "N/A", 0, 0.0);
+
+    // Ghi đè category đúng theo loại Seller đã chọn
+    item.setCategory(category);
+    return item;
   }
 
   // ─── PHỤC DỰNG ITEM TỪ DATABASE ──────────────────────────────────

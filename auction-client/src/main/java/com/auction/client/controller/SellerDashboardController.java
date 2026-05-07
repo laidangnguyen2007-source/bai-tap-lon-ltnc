@@ -6,7 +6,6 @@ import com.auction.client.util.ComboBoxPopupWidthSync;
 import com.auction.client.util.FxmlLoader;
 import com.auction.client.util.NotificationUtils;
 import com.auction.server.model.entity.Auction;
-import com.auction.server.service.AuctionManager;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
@@ -30,7 +29,7 @@ import javafx.stage.Stage;
  * Controller cho màn hình Dashboard của Seller (seller-dashboard.fxml).
  *
  * <p>Cho phép người bán (Seller): 1. Xem danh sách các phiên đấu giá mình đã tạo 2. Tạo phiên đấu
- * giá mới bằng cách điền form và gửi lên server
+ * giá mới bằng cách chọn loại sản phẩm, đặt tên, và thiết lập thời gian
  *
  * <p>Màn hình này chỉ dành cho user có role SELLER. LoginController đã đảm bảo điều này bằng cách
  * chỉ điều hướng Seller đến đây.
@@ -40,7 +39,14 @@ public class SellerDashboardController {
   // -- @FXML inject từ seller-dashboard.fxml --
 
   // Form tạo phiên đấu giá mới
-  @FXML private TextField itemIdField;
+
+  // ComboBox chọn loại sản phẩm (thay thế TextField itemIdField cũ)
+  // Seller chọn 1 trong 4 loại: Điện tử, Nghệ thuật, Xe cộ, Khác
+  @FXML private ComboBox<String> categoryCombo;
+
+  // TextField nhập tên sản phẩm (mới thêm)
+  // Seller tự đặt tên cho sản phẩm thay vì phải nhớ mã ID
+  @FXML private TextField itemNameField;
 
   @FXML private TextField startingPriceField;
 
@@ -62,6 +68,8 @@ public class SellerDashboardController {
 
   @FXML private TableColumn<Auction, Long> idCol;
   @FXML private TableColumn<Auction, String> itemNameCol;
+  // Cột loại sản phẩm (mới) — hiển thị ELECTRONICS/ARTWORK/VEHICLE/OTHER bằng tiếng Việt
+  @FXML private TableColumn<Auction, String> categoryCol;
   @FXML private TableColumn<Auction, Long> priceCol;
   @FXML private TableColumn<Auction, String> statusCol;
   @FXML private TableColumn<Auction, String> startTimeCol;
@@ -81,6 +89,18 @@ public class SellerDashboardController {
 
   private final ObservableList<Auction> myAuctions = FXCollections.observableArrayList();
 
+  // Bảng ánh xạ: Tên tiếng Việt hiển thị trên ComboBox → giá trị enum gửi lên server
+  // Giúp Seller dễ hiểu hơn so với tên enum tiếng Anh (ELECTRONICS, ARTWORK, VEHICLE, OTHER)
+  private static final String[] CATEGORY_DISPLAY_NAMES = {
+      "Điện tử",      // → ELECTRONICS
+      "Nghệ thuật",   // → ARTWORK
+      "Xe cộ",         // → VEHICLE
+      "Khác"           // → OTHER
+  };
+  private static final String[] CATEGORY_ENUM_VALUES = {
+      "ELECTRONICS", "ARTWORK", "VEHICLE", "OTHER"
+  };
+
   /**
    * Khởi tạo màn hình: hiển thị tên seller, cấu hình bảng và load danh sách phiên của seller này.
    */
@@ -93,6 +113,21 @@ public class SellerDashboardController {
     // Cấu hình cột bảng
     idCol.setCellValueFactory(new PropertyValueFactory<>("id"));
     itemNameCol.setCellValueFactory(new PropertyValueFactory<>("itemName"));
+    
+    // Cột loại sản phẩm — chuyển enum tiếng Anh sang tiếng Việt để dễ đọc
+    categoryCol.setCellValueFactory(
+        cell -> {
+          String cat = cell.getValue().getItemCategory();
+          if (cat == null) cat = "OTHER";
+          String vietnameseCategory = switch (cat) {
+            case "ELECTRONICS" -> "Điện tử";
+            case "ARTWORK" -> "Nghệ thuật";
+            case "VEHICLE" -> "Xe cộ";
+            case "OTHER" -> "Khác";
+            default -> cat;
+          };
+          return new javafx.beans.property.SimpleStringProperty(vietnameseCategory);
+        });
     
     priceCol.setCellFactory(column -> new javafx.scene.control.TableCell<>() {
       @Override
@@ -131,6 +166,11 @@ public class SellerDashboardController {
 
     myAuctionsTable.setItems(myAuctions);
 
+    // Khởi tạo ComboBox loại sản phẩm (mới) — hiển thị tên tiếng Việt cho dễ hiểu
+    categoryCombo.setItems(FXCollections.observableArrayList(CATEGORY_DISPLAY_NAMES));
+    categoryCombo.setValue(CATEGORY_DISPLAY_NAMES[0]); // Mặc định: Điện tử
+    ComboBoxPopupWidthSync.install(categoryCombo);
+
     // Khởi tạo ComboBox giờ và phút cho Form
     ObservableList<Integer> hours = FXCollections.observableArrayList();
     for (int i = 0; i < 24; i++) hours.add(i);
@@ -142,7 +182,7 @@ public class SellerDashboardController {
     endHourCombo.setItems(hours);
     endMinuteCombo.setItems(minutes);
 
-    // Mặc định chọn giờ đẹp
+    // Mặc định chọn giờ hiện tại
     startHourCombo.setValue(LocalDateTime.now().getHour());
     startMinuteCombo.setValue(LocalDateTime.now().getMinute());
     endHourCombo.setValue(23);
@@ -165,35 +205,57 @@ public class SellerDashboardController {
   }
 
   /**
-   * Xử lý khi Seller nhấn nút "Tạo Phiên Mới". Validate form và gửi yêu cầu tạo auction lên
-   * server.
+   * Chuyển đổi tên hiển thị tiếng Việt trong ComboBox sang giá trị enum để gửi lên server.
+   * Ví dụ: "Điện tử" → "ELECTRONICS", "Nghệ thuật" → "ARTWORK"
+   *
+   * @param displayName tên hiển thị tiếng Việt từ categoryCombo
+   * @return tên enum tiếng Anh tương ứng, hoặc "OTHER" nếu không tìm thấy
+   */
+  private String categoryDisplayToEnum(String displayName) {
+    for (int i = 0; i < CATEGORY_DISPLAY_NAMES.length; i++) {
+      if (CATEGORY_DISPLAY_NAMES[i].equals(displayName)) {
+        return CATEGORY_ENUM_VALUES[i];
+      }
+    }
+    return "OTHER"; // Fallback an toàn
+  }
+
+  /**
+   * Xử lý khi Seller nhấn nút "Tạo Phiên Mới".
+   * Validate form, tạo Item + Auction trên server.
+   *
+   * <p>Luồng xử lý:
+   * 1. Validate: kiểm tra các trường bắt buộc
+   * 2. Chuyển đổi category từ tiếng Việt sang enum
+   * 3. Gửi request lên server (server sẽ tự tạo Item + Auction)
+   * 4. Xác định trạng thái dựa trên thời gian bắt đầu
    *
    * @param event ActionEvent từ createAuctionButton
    */
   @FXML
   private void handleCreateAuction(ActionEvent event) {
-    String itemIdText = itemIdField.getText().trim();
+    String itemName = itemNameField.getText().trim();
     String priceText = startingPriceField.getText().trim();
 
     // Validate: các trường bắt buộc không được rỗng
-    if (itemIdText.isEmpty() || priceText.isEmpty()
+    if (categoryCombo.getValue() == null
+        || itemName.isEmpty()
+        || priceText.isEmpty()
         || startDatePicker.getValue() == null
         || endDatePicker.getValue() == null
         || startHourCombo.getValue() == null
         || startMinuteCombo.getValue() == null
         || endHourCombo.getValue() == null
         || endMinuteCombo.getValue() == null) {
-      formResultLabel.setText("Vui lòng điền đầy đủ ngày và giờ.");
+      formResultLabel.setText("Vui lòng điền đầy đủ tất cả thông tin!");
       return;
     }
 
-    Long itemId;
     long startingPrice;
     try {
-      itemId = Long.parseLong(itemIdText);
       startingPrice = Long.parseLong(priceText);
     } catch (NumberFormatException e) {
-      formResultLabel.setText("Mã sản phẩm và giá khởi điểm phải là số hợp lệ.");
+      formResultLabel.setText("Giá khởi điểm phải là số hợp lệ.");
       return;
     }
 
@@ -203,55 +265,66 @@ public class SellerDashboardController {
       return;
     }
 
-    // [Xử lý thời gian] Chuyển đổi dữ liệu từ DatePicker và ComboBox Giờ/Phút sang đối tượng LocalDateTime
+    // Chuyển đổi tên hiển thị tiếng Việt → enum tiếng Anh để gửi lên server
+    String categoryEnum = categoryDisplayToEnum(categoryCombo.getValue());
+
+    // [Xử lý thời gian] Chuyển đổi dữ liệu từ DatePicker và ComboBox Giờ/Phút sang LocalDateTime
     LocalDateTime now = LocalDateTime.now();
     LocalDateTime startTime = startDatePicker.getValue().atTime(
         startHourCombo.getValue(), startMinuteCombo.getValue());
     
     // [Validation] Chống tạo phiên đấu giá trong quá khứ. 
     // Chúng ta cho phép sai số 10 giây để bù đắp cho độ trễ khi thao tác form.
-    if (startTime.isBefore(now.minusSeconds(10))) {
-        formResultLabel.setText("Lỗi: Thời gian bắt đầu không được ở trong quá khứ!");
-        return;
-    }
+    // if (startTime.isBefore(now.minusSeconds(10))) {
+    //     formResultLabel.setText("Lỗi: Thời gian bắt đầu không được ở trong quá khứ!");
+    //     return;
+    // }
     
     // Tương tự cho thời gian kết thúc
     LocalDateTime endTime = endDatePicker.getValue().atTime(
         endHourCombo.getValue(), endMinuteCombo.getValue());
 
-    // Validate: thời gian kết thúc phải sau thời gian bắt đầu
+    // [Validation] Thời gian kết thúc phải sau thời gian bắt đầu
     if (!endTime.isAfter(startTime)) {
-      formResultLabel.setText("Thời gian kết thúc phải sau thời gian bắt đầu.");
+      formResultLabel.setText("Lỗi: Thời gian kết thúc phải sau thời gian bắt đầu!");
       return;
     }
 
     Long sellerId = session.getCurrentUser().getId();
 
-    // [Thêm bước xác nhận] Hỏi bạn trước khi tạo phiên đấu giá chính thức
+    // [Thêm bước xác nhận] Hỏi Seller trước khi tạo phiên đấu giá chính thức
     javafx.scene.control.Alert confirmAlert = new javafx.scene.control.Alert(javafx.scene.control.Alert.AlertType.CONFIRMATION);
     NotificationUtils.styleAlert(confirmAlert);
     confirmAlert.setGraphic(null); // Bỏ dấu "?"
     confirmAlert.setTitle("Xác Nhận Tạo Phiên");
     confirmAlert.setHeaderText("Bạn có chắc chắn muốn tạo phiên đấu giá mới này không?");
-    confirmAlert.setContentText("Vui lòng kiểm tra kỹ Item ID và thời gian trước khi nhấn OK.");
+    confirmAlert.setContentText(
+        "Sản phẩm: " + itemName + "\n"
+        + "Loại: " + categoryCombo.getValue() + "\n"
+        + "Giá khởi điểm: " + String.format("%,d", startingPrice) + " VNĐ");
 
     java.util.Optional<javafx.scene.control.ButtonType> confirmResult = confirmAlert.showAndWait();
     if (confirmResult.isEmpty() || confirmResult.get() != javafx.scene.control.ButtonType.OK) {
         return; // Hủy tạo phiên
     }
 
-    // Tạo đối tượng Auction mới từ dữ liệu form
-    Auction newAuction = new Auction(itemId, sellerId, startTime, endTime);
-    newAuction.setCurrentPrice(startingPrice);
-
-    Long createdId = serverService.createAuction(newAuction);
+    // Gửi request lên server kèm itemName + category
+    // Server sẽ tự tạo Item (với ID auto-increment) rồi tạo Auction
+    // KHÔNG tạo Auction object giả (Auction(0L,...)) vì itemId=0 gây lỗi
+    Long createdId = serverService.createAuction(
+        sellerId, startingPrice, startTime, endTime, itemName, categoryEnum);
 
     if (createdId != null && createdId > 0) {
-      newAuction.setId(createdId);
-      // Singleton Pattern: Khai mạc phiên đấu giá qua AuctionManager duy nhất của hệ thống
-      // AuctionManager giúp quản lý tập trung tất cả phiên đang chạy, phục vụ Concurrency
-      AuctionManager.getInstance().openAuction(newAuction);
-      formResultLabel.setText("Tạo phiên đấu giá thành công! Mã phiên: #" + createdId);
+      // [Thông báo trạng thái dựa trên thời gian]
+      // Server đã tự xử lý trạng thái (OPEN/RUNNING) — client chỉ cần hiển thị
+      if (!startTime.isAfter(now)) {
+        formResultLabel.setText("Tạo phiên đấu giá thành công! Mã phiên: #" + createdId
+            + " — Trạng thái: ĐANG DIỄN RA (thời gian bắt đầu đã qua)");
+      } else {
+        formResultLabel.setText("Tạo phiên đấu giá thành công! Mã phiên: #" + createdId
+            + " — Trạng thái: ĐANG MỞ (sẽ tự chạy khi đến giờ bắt đầu)");
+      }
+
       clearForm();
       loadMyAuctions(); // Refresh bảng
     } else {
@@ -297,10 +370,11 @@ public class SellerDashboardController {
 
   /** Xóa trắng form tạo phiên sau khi tạo thành công. */
   private void clearForm() {
-    itemIdField.clear();
+    itemNameField.clear();
     startingPriceField.clear();
     startDatePicker.setValue(null);
     endDatePicker.setValue(null);
+    categoryCombo.setValue(CATEGORY_DISPLAY_NAMES[0]); // Reset về "Điện tử"
     // Reset giờ về hiện tại
     startHourCombo.setValue(LocalDateTime.now().getHour());
     startMinuteCombo.setValue(LocalDateTime.now().getMinute());

@@ -27,7 +27,14 @@ public class AutoBidStrategy implements BidStrategy {
   public BidTransaction calculateBid(Auction auction, long bidderId, long requestAmount) {
     validateAuction(auction);
 
-    long nextBid = Math.min(auction.getCurrentPrice() + increment, maxBid);
+    long currentPrice = auction.getCurrentPrice();
+
+    // Kiểm tra xem người này có đang dẫn đầu không -> nếu có thì ko cập nhật bid
+    if (auction.getCurrentWinnerId() != null && auction.getCurrentWinnerId().equals(userId)) {
+      return null;
+    }
+
+    long nextBid = Math.min(currentPrice + increment, maxBid);
 
     validateAmount(auction, nextBid);
     return new BidTransaction(auction.getId(), bidderId, nextBid);
@@ -47,10 +54,21 @@ public class AutoBidStrategy implements BidStrategy {
   }
 
   private void validateAmount(Auction auction, long nextBid) {
+    if (nextBid <= auction.getCurrentPrice()) {
+      throw new InvalidBidException("Bid must be higher than the current price!");
+    }
 
     if (auction.getCurrentPrice() >= maxBid) {
       throw new InvalidBidException("Auto-bid limit reached!");
     }
+  }
+
+  // Hàm xét độ ưu tiên, nếu có cùng giá trị maxBid -> ưu tiên người đặt giá trước
+  public boolean hasPriorityOver(AutoBidStrategy other) {
+    if (this.maxBid != other.maxBid) {
+      return this.maxBid > other.maxBid;
+    }
+    return this.registerAt.isBefore(other.registerAt);
   }
 
   @Override
