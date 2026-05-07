@@ -2,6 +2,7 @@ C:\Users\admin\OneDrive\Máy tính\ASecret\bai-tap-lon-ltnc\auction-client\src\m
 C:\Users\admin\OneDrive\Máy tính\ASecret\bai-tap-lon-ltnc\auction-client\src\main\java\com\auction\client\network\UserController.java
 C:\Users\admin\OneDrive\Máy tính\ASecret\bai-tap-lon-ltnc\auction-client\src\main\java\com\auction\client\controller\LoginController.java
 C:\Users\admin\OneDrive\Máy tính\ASecret\bai-tap-lon-ltnc\auction-client\src\main\java\com\auction\client\Launcher.java
+C:\Users\admin\OneDrive\Máy tính\ASecret\bai-tap-lon-ltnc\auction-client\src\main\java\com\auction\client\util\ComboBoxPopupWidthSync.java
 C:\Users\admin\OneDrive\Máy tính\ASecret\bai-tap-lon-ltnc\auction-client\src\main\java\com\auction\client\controller\BiddingRoomController.java
 C:\Users\admin\OneDrive\Máy tính\ASecret\bai-tap-lon-ltnc\auction-client\src\main\java\com\auction\client\network\AuctionController.java
 C:\Users\admin\OneDrive\Máy tính\ASecret\bai-tap-lon-ltnc\auction-client\src\main\java\com\auction\client\network\ItemController.java
@@ -10,6 +11,8 @@ C:\Users\admin\OneDrive\Máy tính\ASecret\bai-tap-lon-ltnc\auction-client\src\m
 C:\Users\admin\OneDrive\Máy tính\ASecret\bai-tap-lon-ltnc\auction-client\src\main\java\com\auction\client\controller\AuctionListController.java
 C:\Users\admin\OneDrive\Máy tính\ASecret\bai-tap-lon-ltnc\auction-client\src\main\java\com\auction\client\controller\SellerDashboardController.java
 C:\Users\admin\OneDrive\Máy tính\ASecret\bai-tap-lon-ltnc\auction-client\src\main\java\com\auction\client\util\FxmlLoader.java
+C:\Users\admin\OneDrive\Máy tính\ASecret\bai-tap-lon-ltnc\auction-client\src\main\java\com\auction\client\util\NotificationUtils.java
+C:\Users\admin\OneDrive\Máy tính\ASecret\bai-tap-lon-ltnc\auction-client\src\main\java\com\auction\client\controller\MyWinsController.java
 C:\Users\admin\OneDrive\Máy tính\ASecret\bai-tap-lon-ltnc\auction-client\src\main\java\com\auction\client\observer\AuctionObserver.java
 C:\Users\admin\OneDrive\Máy tính\ASecret\bai-tap-lon-ltnc\auction-client\src\main\java\com\auction\client\controller\AuctionDetailController.java
 C:\Users\admin\OneDrive\Máy tính\ASecret\bai-tap-lon-ltnc\auction-client\src\main\java\com\auction\client\network\SocketConnection.java
