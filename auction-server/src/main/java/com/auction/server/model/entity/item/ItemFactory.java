@@ -77,8 +77,8 @@ public class ItemFactory {
       // OTHER: Sản phẩm chung không thuộc 3 loại chuyên biệt
       // Dùng Electronics làm class cụ thể (vì Item là abstract) với giá trị mặc định
       case OTHER -> {
-        Electronics item = new Electronics(name, description, startingPrice, sellerId,
-            "N/A", 0, 0.0);
+        Electronics item =
+            new Electronics(name, description, startingPrice, sellerId, "N/A", 0, 0.0);
         item.setCategory(ItemCategory.OTHER); // Ghi đè category từ ELECTRONICS → OTHER
         yield item;
       }
@@ -86,9 +86,9 @@ public class ItemFactory {
   }
 
   /**
-   * Tạo nhanh một Item đơn giản — dùng khi Seller tạo phiên đấu giá từ Dashboard.
-   * Phương thức này là PUBLIC để các package khác (như handler) có thể gọi được,
-   * vì các constructor của Electronics/Artwork/Vehicle đều là package-private.
+   * Tạo nhanh một Item đơn giản — dùng khi Seller tạo phiên đấu giá từ Dashboard. Phương thức này
+   * là PUBLIC để các package khác (như handler) có thể gọi được, vì các constructor của
+   * Electronics/Artwork/Vehicle đều là package-private.
    *
    * @param category Loại sản phẩm (ELECTRONICS, ARTWORK, VEHICLE, OTHER)
    * @param name Tên sản phẩm do Seller đặt
@@ -103,8 +103,7 @@ public class ItemFactory {
 
     // Tạo Item với giá trị mặc định cho các trường đặc thù
     // Dùng Electronics làm class cụ thể (vì Item là abstract, không thể new Item() trực tiếp)
-    Electronics item = new Electronics(name, description, startingPrice, sellerId,
-        "N/A", 0, 0.0);
+    Electronics item = new Electronics(name, description, startingPrice, sellerId, "N/A", 0, 0.0);
 
     // Ghi đè category đúng theo loại Seller đã chọn
     item.setCategory(category);
