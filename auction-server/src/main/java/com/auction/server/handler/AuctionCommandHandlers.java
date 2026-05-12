@@ -43,18 +43,20 @@ public final class AuctionCommandHandlers {
    * Tạo phiên đấu giá mới — đồng thời tự động tạo Item (sản phẩm) trong database.
    *
    * <p><b>Luồng xử lý:</b>
+   *
    * <ol>
-   *   <li>Nhận thông tin từ client: tên sản phẩm, loại sản phẩm, giá, thời gian</li>
-   *   <li>Tạo Item mới qua {@code ItemFactory.createSimpleItem()} và lưu vào DB</li>
-   *   <li>Lấy itemId tự động sinh bởi AUTO_INCREMENT (không bao giờ trùng)</li>
-   *   <li>Tạo Auction gắn với itemId vừa tạo</li>
-   *   <li>Xác định trạng thái dựa trên thời gian bắt đầu</li>
+   *   <li>Nhận thông tin từ client: tên sản phẩm, loại sản phẩm, giá, thời gian
+   *   <li>Tạo Item mới qua {@code ItemFactory.createSimpleItem()} và lưu vào DB
+   *   <li>Lấy itemId tự động sinh bởi AUTO_INCREMENT (không bao giờ trùng)
+   *   <li>Tạo Auction gắn với itemId vừa tạo
+   *   <li>Xác định trạng thái dựa trên thời gian bắt đầu
    * </ol>
    */
   public String createAuction(JSONObject req) throws Exception {
     // --- Đọc dữ liệu từ request JSON ---
-    String itemName = req.getString("itemName");        // Tên sản phẩm do Seller đặt
-    String categoryStr = req.getString("category");     // Loại sản phẩm (ELECTRONICS, ARTWORK, VEHICLE, OTHER)
+    String itemName = req.getString("itemName"); // Tên sản phẩm do Seller đặt
+    String categoryStr =
+        req.getString("category"); // Loại sản phẩm (ELECTRONICS, ARTWORK, VEHICLE, OTHER)
     Long sellerId = req.getLong("sellerId");
     Long startingPrice = req.getLong("startingPrice");
     LocalDateTime startTime = LocalDateTime.parse(req.getString("startTime"));
@@ -81,8 +83,14 @@ public final class AuctionCommandHandlers {
     itemDao.save(newItem); // Sau lệnh này, newItem.getId() sẽ có giá trị từ DB
 
     Long itemId = newItem.getId();
-    System.out.println("CREATE_AUCTION: Auto-created item #" + itemId
-        + " [" + category + "] \"" + itemName + "\"");
+    System.out.println(
+        "CREATE_AUCTION: Auto-created item #"
+            + itemId
+            + " ["
+            + category
+            + "] \""
+            + itemName
+            + "\"");
 
     // --- Bước 2: Tạo Auction gắn với Item vừa tạo ---
     Auction auction = new Auction(itemId, sellerId, startTime, endTime);
