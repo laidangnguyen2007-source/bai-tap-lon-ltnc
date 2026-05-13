@@ -24,6 +24,10 @@ import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.stage.Stage;
+import javafx.util.Callback;
+import javafx.scene.control.TableCell;
+import javafx.scene.layout.HBox;
+import com.auction.server.model.enums.AuctionStatus;
 
 /**
  * Controller cho màn hình Dashboard của Seller (seller-dashboard.fxml).
@@ -60,6 +64,7 @@ public class SellerDashboardController {
   @FXML private ComboBox<Integer> endMinuteCombo;
   
   @FXML private Button createAuctionButton;
+  @FXML private Button cancelEditButton;
 
   @FXML private Label formResultLabel;
 
@@ -74,6 +79,7 @@ public class SellerDashboardController {
   @FXML private TableColumn<Auction, String> statusCol;
   @FXML private TableColumn<Auction, String> startTimeCol;
   @FXML private TableColumn<Auction, String> endTimeCol;
+  @FXML private TableColumn<Auction, Void> actionCol;
 
   // Header
   @FXML private Label sellerNameLabel;
@@ -100,6 +106,8 @@ public class SellerDashboardController {
   private static final String[] CATEGORY_ENUM_VALUES = {
       "ELECTRONICS", "ARTWORK", "VEHICLE", "OTHER"
   };
+
+  private Long editingAuctionId = null;
 
   /**
    * Khởi tạo màn hình: hiển thị tên seller, cấu hình bảng và load danh sách phiên của seller này.
@@ -164,6 +172,50 @@ public class SellerDashboardController {
         cell -> new javafx.beans.property.SimpleStringProperty(
             cell.getValue().getEndTime().format(formatter)));
 
+    // Cột Hành động (Sửa/Xóa)
+    actionCol.setCellFactory(new Callback<>() {
+      @Override
+      public TableCell<Auction, Void> call(final TableColumn<Auction, Void> param) {
+        return new TableCell<>() {
+          private final Button editBtn = new Button("Sửa");
+          private final Button deleteBtn = new Button("Xóa");
+          private final HBox pane = new HBox(5, editBtn, deleteBtn);
+
+          {
+            editBtn.getStyleClass().add("secondary-button");
+            deleteBtn.getStyleClass().add("danger-button");
+
+            editBtn.setOnAction(event -> {
+              Auction auction = getTableView().getItems().get(getIndex());
+              handleEdit(auction);
+            });
+
+            deleteBtn.setOnAction(event -> {
+              Auction auction = getTableView().getItems().get(getIndex());
+              handleDelete(auction);
+            });
+          }
+
+          @Override
+          protected void updateItem(Void item, boolean empty) {
+            super.updateItem(item, empty);
+            if (empty || getTableView().getItems().get(getIndex()) == null) {
+              setGraphic(null);
+            } else {
+              Auction auction = getTableView().getItems().get(getIndex());
+              // Chỉ hiện thị / enable theo rule Sửa/Xóa mới
+              // Sửa: Chỉ khi OPEN
+              editBtn.setDisable(auction.getStatus() != AuctionStatus.OPEN);
+              // Xóa: Chỉ khi chưa có winner (chưa có ai đặt giá)
+              deleteBtn.setDisable(auction.getCurrentWinnerId() != null);
+              
+              setGraphic(pane);
+            }
+          }
+        };
+      }
+    });
+
     myAuctionsTable.setItems(myAuctions);
 
     // Khởi tạo ComboBox loại sản phẩm (mới) — hiển thị tên tiếng Việt cho dễ hiểu
@@ -221,14 +273,13 @@ public class SellerDashboardController {
   }
 
   /**
-   * Xử lý khi Seller nhấn nút "Tạo Phiên Mới".
-   * Validate form, tạo Item + Auction trên server.
+   * Xử lý khi Seller nhấn nút "Tạo Phiên Mới" hoặc "Lưu Thay Đổi".
+   * Validate form, tạo hoặc cập nhật Item + Auction trên server.
    *
    * <p>Luồng xử lý:
    * 1. Validate: kiểm tra các trường bắt buộc
    * 2. Chuyển đổi category từ tiếng Việt sang enum
-   * 3. Gửi request lên server (server sẽ tự tạo Item + Auction)
-   * 4. Xác định trạng thái dựa trên thời gian bắt đầu
+   * 3. Gửi request lên server
    *
    * @param event ActionEvent từ createAuctionButton
    */
@@ -305,30 +356,108 @@ public class SellerDashboardController {
 
     java.util.Optional<javafx.scene.control.ButtonType> confirmResult = confirmAlert.showAndWait();
     if (confirmResult.isEmpty() || confirmResult.get() != javafx.scene.control.ButtonType.OK) {
-        return; // Hủy tạo phiên
+        return; // Hủy tạo/sửa phiên
     }
 
-    // Gửi request lên server kèm itemName + category
-    // Server sẽ tự tạo Item (với ID auto-increment) rồi tạo Auction
-    // KHÔNG tạo Auction object giả (Auction(0L,...)) vì itemId=0 gây lỗi
-    Long createdId = serverService.createAuction(
-        sellerId, startingPrice, startTime, endTime, itemName, categoryEnum);
-
-    if (createdId != null && createdId > 0) {
-      // [Thông báo trạng thái dựa trên thời gian]
-      // Server đã tự xử lý trạng thái (OPEN/RUNNING) — client chỉ cần hiển thị
-      if (!startTime.isAfter(now)) {
-        formResultLabel.setText("Tạo phiên đấu giá thành công! Mã phiên: #" + createdId
-            + " — Trạng thái: ĐANG DIỄN RA (thời gian bắt đầu đã qua)");
+    if (editingAuctionId != null) {
+      boolean success = serverService.updateAuctionSeller(
+          editingAuctionId, sellerId, itemName, categoryEnum, startingPrice, startTime, endTime);
+      if (success) {
+        formResultLabel.setText("Cập nhật phiên đấu giá #" + editingAuctionId + " thành công!");
+        handleCancelEdit(null); // Reset form
+        loadMyAuctions(); // Refresh bảng
       } else {
-        formResultLabel.setText("Tạo phiên đấu giá thành công! Mã phiên: #" + createdId
-            + " — Trạng thái: ĐANG MỞ (sẽ tự chạy khi đến giờ bắt đầu)");
+        formResultLabel.setText("Cập nhật thất bại. Vui lòng kiểm tra lại trạng thái phiên.");
       }
-
-      clearForm();
-      loadMyAuctions(); // Refresh bảng
     } else {
-      formResultLabel.setText("Tạo phiên thất bại. Vui lòng kiểm tra lại thông tin.");
+      // Gửi request lên server kèm itemName + category để tạo mới
+      Long createdId = serverService.createAuction(
+          sellerId, startingPrice, startTime, endTime, itemName, categoryEnum);
+
+      if (createdId != null && createdId > 0) {
+        // [Thông báo trạng thái dựa trên thời gian]
+        // Server đã tự xử lý trạng thái (OPEN/RUNNING) — client chỉ cần hiển thị
+        if (!startTime.isAfter(now)) {
+          formResultLabel.setText("Tạo phiên đấu giá thành công! Mã phiên: #" + createdId
+              + " — Trạng thái: ĐANG DIỄN RA (thời gian bắt đầu đã qua)");
+        } else {
+          formResultLabel.setText("Tạo phiên đấu giá thành công! Mã phiên: #" + createdId
+              + " — Trạng thái: ĐANG MỞ (sẽ tự chạy khi đến giờ bắt đầu)");
+        }
+
+        clearForm();
+        loadMyAuctions(); // Refresh bảng
+      } else {
+        formResultLabel.setText("Tạo phiên thất bại. Vui lòng kiểm tra lại thông tin.");
+      }
+    }
+  }
+
+  @FXML
+  private void handleCancelEdit(ActionEvent event) {
+    editingAuctionId = null;
+    createAuctionButton.setText("🚀 Tạo Phiên Đấu Giá");
+    cancelEditButton.setVisible(false);
+    cancelEditButton.setManaged(false);
+    formResultLabel.setText("");
+    clearForm();
+  }
+
+  private void handleEdit(Auction auction) {
+    editingAuctionId = auction.getId();
+    createAuctionButton.setText("💾 Lưu Thay Đổi");
+    cancelEditButton.setVisible(true);
+    cancelEditButton.setManaged(true);
+    formResultLabel.setText("Đang chỉnh sửa phiên #" + auction.getId());
+
+    itemNameField.setText(auction.getItemName());
+    startingPriceField.setText(String.valueOf(auction.getCurrentPrice()));
+
+    // Map Category (Enum) -> Display Name (Vietnamese)
+    String enumCat = auction.getItemCategory() != null ? auction.getItemCategory() : "OTHER";
+    int idx = -1;
+    for (int i = 0; i < CATEGORY_ENUM_VALUES.length; i++) {
+      if (CATEGORY_ENUM_VALUES[i].equals(enumCat)) {
+        idx = i;
+        break;
+      }
+    }
+    if (idx != -1) {
+      categoryCombo.setValue(CATEGORY_DISPLAY_NAMES[idx]);
+    } else {
+      categoryCombo.setValue(CATEGORY_DISPLAY_NAMES[0]);
+    }
+
+    if (auction.getStartTime() != null) {
+      startDatePicker.setValue(auction.getStartTime().toLocalDate());
+      startHourCombo.setValue(auction.getStartTime().getHour());
+      startMinuteCombo.setValue(auction.getStartTime().getMinute());
+    }
+
+    if (auction.getEndTime() != null) {
+      endDatePicker.setValue(auction.getEndTime().toLocalDate());
+      endHourCombo.setValue(auction.getEndTime().getHour());
+      endMinuteCombo.setValue(auction.getEndTime().getMinute());
+    }
+  }
+
+  private void handleDelete(Auction auction) {
+    javafx.scene.control.Alert confirmAlert = new javafx.scene.control.Alert(javafx.scene.control.Alert.AlertType.CONFIRMATION);
+    NotificationUtils.styleAlert(confirmAlert);
+    confirmAlert.setGraphic(null);
+    confirmAlert.setTitle("Xác Nhận Xóa");
+    confirmAlert.setHeaderText("Bạn có chắc chắn muốn xóa phiên đấu giá #" + auction.getId() + " không?");
+    confirmAlert.setContentText("Hành động này không thể hoàn tác!");
+
+    java.util.Optional<javafx.scene.control.ButtonType> confirmResult = confirmAlert.showAndWait();
+    if (confirmResult.isPresent() && confirmResult.get() == javafx.scene.control.ButtonType.OK) {
+      boolean success = serverService.deleteAuctionSeller(auction.getId(), session.getCurrentUser().getId());
+      if (success) {
+        formResultLabel.setText("Đã xóa phiên đấu giá #" + auction.getId());
+        loadMyAuctions();
+      } else {
+        formResultLabel.setText("Xóa thất bại. Vui lòng kiểm tra xem phiên đấu giá đã có người đặt giá chưa.");
+      }
     }
   }
 

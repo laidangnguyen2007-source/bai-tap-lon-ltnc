@@ -223,4 +223,12 @@ public class ServerService {
   public boolean resetAuction(Long auctionId) {
     return auctionController.resetAuction(auctionId);
   }
+
+  public boolean updateAuctionSeller(Long auctionId, Long sellerId, String itemName, String category, long startingPrice, java.time.LocalDateTime startTime, java.time.LocalDateTime endTime) {
+    return auctionController.updateAuctionSeller(auctionId, sellerId, itemName, category, startingPrice, startTime, endTime);
+  }
+
+  public boolean deleteAuctionSeller(Long auctionId, Long sellerId) {
+    return auctionController.deleteAuctionSeller(auctionId, sellerId);
+  }
 }

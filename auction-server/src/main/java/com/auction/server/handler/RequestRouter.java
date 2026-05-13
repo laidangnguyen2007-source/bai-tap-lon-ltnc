@@ -72,6 +72,8 @@ public final class RequestRouter {
     map.put("DELETE_AUCTION", commands::deleteAuction);
     map.put("ADMIN_UPDATE_AUCTION", commands::adminUpdateAuction);
     map.put("RESET_AUCTION", commands::resetAuction);
+    map.put("SELLER_UPDATE_AUCTION", commands::sellerUpdateAuction);
+    map.put("SELLER_DELETE_AUCTION", commands::sellerDeleteAuction);
     return new RequestRouter(Collections.unmodifiableMap(map));
   }
 }
