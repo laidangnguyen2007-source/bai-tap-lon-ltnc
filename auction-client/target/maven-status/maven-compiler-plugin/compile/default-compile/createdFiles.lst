@@ -5,6 +5,7 @@ com\auction\client\network\SocketConnection.class
 com\auction\client\controller\BiddingRoomController.class
 com\auction\client\controller\AuctionListController.class
 com\auction\client\controller\BiddingRoomController$2.class
+com\auction\client\controller\SellerDashboardController$2.class
 com\auction\client\controller\AuctionListController$1.class
 com\auction\client\util\JsonEntityMapper$1.class
 com\auction\client\util\JsonEntityMapper.class
@@ -18,6 +19,7 @@ com\auction\client\observer\AuctionObserver.class
 com\auction\client\controller\MyWinsController.class
 com\auction\client\util\NotificationUtils.class
 com\auction\client\controller\MyWinsController$1.class
+com\auction\client\controller\SellerDashboardController$2$1.class
 com\auction\client\Launcher.class
 com\auction\client\util\ComboBoxPopupWidthSync.class
 com\auction\client\util\FxmlLoader.class
