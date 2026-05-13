@@ -90,12 +90,22 @@
         <!-- Thông báo kết quả tạo phiên -->
         <Label fx:id="formResultLabel" text="" styleClass="info-label" wrapText="true"/>
 
-        <Button
-          fx:id="createAuctionButton"
-          text="🚀 Tạo Phiên Đấu Giá"
-          onAction="#handleCreateAuction"
-          styleClass="primary-button"
-          maxWidth="Infinity"/>
+        <HBox spacing="10">
+          <Button
+            fx:id="createAuctionButton"
+            text="🚀 Tạo Phiên Đấu Giá"
+            onAction="#handleCreateAuction"
+            styleClass="primary-button"
+            HBox.hgrow="ALWAYS"
+            maxWidth="Infinity"/>
+          <Button
+            fx:id="cancelEditButton"
+            text="❌ Hủy Sửa"
+            onAction="#handleCancelEdit"
+            styleClass="secondary-button"
+            visible="false"
+            managed="false"/>
+        </HBox>
       </VBox>
 
       <!-- Cột phải: Danh sách phiên đấu giá của Seller -->
@@ -119,6 +129,7 @@
             <TableColumn fx:id="statusCol" text="Trạng thái" prefWidth="110"/>
             <TableColumn fx:id="startTimeCol" text="Bắt đầu" prefWidth="150"/>
             <TableColumn fx:id="endTimeCol" text="Kết thúc" prefWidth="150"/>
+            <TableColumn fx:id="actionCol" text="Hành động" prefWidth="150"/>
           </columns>
           <placeholder>
             <Label text="Bạn chưa tạo phiên đấu giá nào." styleClass="placeholder-label"/>

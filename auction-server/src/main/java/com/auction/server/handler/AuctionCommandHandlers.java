@@ -219,4 +219,101 @@ public final class AuctionCommandHandlers {
     res.put("status", "OK");
     return res.toString();
   }
+
+  public String sellerUpdateAuction(JSONObject req) throws Exception {
+    Long auctionId = req.getLong("auctionId");
+    Long sellerId = req.getLong("sellerId");
+    String itemName = req.getString("itemName");
+    String categoryStr = req.getString("category");
+    Long startingPrice = req.getLong("startingPrice");
+    LocalDateTime startTime = LocalDateTime.parse(req.getString("startTime"));
+    LocalDateTime endTime = LocalDateTime.parse(req.getString("endTime"));
+
+    Optional<Auction> auctionOpt = auctionDao.findById(auctionId);
+    if (auctionOpt.isEmpty()) {
+      return JsonResponses.error("Không tìm thấy đấu giá #" + auctionId);
+    }
+    Auction auction = auctionOpt.get();
+
+    if (!auction.getSellerId().equals(sellerId)) {
+      return JsonResponses.error("Bạn không có quyền sửa phiên đấu giá này.");
+    }
+
+    if (auction.getStatus() != AuctionStatus.OPEN) {
+      return JsonResponses.error("Chỉ có thể sửa phiên đấu giá chưa bắt đầu.");
+    }
+
+    if (itemName == null || itemName.trim().isEmpty()) {
+      return JsonResponses.error("Tên sản phẩm không được để trống!");
+    }
+
+    ItemCategory category;
+    try {
+      category = ItemCategory.valueOf(categoryStr);
+    } catch (IllegalArgumentException e) {
+      return JsonResponses.error("Loại sản phẩm không hợp lệ: " + categoryStr);
+    }
+
+    // Update Auction
+    auction.setCurrentPrice(startingPrice);
+    auction.setStartTime(startTime);
+    auction.setEndTime(endTime);
+
+    // Update status based on new times
+    LocalDateTime now = LocalDateTime.now();
+    if (now.isAfter(startTime) && now.isBefore(endTime)) {
+      auction.setStatus(AuctionStatus.RUNNING);
+    } else if (now.isAfter(endTime)) {
+      auction.setStatus(AuctionStatus.FINISHED);
+    } else {
+      auction.setStatus(AuctionStatus.OPEN);
+    }
+
+    auctionDao.update(auction);
+
+    // Update Item
+    Optional<Item> itemOpt = itemDao.findById(auction.getItemId());
+    if (itemOpt.isPresent()) {
+      Item item = itemOpt.get();
+      item.setName(itemName);
+      item.setCategory(category);
+      item.setStartingPrice(startingPrice);
+      itemDao.update(item);
+    }
+
+    if (auction.getStatus() == AuctionStatus.RUNNING) {
+      AuctionManager.getInstance().restoreRunningAuction(auction);
+    }
+
+    JSONObject res = new JSONObject();
+    res.put("status", "OK");
+    return res.toString();
+  }
+
+  public String sellerDeleteAuction(JSONObject req) throws Exception {
+    Long auctionId = req.getLong("auctionId");
+    Long sellerId = req.getLong("sellerId");
+
+    Optional<Auction> auctionOpt = auctionDao.findById(auctionId);
+    if (auctionOpt.isEmpty()) {
+      return JsonResponses.error("Không tìm thấy phiên đấu giá #" + auctionId);
+    }
+    Auction auction = auctionOpt.get();
+
+    if (!auction.getSellerId().equals(sellerId)) {
+      return JsonResponses.error("Bạn không có quyền xóa phiên đấu giá này.");
+    }
+
+    if (auction.getCurrentWinnerId() != null) {
+      return JsonResponses.error("Không thể xóa phiên đấu giá đã có người đặt giá.");
+    }
+
+    AuctionManager.getInstance().closeAuction(auctionId);
+    auctionDao.deleteById(auctionId);
+    itemDao.deleteById(auction.getItemId());
+
+    JSONObject res = new JSONObject();
+    res.put("status", "OK");
+    return res.toString();
+  }
 }
