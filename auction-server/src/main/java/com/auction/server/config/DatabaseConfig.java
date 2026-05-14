@@ -78,10 +78,12 @@ public class DatabaseConfig {
           try {
             stmt.execute(trimmed);
           } catch (SQLException e) {
-            // Nếu là lỗi "Duplicate column" hoặc "Duplicate key", ta có thể bỏ qua 
+            // Nếu là lỗi "Duplicate column" hoặc "Duplicate key", ta có thể bỏ qua
             // để đảm bảo server vẫn khởi động được khi chạy lại script migration.
-            if (trimmed.toUpperCase().contains("ALTER TABLE") || trimmed.toUpperCase().contains("ADD COLUMN")) {
-              System.out.println("Lưu ý: Bỏ qua lỗi cập nhật cấu trúc (có thể cột đã tồn tại): " + e.getMessage());
+            if (trimmed.toUpperCase().contains("ALTER TABLE")
+                || trimmed.toUpperCase().contains("ADD COLUMN")) {
+              System.out.println(
+                  "Lưu ý: Bỏ qua lỗi cập nhật cấu trúc (có thể cột đã tồn tại): " + e.getMessage());
             } else {
               throw e;
             }

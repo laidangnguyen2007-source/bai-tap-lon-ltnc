@@ -13,7 +13,7 @@ import java.util.Optional;
 /**
  * Triển khai AuctionDao sử dụng JDBC + MySQL.
  *
- * Pessimistic Locking: Phương thức findById dùng SELECT ... FOR UPDATE để khóa dòng dữ liệu khi
+ * <p>Pessimistic Locking: Phương thức findById dùng SELECT ... FOR UPDATE để khóa dòng dữ liệu khi
  * AuctionService đang xử lý lệnh đặt giá (bid). Nếu 2 luồng cùng cố gắng đặt giá trên cùng 1
  * Auction, luồng thứ 2 bị Database giữ lại cho đến khi luồng thứ 1 COMMIT xong. Đây là cơ chế chống
  * Lost Update ở tầng Database, đảm bảo tính Concurrent Bidding của hệ thống.
@@ -24,11 +24,15 @@ public class JdbcAuctionDao implements AuctionDao { // DIP
 
   @Override // GenericDao
   public Auction save(Auction auction) {
-    String sql = "INSERT INTO auctions (created_at, item_id, seller_id, current_price,"
-        + " current_winner_id, status, start_time, end_time)" + " VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+    String sql =
+        "INSERT INTO auctions (created_at, item_id, seller_id, current_price,"
+            + " current_winner_id, status, start_time, end_time)"
+            + " VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
 
-    try (PreparedStatement ps = DatabaseConfig.getInstance().getConnection().prepareStatement(sql,
-        Statement.RETURN_GENERATED_KEYS)) {
+    try (PreparedStatement ps =
+        DatabaseConfig.getInstance()
+            .getConnection()
+            .prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
       // prepareStatement: Biến câu lệnh SQL có dấu ? lúc nãy thành một đối tượng có thể điều khiển.
       // RETURN_GENERATED_KEYS: Một cái "giỏ" đi kèm để hứng cái ID tự động mà MySQL sắp tạo
       // ra.
@@ -55,7 +59,7 @@ public class JdbcAuctionDao implements AuctionDao { // DIP
   /**
    * Tìm Auction theo ID với khóa Pessimistic (FOR UPDATE).
    *
-   * Khi AuctionService cần đặt giá, nó gọi hàm này trong 1 Transaction. MySQL sẽ khóa dòng
+   * <p>Khi AuctionService cần đặt giá, nó gọi hàm này trong 1 Transaction. MySQL sẽ khóa dòng
    * auction đó lại. Các luồng khác gọi findById cùng ID sẽ bị block cho đến khi Transaction kết
    * thúc (COMMIT/ROLLBACK). Điều này đảm bảo chỉ 1 luồng cập nhật giá tại 1 thời điểm.
    */
@@ -63,12 +67,11 @@ public class JdbcAuctionDao implements AuctionDao { // DIP
   public Optional<Auction> findById(Long id) {
     // FOR UPDATE: Khóa dòng này lại cho đến khi transaction kết thúc
     String sql = "SELECT * FROM auctions WHERE id = ? FOR UPDATE";
-    try (
-        PreparedStatement ps = DatabaseConfig.getInstance().getConnection().prepareStatement(sql)) {
+    try (PreparedStatement ps =
+        DatabaseConfig.getInstance().getConnection().prepareStatement(sql)) {
       ps.setLong(1, id);
       try (ResultSet rs = ps.executeQuery()) {
-        if (rs.next())
-          return Optional.of(mapRow(rs));
+        if (rs.next()) return Optional.of(mapRow(rs));
       }
     } catch (SQLException e) {
       throw new AuctionException("Database error finding Auction by id", e);
@@ -82,8 +85,7 @@ public class JdbcAuctionDao implements AuctionDao { // DIP
     String sql = "SELECT * FROM auctions";
     try (Statement st = DatabaseConfig.getInstance().getConnection().createStatement();
         ResultSet rs = st.executeQuery(sql)) {
-      while (rs.next())
-        list.add(mapRow(rs));
+      while (rs.next()) list.add(mapRow(rs));
     } catch (SQLException e) {
       throw new AuctionException("Database error fetching all Auctions", e);
     }
@@ -95,8 +97,8 @@ public class JdbcAuctionDao implements AuctionDao { // DIP
     String sql =
         "UPDATE auctions SET current_price=?, current_winner_id=?, status=?, start_time=?, end_time=?"
             + " WHERE id=?";
-    try (
-        PreparedStatement ps = DatabaseConfig.getInstance().getConnection().prepareStatement(sql)) {
+    try (PreparedStatement ps =
+        DatabaseConfig.getInstance().getConnection().prepareStatement(sql)) {
       ps.setLong(1, auction.getCurrentPrice());
       setNullableLong(ps, 2, auction.getCurrentWinnerId());
       ps.setString(3, auction.getStatus().name());
@@ -113,8 +115,8 @@ public class JdbcAuctionDao implements AuctionDao { // DIP
   @Override
   public boolean deleteById(Long id) {
     String sql = "DELETE FROM auctions WHERE id = ?";
-    try (
-        PreparedStatement ps = DatabaseConfig.getInstance().getConnection().prepareStatement(sql)) {
+    try (PreparedStatement ps =
+        DatabaseConfig.getInstance().getConnection().prepareStatement(sql)) {
       ps.setLong(1, id);
       return ps.executeUpdate() > 0;
     } catch (SQLException e) {
@@ -125,8 +127,8 @@ public class JdbcAuctionDao implements AuctionDao { // DIP
   @Override
   public boolean existsById(Long id) {
     String sql = "SELECT COUNT(1) FROM auctions WHERE id = ?";
-    try (
-        PreparedStatement ps = DatabaseConfig.getInstance().getConnection().prepareStatement(sql)) {
+    try (PreparedStatement ps =
+        DatabaseConfig.getInstance().getConnection().prepareStatement(sql)) {
       ps.setLong(1, id);
       try (ResultSet rs = ps.executeQuery()) {
         return rs.next() && rs.getInt(1) > 0;
@@ -155,12 +157,11 @@ public class JdbcAuctionDao implements AuctionDao { // DIP
   public List<Auction> findByStatus(AuctionStatus status) {
     List<Auction> list = new ArrayList<>();
     String sql = "SELECT * FROM auctions WHERE status = ?";
-    try (
-        PreparedStatement ps = DatabaseConfig.getInstance().getConnection().prepareStatement(sql)) {
+    try (PreparedStatement ps =
+        DatabaseConfig.getInstance().getConnection().prepareStatement(sql)) {
       ps.setString(1, status.name());
       try (ResultSet rs = ps.executeQuery()) {
-        while (rs.next())
-          list.add(mapRow(rs));
+        while (rs.next()) list.add(mapRow(rs));
       }
     } catch (SQLException e) {
       throw new AuctionException("Database error finding Auctions by status", e);
@@ -171,12 +172,11 @@ public class JdbcAuctionDao implements AuctionDao { // DIP
   @Override
   public Optional<Auction> findByItemId(Long itemId) {
     String sql = "SELECT * FROM auctions WHERE item_id = ?";
-    try (
-        PreparedStatement ps = DatabaseConfig.getInstance().getConnection().prepareStatement(sql)) {
+    try (PreparedStatement ps =
+        DatabaseConfig.getInstance().getConnection().prepareStatement(sql)) {
       ps.setLong(1, itemId);
       try (ResultSet rs = ps.executeQuery()) {
-        if (rs.next())
-          return Optional.of(mapRow(rs));
+        if (rs.next()) return Optional.of(mapRow(rs));
       }
     } catch (SQLException e) {
       throw new AuctionException("Database error finding Auction by item ID", e);
@@ -188,12 +188,11 @@ public class JdbcAuctionDao implements AuctionDao { // DIP
   public List<Auction> findBySellerId(Long sellerId) {
     List<Auction> list = new ArrayList<>();
     String sql = "SELECT * FROM auctions WHERE seller_id = ?";
-    try (
-        PreparedStatement ps = DatabaseConfig.getInstance().getConnection().prepareStatement(sql)) {
+    try (PreparedStatement ps =
+        DatabaseConfig.getInstance().getConnection().prepareStatement(sql)) {
       ps.setLong(1, sellerId);
       try (ResultSet rs = ps.executeQuery()) {
-        while (rs.next())
-          list.add(mapRow(rs));
+        while (rs.next()) list.add(mapRow(rs));
       }
     } catch (SQLException e) {
       throw new AuctionException("Database error finding Auctions by seller ID", e);
@@ -212,8 +211,7 @@ public class JdbcAuctionDao implements AuctionDao { // DIP
     String sql = "SELECT * FROM auctions WHERE status IN ('OPEN', 'RUNNING')";
     try (Statement st = DatabaseConfig.getInstance().getConnection().createStatement();
         ResultSet rs = st.executeQuery(sql)) {
-      while (rs.next())
-        list.add(mapRow(rs));
+      while (rs.next()) list.add(mapRow(rs));
     } catch (SQLException e) {
       throw new AuctionException("Database error finding active Auctions", e);
     }
@@ -230,9 +228,14 @@ public class JdbcAuctionDao implements AuctionDao { // DIP
       currentWinnerId = null;
     }
 
-    return new Auction(rs.getLong("id"), rs.getTimestamp("created_at").toLocalDateTime(),
-        rs.getLong("item_id"), rs.getLong("seller_id"), rs.getLong("current_price"),
-        currentWinnerId, AuctionStatus.valueOf(rs.getString("status")),
+    return new Auction(
+        rs.getLong("id"),
+        rs.getTimestamp("created_at").toLocalDateTime(),
+        rs.getLong("item_id"),
+        rs.getLong("seller_id"),
+        rs.getLong("current_price"),
+        currentWinnerId,
+        AuctionStatus.valueOf(rs.getString("status")),
         rs.getTimestamp("start_time").toLocalDateTime(),
         rs.getTimestamp("end_time").toLocalDateTime());
   }
