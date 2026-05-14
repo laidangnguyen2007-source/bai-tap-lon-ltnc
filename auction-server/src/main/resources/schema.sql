@@ -67,6 +67,7 @@ CREATE TABLE IF NOT EXISTS items (
     created_at      DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
     name            VARCHAR(255)    NOT NULL,
     description     TEXT            DEFAULT NULL,
+    image_base64    LONGTEXT        DEFAULT NULL,
     starting_price  BIGINT          NOT NULL,
     seller_id       BIGINT          NOT NULL,
     category        VARCHAR(20)     NOT NULL COMMENT 'ELECTRONICS | ARTWORK | VEHICLE',
@@ -277,12 +278,18 @@ WHERE id = 1;
 
 
 -- ================================================================
--- 7. KIỂM TRA KẾT QUẢ
+-- 8. AUTO-MIGRATION (Cập nhật cho các bản cũ)
+-- Cần dùng thủ thuật hoặc chạy lệnh đơn lẻ vì MySQL không có 'ADD COLUMN IF NOT EXISTS' 
+-- bản cũ. Các câu lệnh dưới đây đảm bảo máy cũ khi pull code về vẫn chạy được.
 -- ================================================================
-SELECT 'users' AS table_name, COUNT(*) AS total_rows FROM users
-UNION ALL
-SELECT 'items' AS table_name, COUNT(*) FROM items
-UNION ALL
-SELECT 'auctions' AS table_name, COUNT(*) FROM auctions
-UNION ALL
-SELECT 'bid_transactions' AS table_name, COUNT(*) FROM bid_transactions;
+
+-- Thêm cột mô tả sản phẩm và ảnh Base64 nếu chưa có (cho bảng items)
+-- Lưu ý: Nếu máy đã có rồi, các lệnh này có thể báo lỗi nhẹ trong log nhưng không làm dừng Server.
+-- (Server của chúng ta được thiết kế để bỏ qua lỗi nhỏ khi khởi tạo schema).
+-- ----------------------------------------------------------------
+ALTER TABLE items ADD COLUMN IF NOT EXISTS image_base64 LONGTEXT DEFAULT NULL AFTER description;
+
+-- Đảm bảo category có hỗ trợ loại 'OTHER'
+ALTER TABLE items MODIFY COLUMN category VARCHAR(50) NOT NULL;
+
+SELECT 'Migration completed successfully' AS status;

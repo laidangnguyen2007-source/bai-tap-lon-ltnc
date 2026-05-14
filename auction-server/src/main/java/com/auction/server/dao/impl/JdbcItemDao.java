@@ -33,10 +33,10 @@ public class JdbcItemDao implements ItemDao {
   @Override
   public Item save(Item item) {
     String sql =
-        "INSERT INTO items (created_at, name, description, starting_price, seller_id, category,"
+        "INSERT INTO items (created_at, name, description, starting_price, seller_id, category, image_base64,"
             + " brand, warranty_months, power_watts, artist, art_year, medium,"
             + " make, model, vehicle_year, mileage)"
-            + " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+            + " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
     try (PreparedStatement ps =
         DatabaseConfig.getInstance()
@@ -48,7 +48,8 @@ public class JdbcItemDao implements ItemDao {
       ps.setLong(4, item.getStartingPrice());
       ps.setLong(5, item.getSellerId());
       ps.setString(6, item.getCategory().name());
-      bindItemTypeFields(ps, item); // gán các cột đặc thù bắt đầu từ index 7
+      ps.setString(7, item.getImageBase64());
+      bindItemTypeFields(ps, item, 8); // gán các cột đặc thù bắt đầu từ index 8
       ps.executeUpdate();
 
       try (ResultSet keys = ps.getGeneratedKeys()) {
@@ -96,7 +97,7 @@ public class JdbcItemDao implements ItemDao {
   @Override
   public Item update(Item item) {
     String sql =
-        "UPDATE items SET name=?, description=?, starting_price=?, category=?,"
+        "UPDATE items SET name=?, description=?, starting_price=?, category=?, image_base64=?,"
             + " brand=?, warranty_months=?, power_watts=?,"
             + " artist=?, art_year=?, medium=?,"
             + " make=?, model=?, vehicle_year=?, mileage=?"
@@ -107,8 +108,9 @@ public class JdbcItemDao implements ItemDao {
       ps.setString(2, item.getDescription());
       ps.setLong(3, item.getStartingPrice());
       ps.setString(4, item.getCategory().name());
-      bindItemTypeFieldsForUpdate(ps, item, 5);
-      ps.setLong(15, item.getId());
+      ps.setString(5, item.getImageBase64());
+      bindItemTypeFieldsForUpdate(ps, item, 6);
+      ps.setLong(16, item.getId());
       ps.executeUpdate();
       return item;
     } catch (SQLException e) {
@@ -217,6 +219,7 @@ public class JdbcItemDao implements ItemDao {
     long startingPrice = rs.getLong("starting_price");
     Long sellerId = rs.getLong("seller_id");
     ItemCategory category = ItemCategory.valueOf(rs.getString("category"));
+    String imageBase64 = rs.getString("image_base64");
 
     // Factory Pattern: gọi ItemFactory.reconstruct*() thay vì new trực tiếp
     // Giữ cho DAO không bị phụ thuộc vào cụ thể của từng loại Item
@@ -275,43 +278,44 @@ public class JdbcItemDao implements ItemDao {
             yield otherItem;
           }
         };
+    result.setImageBase64(imageBase64);
     return result;
   }
 
-  private void bindItemTypeFields(PreparedStatement ps, Item item) throws SQLException {
+  private void bindItemTypeFields(PreparedStatement ps, Item item, int start) throws SQLException {
     if (item instanceof Electronics e) {
-      ps.setString(7, e.getBrand());
-      ps.setInt(8, e.getWarrantyMonths());
-      ps.setDouble(9, e.getPowerWatts());
-      ps.setNull(10, Types.VARCHAR);
-      ps.setNull(11, Types.INTEGER);
-      ps.setNull(12, Types.VARCHAR);
-      ps.setNull(13, Types.VARCHAR);
-      ps.setNull(14, Types.VARCHAR);
-      ps.setNull(15, Types.INTEGER);
-      ps.setNull(16, Types.DOUBLE);
+      ps.setString(start, e.getBrand());
+      ps.setInt(start + 1, e.getWarrantyMonths());
+      ps.setDouble(start + 2, e.getPowerWatts());
+      ps.setNull(start + 3, Types.VARCHAR);
+      ps.setNull(start + 4, Types.INTEGER);
+      ps.setNull(start + 5, Types.VARCHAR);
+      ps.setNull(start + 6, Types.VARCHAR);
+      ps.setNull(start + 7, Types.VARCHAR);
+      ps.setNull(start + 8, Types.INTEGER);
+      ps.setNull(start + 9, Types.DOUBLE);
     } else if (item instanceof Artwork a) {
-      ps.setNull(7, Types.VARCHAR);
-      ps.setNull(8, Types.INTEGER);
-      ps.setNull(9, Types.DOUBLE);
-      ps.setString(10, a.getArtistName());
-      ps.setInt(11, a.getYearCreated());
-      ps.setString(12, a.getMedium());
-      ps.setNull(13, Types.VARCHAR);
-      ps.setNull(14, Types.VARCHAR);
-      ps.setNull(15, Types.INTEGER);
-      ps.setNull(16, Types.DOUBLE);
+      ps.setNull(start, Types.VARCHAR);
+      ps.setNull(start + 1, Types.INTEGER);
+      ps.setNull(start + 2, Types.DOUBLE);
+      ps.setString(start + 3, a.getArtistName());
+      ps.setInt(start + 4, a.getYearCreated());
+      ps.setString(start + 5, a.getMedium());
+      ps.setNull(start + 6, Types.VARCHAR);
+      ps.setNull(start + 7, Types.VARCHAR);
+      ps.setNull(start + 8, Types.INTEGER);
+      ps.setNull(start + 9, Types.DOUBLE);
     } else if (item instanceof Vehicle v) {
-      ps.setNull(7, Types.VARCHAR);
-      ps.setNull(8, Types.INTEGER);
-      ps.setNull(9, Types.DOUBLE);
-      ps.setNull(10, Types.VARCHAR);
-      ps.setNull(11, Types.INTEGER);
-      ps.setNull(12, Types.VARCHAR);
-      ps.setString(13, v.getManufacturer());
-      ps.setNull(14, Types.VARCHAR); // model chưa có getter riêng
-      ps.setInt(15, v.getYearManufactured());
-      ps.setDouble(16, v.getMileageKm());
+      ps.setNull(start, Types.VARCHAR);
+      ps.setNull(start + 1, Types.INTEGER);
+      ps.setNull(start + 2, Types.DOUBLE);
+      ps.setNull(start + 3, Types.VARCHAR);
+      ps.setNull(start + 4, Types.INTEGER);
+      ps.setNull(start + 5, Types.VARCHAR);
+      ps.setString(start + 6, v.getManufacturer());
+      ps.setNull(start + 7, Types.VARCHAR); // model chưa có getter riêng
+      ps.setInt(start + 8, v.getYearManufactured());
+      ps.setDouble(start + 9, v.getMileageKm());
     }
   }
 

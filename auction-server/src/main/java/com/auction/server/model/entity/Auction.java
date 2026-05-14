@@ -7,17 +7,18 @@ import java.util.Objects;
 
 public class Auction extends BaseEntity {
 
-  // Anti-sniping logi (logic chống đặt giá giây cuối): nếu một lượt đặt giá được
+  // Anti-sniping logic (logic chống đặt giá giây cuối): nếu một lượt đặt giá được
   // thực hiện trong vòng ANTI_SNIPE_WINDOW_SECONDS giây trước khi kết thúc, thời
   // gian kết thúc sẽ tự động được gia hạn thêm EXTENSION_SECONDS giây. Logic này
   // được xử lý ở tầng AuctionServiceImpl.
 
-  // số giấy trước khi kết thúc đấu giá để kích hoạt anti-snipping
+  // số giây trước khi kết thúc đấu giá để kích hoạt anti-snipping
   public static final int ANTI_SNIPE_WINDOW_SECONDS = 30;
 
   // số giây gia hạn thêm khi anti-snipping kích hoạt
   public static final int EXTENSION_SECONDS = 30;
 
+  private long startingPrice;
   private Long itemId;
   private Long sellerId;
   private long currentPrice; // giá cao nhất được đặt hiện tại
@@ -27,6 +28,8 @@ public class Auction extends BaseEntity {
   private LocalDateTime endTime;
   private String itemName; // Tên sản phẩm (để hiển thị ở danh sách)
   private String itemCategory; // Loại sản phẩm (để hiển thị ở bảng Seller Dashboard)
+  private String imageBase64; // Hình ảnh (hiển thị UI mới)
+  private String itemDescription; // Mô tả sản phẩm (hiển thị UI mới)
 
   public Auction() {
     super();
@@ -48,16 +51,8 @@ public class Auction extends BaseEntity {
     }
   }
 
-  public Auction(
-      Long id,
-      LocalDateTime createdAt,
-      Long itemId,
-      Long sellerId,
-      long currentPrice,
-      Long currentWinnerId,
-      AuctionStatus status,
-      LocalDateTime startTime,
-      LocalDateTime endTime) {
+  public Auction(Long id, LocalDateTime createdAt, Long itemId, Long sellerId, long currentPrice,
+      Long currentWinnerId, AuctionStatus status, LocalDateTime startTime, LocalDateTime endTime) {
     super(id, createdAt);
     this.itemId = itemId;
     this.sellerId = sellerId;
@@ -95,11 +90,8 @@ public class Auction extends BaseEntity {
           "Cannot place bid: auction is not RUNNING. Current status: " + status);
     }
     if (newPrice <= currentPrice) {
-      throw new IllegalArgumentException(
-          "New bid must be higher than current price. Current: "
-              + currentPrice
-              + ", offered: "
-              + newPrice);
+      throw new IllegalArgumentException("New bid must be higher than current price. Current: "
+          + currentPrice + ", offered: " + newPrice);
     }
     this.currentPrice = newPrice;
     this.currentWinnerId = Objects.requireNonNull(bidderId, "bidderId must not be null");
@@ -109,9 +101,8 @@ public class Auction extends BaseEntity {
     if (extraSeconds <= 0) {
       throw new IllegalArgumentException("extraSeconds must be positive: " + extraSeconds);
     }
-    this.endTime =
-        this.endTime.plusSeconds(
-            extraSeconds); // plusSeconds() là phương thức built-in của LocalDateTime
+    this.endTime = this.endTime.plusSeconds(extraSeconds); // plusSeconds() là phương thức built-in
+                                                           // của LocalDateTime
   }
 
   public Long getItemId() {
@@ -132,6 +123,14 @@ public class Auction extends BaseEntity {
 
   public long getCurrentPrice() {
     return currentPrice;
+  }
+
+  public long getStartingPrice() {
+    return startingPrice;
+  }
+
+  public void setStartingPrice(long startingPrice) {
+    this.startingPrice = startingPrice;
   }
 
   public void setCurrentPrice(long currentPrice) {
@@ -187,27 +186,27 @@ public class Auction extends BaseEntity {
     this.itemCategory = itemCategory;
   }
 
+  public String getImageBase64() {
+    return imageBase64;
+  }
+
+  public void setImageBase64(String imageBase64) {
+    this.imageBase64 = imageBase64;
+  }
+
+  public String getItemDescription() {
+    return itemDescription;
+  }
+
+  public void setItemDescription(String itemDescription) {
+    this.itemDescription = itemDescription;
+  }
+
   @Override
   public String toString() {
-    return "Auction{"
-        + "id="
-        + getId()
-        + ", itemId="
-        + itemId
-        + ", sellerId="
-        + sellerId
-        + ", currentPrice="
-        + currentPrice
-        + ", currentWinnerId="
-        + currentWinnerId
-        + ", status="
-        + status
-        + ", startTime="
-        + startTime
-        + ", endTime="
-        + endTime
-        + ", createdAt="
-        + getCreatedAt()
-        + "}";
+    return "Auction{" + "id=" + getId() + ", itemId=" + itemId + ", sellerId=" + sellerId
+        + ", currentPrice=" + currentPrice + ", currentWinnerId=" + currentWinnerId + ", status="
+        + status + ", startTime=" + startTime + ", endTime=" + endTime + ", createdAt="
+        + getCreatedAt() + "}";
   }
 }

@@ -108,6 +108,15 @@ public class BiddingRoomController implements AuctionObserver {
 
     // Thiết lập thông tin tiêu đề phiên
     auctionTitleLabel.setText("Phiên Đấu Giá #" + auction.getId());
+
+
+    // Thêm giá khởi điểm vào Chart
+    if (bidSeries.getData().isEmpty()) {
+      XYChart.Data<Number, Number> dataPoint = new XYChart.Data<>(bidCount, auction.getStartingPrice());
+      bidSeries.getData().add(dataPoint);
+    }
+
+
     currentPriceLabel.setText(String.format("%,d VNĐ", auction.getCurrentPrice()));
     statusLabel.setText(auction.getStatus().name());
 
@@ -183,6 +192,25 @@ public class BiddingRoomController implements AuctionObserver {
     // Không tự động giới hạn khoảng trục Y — để chart tự mở rộng theo dữ liệu
     yAxis.setAutoRanging(true);
     xAxis.setAutoRanging(true);
+
+    // Cấu hình trục X chỉ hiển thị số nguyên (lượt bid) và tránh lặp số
+    xAxis.setTickUnit(1);
+    xAxis.setMinorTickCount(0);
+    xAxis.setMinorTickVisible(false);
+    xAxis.setTickLabelFormatter(new javafx.util.StringConverter<Number>() {
+        @Override
+        public String toString(Number object) {
+            // Nếu là số nguyên thì hiện, số lẻ (do auto-scaling) thì ẩn để tránh lặp
+            if (object.doubleValue() % 1 == 0) {
+                return String.valueOf(object.intValue());
+            }
+            return "";
+        }
+        @Override
+        public Number fromString(String string) {
+            return string.isEmpty() ? 0 : Double.valueOf(string);
+        }
+    });
 
     // Tắt animation mỗi khi thêm điểm mới (animation chậm sẽ gây lag khi cập nhật liên tục)
     bidChart.setAnimated(false);
@@ -274,11 +302,12 @@ public class BiddingRoomController implements AuctionObserver {
           currentAuction.setCurrentPrice(bid.getAmount());
           currentAuction.setCurrentWinnerId(bid.getBidderId());
 
-          // Nếu bid này là của chính mình, hiện thông báo thành công
+          // Nếu bid này là của chính mình, hiện thông báo thành công và MỞ KHÓA nút ngay
           if (pendingBidAmount > 0 && bid.getAmount() == pendingBidAmount) {
             infoLabel.setText("✅ Đặt giá " + String.format("%,d", bid.getAmount()) + " VNĐ thành công!");
             NotificationUtils.showSuccess((Stage) bidChart.getScene().getWindow(), "Bạn đã dẫn đầu với giá " + String.format("%,d", bid.getAmount()) + " VNĐ");
             pendingBidAmount = -1;
+            placeBidButton.setDisable(false); // Mở khóa nút để đặt giá tiếp
           } else {
             // [Tính năng 4] Thông báo khi có người khác đặt giá
             NotificationUtils.showToast((Stage) bidChart.getScene().getWindow(), "📣 Có người vừa đặt giá mới: " + String.format("%,d", bid.getAmount()) + " VNĐ", false);
@@ -391,15 +420,15 @@ public class BiddingRoomController implements AuctionObserver {
       return;
     }
 
-    // Sau 6 giây, nếu BID_UPDATE chưa về thì báo thất bại
+    // Sau 3 giây (giảm từ 6s), nếu BID_UPDATE chưa về thì báo thất bại
     new Thread(() -> {
-      try { Thread.sleep(6000); } catch (InterruptedException ignored) {}
+      try { Thread.sleep(3000); } catch (InterruptedException ignored) {}
       Platform.runLater(() -> {
-        placeBidButton.setDisable(false);
         if (pendingBidAmount == finalAmount) {
           // Chưa nhận được BID_UPDATE → bid bị từ chối hoặc mạng lag
           infoLabel.setText("❌ Đặt giá thất bại. Giá có thể đã bị vượt qua.");
           pendingBidAmount = -1;
+          placeBidButton.setDisable(false);
         }
       });
     }).start();

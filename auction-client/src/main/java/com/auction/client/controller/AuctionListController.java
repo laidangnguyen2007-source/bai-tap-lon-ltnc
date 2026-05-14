@@ -23,12 +23,9 @@ import javafx.scene.control.ComboBox;
 import javafx.scene.control.Dialog;
 import javafx.scene.control.Label;
 
-import javafx.scene.control.TableColumn;
-import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.ButtonBar;
-import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.stage.Stage;
@@ -40,47 +37,48 @@ import javafx.scene.Node;
 /**
  * Controller cho màn hình Danh Sách Đấu Giá (auction-list.fxml).
  *
- * <p>Hiển thị tất cả các phiên đấu giá dưới dạng bảng (TableView). Người dùng có thể: - Lọc
- * phiên theo trạng thái (OPEN, RUNNING, FINISHED, ...) - Click vào một hàng để xem chi tiết hoặc
- * tham gia đấu giá - Đăng xuất để quay lại màn hình Login
+ * <p>
+ * Hiển thị tất cả các phiên đấu giá dưới dạng bảng (TableView). Người dùng có thể: - Lọc phiên theo
+ * trạng thái (OPEN, RUNNING, FINISHED, ...) - Click vào một hàng để xem chi tiết hoặc tham gia đấu
+ * giá - Đăng xuất để quay lại màn hình Login
  */
 public class AuctionListController implements com.auction.client.observer.AuctionObserver {
 
   // -- @FXML inject từ auction-list.fxml --
 
-  @FXML private TableView<Auction> auctionTable;
+  @FXML
+  private javafx.scene.layout.FlowPane auctionGridPane;
 
-  @FXML private TableColumn<Auction, Long> idColumn;
+  // Danh sách các hàm cập nhật thời gian đếm ngược cho từng thẻ
+  private final java.util.List<Runnable> timeUpdaters = new java.util.ArrayList<>();
 
-  @FXML private TableColumn<Auction, String> itemNameColumn;
+  @FXML
+  private ComboBox<String> statusFilterCombo;
 
-  @FXML private TableColumn<Auction, String> statusColumn;
+  @FXML
+  private Button refreshButton;
 
-  @FXML private TableColumn<Auction, String> currentPriceColumn;
+  @FXML
+  private TextField searchField;
 
-  @FXML private TableColumn<Auction, String> startTimeColumn;
+  @FXML
+  private Button logoutButton;
 
-  @FXML private TableColumn<Auction, String> endTimeColumn;
+  @FXML
+  private Button myWinsButton;
 
-  @FXML private TableColumn<Auction, Void> actionsColumn;
-
-  @FXML private TableColumn<Auction, String> timeLeftColumn;
-
-  @FXML private ComboBox<String> statusFilterCombo;
-
-  @FXML private Button refreshButton;
-
-  @FXML private Button logoutButton;
-
-  @FXML private Button myWinsButton;
-
-  @FXML private Label welcomeLabel;
+  @FXML
+  private Label welcomeLabel;
 
   // -- [Tính năng 2] Thống kê dành cho Admin --
-  @FXML private javafx.scene.layout.HBox adminStatsPane;
-  @FXML private Label totalAuctionsLabel;
-  @FXML private Label runningAuctionsLabel;
-  @FXML private Label totalValueLabel;
+  @FXML
+  private javafx.scene.layout.HBox adminStatsPane;
+  @FXML
+  private Label totalAuctionsLabel;
+  @FXML
+  private Label runningAuctionsLabel;
+  @FXML
+  private Label totalValueLabel;
 
   // -- Bộ đếm thời gian thực --
   private javafx.animation.Timeline countdownTimeline;
@@ -107,185 +105,43 @@ public class AuctionListController implements com.auction.client.observer.Auctio
       welcomeLabel.setText("Chào mừng, " + session.getCurrentUser().getUsername() + "!");
     }
 
-    // Thiết lập từng cột của TableView — liên kết với thuộc tính của Auction object
-    idColumn.setCellValueFactory(new PropertyValueFactory<>("id"));
-    
-    // Cột tên sản phẩm: dùng lambda để ép hiển thị, tránh lỗi reflection
-    itemNameColumn.setCellValueFactory(cellData -> {
-        String name = cellData.getValue().getItemName();
-        return new SimpleStringProperty(name != null ? name : "Sản phẩm #" + cellData.getValue().getItemId());
-    });
-
-    // Cột trạng thái: hiển thị tên tiếng Việt thay vì tên enum tiếng Anh
-    statusColumn.setCellValueFactory(
-        cellData ->
-            new SimpleStringProperty(translateStatus(cellData.getValue().getStatus())));
-
-    // Cột giá: định dạng số có dấu phân cách hàng nghìn và thêm đơn vị VNĐ
-    currentPriceColumn.setCellValueFactory(
-        cellData -> {
-          long price = cellData.getValue().getCurrentPrice();
-          return new SimpleStringProperty(String.format("%,d VNĐ", price));
-        });
-
-    // Cột thời gian: format LocalDateTime thành chuỗi có thể đọc được
-    startTimeColumn.setCellValueFactory(
-        cellData -> {
-          LocalDateTime t = cellData.getValue().getStartTime();
-          return new SimpleStringProperty(t != null ? t.format(DISPLAY_FORMAT) : "—");
-        });
-
-    endTimeColumn.setCellValueFactory(
-        cellData -> {
-          LocalDateTime t = cellData.getValue().getEndTime();
-          return new SimpleStringProperty(t != null ? t.format(DISPLAY_FORMAT) : "—");
-        });
-
-    /*
-     * Click đúp để mở chi tiết phiên.
-     *
-     * <p>Tại sao không gắn {@code setOnMouseClicked} trên từng {@link javafx.scene.control.TableRow}?
-     * Một số phiên bản/skin JavaFX kết hợp {@link TableView#refresh()} định kỳ (bộ đếm thời gian còn
-     * lại) có thể làm {@code row.getItem()} không khớp click, hoặc sự kiện không bubble ổn định qua
-     * cell tùy cột.
-     *
-     * <p>Cách ổn định hơn: lắng nghe ở {@link TableView}, lấy hàng đang chọn qua {@link
-     * javafx.scene.control.TableView.TableViewSelectionModel#getSelectedItem()}. Click đầu của
-     * double-click đã chọn hàng; click thứ hai kích hoạt điều hướng.
-     *
-     * <p>Admin có cột Thao tác chứa {@link Button}: double-click nhanh trên nút không được coi là
-     * “mở chi tiết” — bỏ qua khi target thuộc cây con của {@code Button} (hoặc ComboBox).
-     */
-    auctionTable.setOnMouseClicked(
-        event -> {
-          if (event.getClickCount() != 2) {
-            return;
-          }
-          if (isInteractiveControlTarget(event.getTarget())) {
-            return;
-          }
-          Auction selected = auctionTable.getSelectionModel().getSelectedItem();
-          if (selected != null) {
-            navigateToDetail(selected);
-          }
-        });
-
-    // Cấu hình cột Thao tác cho Admin
-    if (session.isLoggedIn() && session.getCurrentUser().getRole() == com.auction.server.model.enums.UserRole.ADMIN) {
-        actionsColumn.setPrefWidth(280);
-        actionsColumn.setCellFactory(param -> new javafx.scene.control.TableCell<>() {
-            private final Button deleteBtn = new Button("🗑 Xóa");
-            private final Button editBtn = new Button("⚙ Sửa");
-            private final Button resetBtn = new Button("🔄 Reset");
-            private final HBox container = new HBox(8, editBtn, resetBtn, deleteBtn);
-            {
-                container.setAlignment(Pos.CENTER);
-                deleteBtn.getStyleClass().add("danger-button");
-                editBtn.getStyleClass().add("secondary-button");
-                resetBtn.getStyleClass().add("primary-button");
-                
-                deleteBtn.setOnAction(event -> {
-                    Auction auction = getTableView().getItems().get(getIndex());
-                    
-                    // [Thêm bước xác nhận] Hỏi bạn trước khi xóa phiên đấu giá
-                    javafx.scene.control.Alert confirmAlert = new javafx.scene.control.Alert(javafx.scene.control.Alert.AlertType.CONFIRMATION);
-                    NotificationUtils.styleAlert(confirmAlert);
-                    confirmAlert.setGraphic(null); // Bỏ dấu "?"
-                    confirmAlert.setTitle("Xác Nhận Xóa Phiên");
-                    confirmAlert.setHeaderText("Bạn có chắc chắn muốn xóa phiên đấu giá #" + auction.getId() + " không?");
-                    confirmAlert.setContentText("Hành động này sẽ gỡ bỏ hoàn toàn phiên đấu giá khỏi hệ thống.");
-
-                    java.util.Optional<javafx.scene.control.ButtonType> confirmResult = confirmAlert.showAndWait();
-                    if (confirmResult.isPresent() && confirmResult.get() == javafx.scene.control.ButtonType.OK) {
-                        boolean success = serverService.deleteAuction(auction.getId());
-                        if (success) {
-                            NotificationUtils.showSuccess((Stage) auctionTable.getScene().getWindow(), "Đã xóa phiên #" + auction.getId());
-                            loadAuctions();
-                        }
-                    }
-                });
-
-                editBtn.setOnAction(event -> {
-                    Auction auction = getTableView().getItems().get(getIndex());
-                    showEditDialog(auction);
-                });
-
-                resetBtn.setOnAction(event -> {
-                    Auction auction = getTableView().getItems().get(getIndex());
-                    
-                    // [Thêm bước xác nhận] Hỏi bạn trước khi Reset (dọn rác)
-                    javafx.scene.control.Alert confirmAlert = new javafx.scene.control.Alert(javafx.scene.control.Alert.AlertType.CONFIRMATION);
-                    NotificationUtils.styleAlert(confirmAlert);
-                    confirmAlert.setGraphic(null); // Bỏ dấu "?"
-                    confirmAlert.setTitle("Xác Nhận Reset Phiên");
-                    confirmAlert.setHeaderText("Bạn có muốn dọn sạch lịch sử và đưa giá phiên #" + auction.getId() + " về ban đầu?");
-                    confirmAlert.setContentText("Hành động này sẽ xóa vĩnh viễn toàn bộ lịch sử đặt giá rác.");
-
-                    java.util.Optional<javafx.scene.control.ButtonType> confirmResult = confirmAlert.showAndWait();
-                    if (confirmResult.isPresent() && confirmResult.get() == javafx.scene.control.ButtonType.OK) {
-                        boolean success = serverService.resetAuction(auction.getId());
-                        if (success) {
-                            NotificationUtils.showSuccess((Stage) auctionTable.getScene().getWindow(), "Đã Reset và dọn rác cho phiên #" + auction.getId());
-                            loadAuctions();
-                        }
-                    }
-                });
-            }
-
-            @Override
-            protected void updateItem(Void item, boolean empty) {
-                super.updateItem(item, empty);
-                if (empty) {
-                    setGraphic(null);
-                } else {
-                    setGraphic(container);
-                }
-            }
-        });
-    } else {
-        // Nếu không phải Admin, ẩn cột Thao tác đi cho đẹp
-        actionsColumn.setVisible(false);
-    }
-
-    // Gắn dữ liệu vào bảng — mọi thay đổi của auctionData tự động cập nhật bảng
-    auctionTable.setItems(auctionData);
-
-    // [Tính năng 1] Khởi tạo cột Thời gian còn lại
-    setupTimeLeftColumn();
+    // Xóa các khởi tạo TableView cũ
 
     // [Tính năng 1] Bắt đầu bộ đếm thời gian thực (1 giây cập nhật 1 lần)
     startCountdownTimer();
 
     // [Tính năng 2] Hiển thị bảng thống kê nếu là Admin
-    if (session.isLoggedIn() && session.getCurrentUser().getRole() == com.auction.server.model.enums.UserRole.ADMIN) {
-        adminStatsPane.setVisible(true);
-        adminStatsPane.setManaged(true);
+    if (session.isLoggedIn()
+        && session.getCurrentUser().getRole() == com.auction.server.model.enums.UserRole.ADMIN) {
+      adminStatsPane.setVisible(true);
+      adminStatsPane.setManaged(true);
     } else {
-        // [Tính năng 3] Hiển thị nút Lịch sử thắng cho Bidder/Seller
-        myWinsButton.setVisible(true);
-        myWinsButton.setManaged(true);
+      // [Tính năng 3] Hiển thị nút Lịch sử thắng cho Bidder/Seller
+      myWinsButton.setVisible(true);
+      myWinsButton.setManaged(true);
     }
 
-    // Giãn đều các cột để không còn ô trống thừa ở cuối bảng
-    auctionTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+    // Bỏ tự động resize của TableView
 
     // [Tính năng 4] Đăng ký nhận thông báo Real-time từ Server
     serverService.addObserver(this);
 
     // Cấu hình ComboBox lọc trạng thái
-    statusFilterCombo.setItems(
-        FXCollections.observableArrayList(
-            "Tất cả", "Đang mở (OPEN)", "Đang chạy (RUNNING)", "Đã kết thúc (FINISHED)"));
+    statusFilterCombo.setItems(FXCollections.observableArrayList("Tất cả", "Đang mở (OPEN)",
+        "Đang chạy (RUNNING)", "Đã kết thúc (FINISHED)"));
     statusFilterCombo.setValue("Tất cả");
     ComboBoxPopupWidthSync.install(statusFilterCombo);
+
+    // [Tính năng 5] Tìm kiếm theo tên sản phẩm — lọc tức thì khi gõ (không cần nhấn Enter)
+    searchField.textProperty().addListener((obs, oldText, newText) -> loadAuctions());
 
     // Load dữ liệu lần đầu ngay khi màn hình khởi tạo
     loadAuctions();
   }
 
   /**
-   * Gọi ServerService để lấy danh sách đấu giá và áp dụng bộ lọc nếu có. Phương thức public để
-   * nút Refresh cũng có thể gọi.
+   * Gọi ServerService để lấy danh sách đấu giá và áp dụng bộ lọc nếu có. Phương thức public để nút
+   * Refresh cũng có thể gọi.
    */
   @FXML
   private void handleRefresh(ActionEvent event) {
@@ -297,12 +153,12 @@ public class AuctionListController implements com.auction.client.observer.Auctio
    */
   @FXML
   private void handleViewMyWins(ActionEvent event) {
-      try {
-          Stage stage = (Stage) myWinsButton.getScene().getWindow();
-          FxmlLoader.navigateTo(stage, "my-wins.fxml", "Online Auction System — Lịch Sử Thắng Cuộc");
-      } catch (IOException e) {
-          e.printStackTrace();
-      }
+    try {
+      Stage stage = (Stage) myWinsButton.getScene().getWindow();
+      FxmlLoader.navigateTo(stage, "my-wins.fxml", "Online Auction System — Lịch Sử Thắng Cuộc");
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
   }
 
   /** Load và lọc danh sách đấu giá từ server, sau đó hiển thị lên bảng. */
@@ -312,38 +168,45 @@ public class AuctionListController implements com.auction.client.observer.Auctio
 
     // [Tính năng 2] Cập nhật số liệu thống kê cho Admin
     if (adminStatsPane.isVisible()) {
-        updateAdminStats(allAuctions);
+      updateAdminStats(allAuctions);
     }
 
     // Lọc theo bộ lọc đang chọn — dùng Stream API để code gọn và có tính biểu đạt cao
-    List<Auction> filtered =
-        allAuctions.stream()
-            .filter(
-                auction -> {
-                  if ("Tất cả".equals(filter)) return true;
-                  if ("Đang mở (OPEN)".equals(filter))
-                    return auction.getStatus() == AuctionStatus.OPEN;
-                  if ("Đang chạy (RUNNING)".equals(filter)) return auction.isRunning();
-                  if ("Đã kết thúc (FINISHED)".equals(filter)) return auction.isFinished();
-                  return true;
-                })
-            .collect(Collectors.toList());
+    List<Auction> filtered = allAuctions.stream().filter(auction -> {
+      if ("Tất cả".equals(filter))
+        return true;
+      if ("Đang mở (OPEN)".equals(filter))
+        return auction.getStatus() == AuctionStatus.OPEN;
+      if ("Đang chạy (RUNNING)".equals(filter))
+        return auction.isRunning();
+      if ("Đã kết thúc (FINISHED)".equals(filter))
+        return auction.isFinished();
+      return true;
+    }).filter(auction -> {
+      // [Tính năng 5] Lọc theo từ khóa tìm kiếm (không phân biệt hoa thường)
+      String keyword = searchField.getText();
+      if (keyword == null || keyword.isBlank())
+        return true;
+      String lowerKeyword = keyword.toLowerCase();
+      String itemName = auction.getItemName();
+      return itemName != null && itemName.toLowerCase().contains(lowerKeyword);
+    }).collect(Collectors.toList());
 
-    // Cập nhật ObservableList — TableView tự động refresh giao diện
-    auctionData.setAll(filtered);
+    // Render thẻ giao diện thay vì TableView
+    renderGrid(filtered);
   }
 
   /**
    * [Tính năng 2] Tính toán và hiển thị số liệu thống kê cho Admin.
    */
   private void updateAdminStats(List<Auction> auctions) {
-      long total = auctions.size();
-      long running = auctions.stream().filter(Auction::isRunning).count();
-      long totalValue = auctions.stream().mapToLong(Auction::getCurrentPrice).sum();
+    long total = auctions.size();
+    long running = auctions.stream().filter(Auction::isRunning).count();
+    long totalValue = auctions.stream().mapToLong(Auction::getCurrentPrice).sum();
 
-      totalAuctionsLabel.setText(String.valueOf(total));
-      runningAuctionsLabel.setText(String.valueOf(running));
-      totalValueLabel.setText(String.format("%,d", totalValue));
+    totalAuctionsLabel.setText(String.valueOf(total));
+    runningAuctionsLabel.setText(String.valueOf(running));
+    totalValueLabel.setText(String.format("%,d", totalValue));
   }
 
 
@@ -368,16 +231,168 @@ public class AuctionListController implements com.auction.client.observer.Auctio
    */
   private void navigateToDetail(Auction selected) {
     serverService.removeObserver(this); // Tạm dừng observer khi rời màn hình
-    
+
     // Lưu phiên đang chọn vào session để AuctionDetailController đọc
     session.setSelectedAuction(selected);
 
     try {
-      Stage stage = (Stage) auctionTable.getScene().getWindow();
-      FxmlLoader.navigateTo(
-          stage, "auction-detail.fxml", "Online Auction System — Chi Tiết Sản Phẩm");
+      Stage stage = (Stage) searchField.getScene().getWindow(); // Thay vì lấy từ bảng
+      FxmlLoader.navigateTo(stage, "auction-detail.fxml",
+          "Online Auction System — Chi Tiết Sản Phẩm");
     } catch (IOException e) {
       e.printStackTrace();
+    }
+  }
+
+  /**
+   * Tạo lưới thẻ (Card Grid) cho các phiên đấu giá
+   */
+  private void renderGrid(List<Auction> auctions) {
+    auctionGridPane.getChildren().clear();
+    timeUpdaters.clear();
+
+    if (auctions.isEmpty()) {
+      Label emptyLabel = new Label("Không có phiên đấu giá nào.");
+      emptyLabel.setStyle("-fx-font-size: 16px; -fx-text-fill: #7f8c8d;");
+      auctionGridPane.getChildren().add(emptyLabel);
+      return;
+    }
+
+    for (Auction auction : auctions) {
+      javafx.scene.layout.VBox card = new javafx.scene.layout.VBox(10);
+      card.getStyleClass().add("auction-card");
+      card.setPrefWidth(260);
+      // Không đặt style inline ở đây để tránh xung đột với CSS
+
+      // Hình ảnh
+      javafx.scene.image.ImageView imgView = new javafx.scene.image.ImageView();
+      imgView.setFitWidth(230);
+      imgView.setFitHeight(180);
+      imgView.setPreserveRatio(true);
+      if (auction.getImageBase64() != null && !auction.getImageBase64().isEmpty()) {
+        try {
+          byte[] imgBytes = java.util.Base64.getDecoder().decode(auction.getImageBase64());
+          imgView
+              .setImage(new javafx.scene.image.Image(new java.io.ByteArrayInputStream(imgBytes)));
+        } catch (Exception e) {
+          // placeholder
+        }
+      } else {
+        // Gắn placeholder nếu cần, tạm thời để trống hoặc màu nền
+      }
+      HBox imgContainer = new HBox(imgView);
+      imgContainer.setAlignment(Pos.CENTER);
+      imgContainer.setMinHeight(180);
+
+      // Tên sản phẩm
+      Label nameLbl = new Label(auction.getItemName() != null ? auction.getItemName()
+          : "Sản phẩm #" + auction.getItemId());
+      nameLbl.getStyleClass().add("card-title");
+      nameLbl.setWrapText(true);
+      nameLbl.setMinHeight(50);
+      nameLbl.setMaxHeight(50);
+      nameLbl.setAlignment(Pos.TOP_LEFT);
+
+      // Giá hiện tại
+      Label priceLbl = new Label(String.format("%,d VNĐ", auction.getCurrentPrice()));
+      priceLbl.getStyleClass().add("card-price");
+
+      // Mô tả ngắn (giới hạn độ dài để khung thẻ đồng đều)
+      String desc = auction.getItemDescription();
+      if (desc == null || desc.isEmpty()) {
+        desc = "Không có mô tả.";
+      } else if (desc.length() > 80) {
+        desc = desc.substring(0, 77) + "...";
+      }
+      Label descLbl = new Label(desc);
+      descLbl.getStyleClass().add("card-desc");
+      descLbl.setWrapText(true);
+      descLbl.setMinHeight(40);
+      descLbl.setMaxHeight(40);
+
+      // Trạng thái + Loại (Việt hóa Loại sản phẩm)
+      Label statusLbl = new Label(translateStatus(auction.getStatus()) + " | "
+          + translateCategoryToVi(auction.getItemCategory()));
+      statusLbl.setStyle("-fx-font-size: 12px; -fx-text-fill: #bdc3c7; -fx-font-style: italic;");
+
+      // Thời gian còn lại
+      Label timeLbl = new Label();
+      timeLbl.setStyle("-fx-font-size: 14px;");
+      Runnable updateTime = () -> {
+        String timeLeft = formatTimeLeft(auction);
+        timeLbl.setText("⏳ " + timeLeft);
+        if (timeLeft.startsWith("00:")) {
+          timeLbl.setStyle("-fx-font-size: 14px; -fx-text-fill: #e74c3c; -fx-font-weight: bold;");
+        } else if (timeLeft.contains("kết thúc") || timeLeft.contains("thanh toán")
+            || timeLeft.contains("hủy")) {
+          timeLbl.setStyle("-fx-font-size: 14px; -fx-text-fill: #95a5a6;");
+        } else {
+          timeLbl.setStyle("-fx-font-size: 14px; -fx-text-fill: #27ae60; -fx-font-weight: bold;");
+        }
+      };
+      updateTime.run();
+      timeUpdaters.add(updateTime);
+
+      card.getChildren().addAll(imgContainer, nameLbl, priceLbl, descLbl, statusLbl, timeLbl);
+
+      // Admin Action Buttons
+      if (session.isLoggedIn()
+          && session.getCurrentUser().getRole() == com.auction.server.model.enums.UserRole.ADMIN) {
+        Button editBtn = new Button("Sửa");
+        editBtn.getStyleClass().add("secondary-button");
+        editBtn.setOnAction(e -> showEditDialog(auction));
+
+        Button deleteBtn = new Button("Xóa");
+        deleteBtn.getStyleClass().add("danger-button");
+        deleteBtn.setOnAction(e -> {
+          javafx.scene.control.Alert confirmAlert =
+              new javafx.scene.control.Alert(javafx.scene.control.Alert.AlertType.CONFIRMATION);
+          NotificationUtils.styleAlert(confirmAlert);
+          confirmAlert.setGraphic(null);
+          confirmAlert.setTitle("Xác Nhận Xóa Phiên");
+          confirmAlert.setHeaderText(
+              "Bạn có chắc chắn muốn xóa phiên đấu giá #" + auction.getId() + " không?");
+          java.util.Optional<javafx.scene.control.ButtonType> confirmResult =
+              confirmAlert.showAndWait();
+          if (confirmResult.isPresent()
+              && confirmResult.get() == javafx.scene.control.ButtonType.OK) {
+            if (serverService.deleteAuction(auction.getId())) {
+              NotificationUtils.showSuccess((Stage) searchField.getScene().getWindow(),
+                  "Đã xóa phiên #" + auction.getId());
+              loadAuctions();
+            }
+          }
+        });
+
+        // Thêm vùng đệm để đẩy nút xuống dưới cùng
+        javafx.scene.layout.Region spacer = new javafx.scene.layout.Region();
+        javafx.scene.layout.VBox.setVgrow(spacer, javafx.scene.layout.Priority.ALWAYS);
+        card.getChildren().add(spacer);
+
+        HBox adminActions = new HBox(10, editBtn, deleteBtn);
+        adminActions.setAlignment(Pos.CENTER);
+        adminActions.setPadding(new Insets(10, 0, 0, 0));
+        card.getChildren().add(adminActions);
+      } else {
+        // Đối với User, cũng thêm spacer để các thành phần bên trên thẳng hàng
+        javafx.scene.layout.Region spacer = new javafx.scene.layout.Region();
+        javafx.scene.layout.VBox.setVgrow(spacer, javafx.scene.layout.Priority.ALWAYS);
+        card.getChildren().add(spacer);
+      }
+
+      // Click vào thẻ để xem chi tiết (áp dụng cho cả User và Admin)
+      card.setOnMouseClicked(e -> {
+        // Nếu bấm vào các nút điều khiển (Sửa/Xóa) thì không chuyển trang chi tiết
+        if (isInteractiveControlTarget(e.getTarget()))
+          return;
+
+        if (e.getButton() == javafx.scene.input.MouseButton.PRIMARY) {
+          navigateToDetail(auction);
+        }
+      });
+      card.setStyle(card.getStyle() + " -fx-cursor: hand;");
+
+      auctionGridPane.getChildren().add(card);
     }
   }
 
@@ -389,159 +404,172 @@ public class AuctionListController implements com.auction.client.observer.Auctio
   @FXML
   private void handleLogout(ActionEvent event) {
     // [Thêm bước xác nhận] Hỏi bạn trước khi đăng xuất
-    javafx.scene.control.Alert alert = new javafx.scene.control.Alert(javafx.scene.control.Alert.AlertType.CONFIRMATION);
+    javafx.scene.control.Alert alert =
+        new javafx.scene.control.Alert(javafx.scene.control.Alert.AlertType.CONFIRMATION);
     NotificationUtils.styleAlert(alert);
     alert.setGraphic(null); // Bỏ dấu "?"
     alert.setTitle("Xác Nhận Đăng Xuất");
     alert.setHeaderText("Bạn có thực sự muốn đăng xuất không?");
-    
+
     java.util.Optional<javafx.scene.control.ButtonType> result = alert.showAndWait();
     if (result.isPresent() && result.get() == javafx.scene.control.ButtonType.OK) {
-        serverService.removeObserver(this); // Hủy observer khi đăng xuất
-        session.clearSession(); // Xóa thông tin đăng nhập
-        try {
-          Stage stage = (Stage) logoutButton.getScene().getWindow();
-          FxmlLoader.navigateTo(stage, "login.fxml", "Online Auction System — Đăng Nhập");
-        } catch (IOException e) {
-          e.printStackTrace();
-        }
+      serverService.removeObserver(this); // Hủy observer khi đăng xuất
+      session.clearSession(); // Xóa thông tin đăng nhập
+      try {
+        Stage stage = (Stage) logoutButton.getScene().getWindow();
+        FxmlLoader.navigateTo(stage, "login.fxml", "Online Auction System — Đăng Nhập");
+      } catch (IOException e) {
+        e.printStackTrace();
+      }
     }
   }
 
   /**
-   * Hiển thị hộp thoại chỉnh sửa phiên đấu giá dành cho Admin.
-   * Cải tiến: Cho phép sửa cả Ngày bắt đầu và Ngày kết thúc.
+   * Hiển thị hộp thoại chỉnh sửa phiên đấu giá dành cho Admin. Cải tiến: Cho phép sửa cả Ngày bắt
+   * đầu và Ngày kết thúc.
    */
   private void showEditDialog(Auction auction) {
-      Dialog<ButtonType> dialog = new Dialog<>();
-      dialog.setTitle("⚙ Quản Lý Phiên Đấu Giá #" + auction.getId());
-      dialog.setHeaderText("Chỉnh sửa thông số phiên đấu giá vi phạm hoặc cần điều chỉnh.");
-      
-      // Áp dụng style dark theme cho Dialog
-      NotificationUtils.styleDialog(dialog);
+    Dialog<ButtonType> dialog = new Dialog<>();
+    dialog.setTitle("⚙ Quản Lý Phiên Đấu Giá #" + auction.getId());
+    dialog.setHeaderText("Chỉnh sửa thông số phiên đấu giá vi phạm hoặc cần điều chỉnh.");
 
-      ButtonType saveButtonType = new ButtonType("Lưu thay đổi", ButtonBar.ButtonData.OK_DONE);
-      dialog.getDialogPane().getButtonTypes().addAll(saveButtonType, ButtonType.CANCEL);
+    // Áp dụng style dark theme cho Dialog
+    NotificationUtils.styleDialog(dialog);
 
-      GridPane grid = new GridPane();
-      grid.setHgap(15);
-      grid.setVgap(15);
-      grid.setPadding(new Insets(20, 30, 20, 30));
+    ButtonType saveButtonType = new ButtonType("Lưu thay đổi", ButtonBar.ButtonData.OK_DONE);
+    dialog.getDialogPane().getButtonTypes().addAll(saveButtonType, ButtonType.CANCEL);
 
-      // 1. Giá hiện tại
-      TextField priceField = new TextField(String.valueOf(auction.getCurrentPrice()));
-      priceField.setPromptText("Nhập số tiền...");
-      
-      // 2. Trạng thái
-      ComboBox<String> statusCombo = new ComboBox<>(FXCollections.observableArrayList("OPEN", "RUNNING", "FINISHED", "PAID", "CANCELED"));
-      statusCombo.setValue(auction.getStatus().name());
-      statusCombo.setMaxWidth(Double.MAX_VALUE);
-      
-      // 3. THỜI GIAN BẮT ĐẦU (MỚI THÊM)
-      LocalDateTime currentStart = auction.getStartTime();
-      DatePicker startDatePicker = new DatePicker(currentStart.toLocalDate());
-      startDatePicker.setMaxWidth(Double.MAX_VALUE);
-      
-      ComboBox<Integer> startHourCombo = new ComboBox<>();
-      for (int i = 0; i < 24; i++) startHourCombo.getItems().add(i);
-      startHourCombo.setValue(currentStart.getHour());
-      
-      ComboBox<Integer> startMinuteCombo = new ComboBox<>();
-      for (int i = 0; i < 60; i++) startMinuteCombo.getItems().add(i);
-      startMinuteCombo.setValue(currentStart.getMinute());
+    GridPane grid = new GridPane();
+    grid.setHgap(15);
+    grid.setVgap(15);
+    grid.setPadding(new Insets(20, 30, 20, 30));
 
-      HBox startTimePickerBox = new HBox(5, startHourCombo, new Label("giờ"), startMinuteCombo, new Label("phút"));
-      startTimePickerBox.setAlignment(Pos.CENTER_LEFT);
-      startTimePickerBox.getStyleClass().add("time-picker-unit");
+    // 1. Giá hiện tại
+    TextField priceField = new TextField(String.valueOf(auction.getCurrentPrice()));
+    priceField.setPromptText("Nhập số tiền...");
 
-      // 4. THỜI GIAN KẾT THÚC
-      LocalDateTime currentEnd = auction.getEndTime();
-      DatePicker endDatePicker = new DatePicker(currentEnd.toLocalDate());
-      endDatePicker.setMaxWidth(Double.MAX_VALUE);
-      
-      ComboBox<Integer> endHourCombo = new ComboBox<>();
-      for (int i = 0; i < 24; i++) endHourCombo.getItems().add(i);
-      endHourCombo.setValue(currentEnd.getHour());
-      
-      ComboBox<Integer> endMinuteCombo = new ComboBox<>();
-      for (int i = 0; i < 60; i++) endMinuteCombo.getItems().add(i);
-      endMinuteCombo.setValue(currentEnd.getMinute());
+    // 2. Trạng thái
+    ComboBox<String> statusCombo = new ComboBox<>(
+        FXCollections.observableArrayList("OPEN", "RUNNING", "FINISHED", "PAID", "CANCELED"));
+    statusCombo.setValue(auction.getStatus().name());
+    statusCombo.setMaxWidth(Double.MAX_VALUE);
 
-      HBox endTimePickerBox = new HBox(5, endHourCombo, new Label("giờ"), endMinuteCombo, new Label("phút"));
-      endTimePickerBox.setAlignment(Pos.CENTER_LEFT);
-      endTimePickerBox.getStyleClass().add("time-picker-unit");
-      
-      // 5. Loại sản phẩm
-      ComboBox<String> categoryCombo = new ComboBox<>(FXCollections.observableArrayList("ELECTRONICS", "ARTWORK", "VEHICLE"));
-      categoryCombo.setValue("ELECTRONICS");
-      categoryCombo.setMaxWidth(Double.MAX_VALUE);
+    // 3. THỜI GIAN BẮT ĐẦU (MỚI THÊM)
+    LocalDateTime currentStart = auction.getStartTime();
+    DatePicker startDatePicker = new DatePicker(currentStart.toLocalDate());
+    startDatePicker.setMaxWidth(Double.MAX_VALUE);
 
-      ComboBoxPopupWidthSync.install(statusCombo);
-      ComboBoxPopupWidthSync.install(startHourCombo);
-      ComboBoxPopupWidthSync.install(startMinuteCombo);
-      ComboBoxPopupWidthSync.install(endHourCombo);
-      ComboBoxPopupWidthSync.install(endMinuteCombo);
-      ComboBoxPopupWidthSync.install(categoryCombo);
+    ComboBox<Integer> startHourCombo = new ComboBox<>();
+    for (int i = 0; i < 24; i++)
+      startHourCombo.getItems().add(i);
+    startHourCombo.setValue(currentStart.getHour());
 
-      // Thêm các control vào grid với Label trắng sáng
-      grid.add(new Label("Giá hiện tại:"), 0, 0);
-      grid.add(priceField, 1, 0);
+    ComboBox<Integer> startMinuteCombo = new ComboBox<>();
+    for (int i = 0; i < 60; i++)
+      startMinuteCombo.getItems().add(i);
+    startMinuteCombo.setValue(currentStart.getMinute());
 
-      grid.add(new Label("Trạng thái:"), 0, 1);
-      grid.add(statusCombo, 1, 1);
+    HBox startTimePickerBox =
+        new HBox(5, startHourCombo, new Label("giờ"), startMinuteCombo, new Label("phút"));
+    startTimePickerBox.setAlignment(Pos.CENTER_LEFT);
+    startTimePickerBox.getStyleClass().add("time-picker-unit");
 
-      grid.add(new Label("Ngày bắt đầu:"), 0, 2);
-      grid.add(startDatePicker, 1, 2);
-      grid.add(new Label("Giờ bắt đầu:"), 0, 3);
-      grid.add(startTimePickerBox, 1, 3);
+    // 4. THỜI GIAN KẾT THÚC
+    LocalDateTime currentEnd = auction.getEndTime();
+    DatePicker endDatePicker = new DatePicker(currentEnd.toLocalDate());
+    endDatePicker.setMaxWidth(Double.MAX_VALUE);
 
-      grid.add(new Label("Ngày kết thúc:"), 0, 4);
-      grid.add(endDatePicker, 1, 4);
-      grid.add(new Label("Giờ kết thúc:"), 0, 5);
-      grid.add(endTimePickerBox, 1, 5);
+    ComboBox<Integer> endHourCombo = new ComboBox<>();
+    for (int i = 0; i < 24; i++)
+      endHourCombo.getItems().add(i);
+    endHourCombo.setValue(currentEnd.getHour());
 
-      grid.add(new Label("Loại sản phẩm:"), 0, 6);
-      grid.add(categoryCombo, 1, 6);
+    ComboBox<Integer> endMinuteCombo = new ComboBox<>();
+    for (int i = 0; i < 60; i++)
+      endMinuteCombo.getItems().add(i);
+    endMinuteCombo.setValue(currentEnd.getMinute());
 
-      dialog.getDialogPane().setContent(grid);
+    HBox endTimePickerBox =
+        new HBox(5, endHourCombo, new Label("giờ"), endMinuteCombo, new Label("phút"));
+    endTimePickerBox.setAlignment(Pos.CENTER_LEFT);
+    endTimePickerBox.getStyleClass().add("time-picker-unit");
 
-      dialog.setResultConverter(dialogButton -> {
-          if (dialogButton == saveButtonType) {
-              try {
-                  long price = Long.parseLong(priceField.getText().trim());
-                  String status = statusCombo.getValue();
-                  String category = categoryCombo.getValue();
-                  
-                  // Ghép Ngày bắt đầu
-                  LocalDateTime newStart = LocalDateTime.of(
-                      startDatePicker.getValue(),
-                      java.time.LocalTime.of(startHourCombo.getValue(), startMinuteCombo.getValue())
-                  );
-                  String startTimeStr = newStart.toString();
+    // 5. Loại sản phẩm (Việt hóa và bổ sung mục KHÁC)
+    ComboBox<String> categoryCombo =
+        new ComboBox<>(FXCollections.observableArrayList("Điện tử", "Nghệ thuật", "Xe cộ", "Khác"));
 
-                  // Ghép Ngày kết thúc
-                  LocalDateTime newEnd = LocalDateTime.of(
-                      endDatePicker.getValue(),
-                      java.time.LocalTime.of(endHourCombo.getValue(), endMinuteCombo.getValue())
-                  );
-                  String endTimeStr = newEnd.toString();
-                  
-                  boolean success = serverService.updateAuctionAdmin(auction.getId(), price, status, startTimeStr, endTimeStr, category);
-                  if (success) {
-                      NotificationUtils.showSuccess((Stage) auctionTable.getScene().getWindow(), "Cập nhật phiên #" + auction.getId() + " thành công!");
-                      loadAuctions();
-                  } else {
-                      NotificationUtils.showError((Stage) auctionTable.getScene().getWindow(), "Cập nhật thất bại. Vui lòng thử lại.");
-                  }
-              } catch (Exception e) {
-                  NotificationUtils.showError((Stage) auctionTable.getScene().getWindow(), "Dữ liệu nhập vào không hợp lệ!");
-                  e.printStackTrace();
-              }
+    // Tự động chọn giá trị hiện tại của phiên
+    String currentCatEn = auction.getItemCategory();
+    categoryCombo.setValue(translateCategoryToVi(currentCatEn));
+    categoryCombo.setMaxWidth(Double.MAX_VALUE);
+
+    ComboBoxPopupWidthSync.install(statusCombo);
+    ComboBoxPopupWidthSync.install(startHourCombo);
+    ComboBoxPopupWidthSync.install(startMinuteCombo);
+    ComboBoxPopupWidthSync.install(endHourCombo);
+    ComboBoxPopupWidthSync.install(endMinuteCombo);
+    ComboBoxPopupWidthSync.install(categoryCombo);
+
+    // Thêm các control vào grid với Label trắng sáng
+    grid.add(new Label("Giá hiện tại:"), 0, 0);
+    grid.add(priceField, 1, 0);
+
+    grid.add(new Label("Trạng thái:"), 0, 1);
+    grid.add(statusCombo, 1, 1);
+
+    grid.add(new Label("Ngày bắt đầu:"), 0, 2);
+    grid.add(startDatePicker, 1, 2);
+    grid.add(new Label("Giờ bắt đầu:"), 0, 3);
+    grid.add(startTimePickerBox, 1, 3);
+
+    grid.add(new Label("Ngày kết thúc:"), 0, 4);
+    grid.add(endDatePicker, 1, 4);
+    grid.add(new Label("Giờ kết thúc:"), 0, 5);
+    grid.add(endTimePickerBox, 1, 5);
+
+    grid.add(new Label("Loại sản phẩm:"), 0, 6);
+    grid.add(categoryCombo, 1, 6);
+
+    dialog.getDialogPane().setContent(grid);
+
+    dialog.setResultConverter(dialogButton -> {
+      if (dialogButton == saveButtonType) {
+        try {
+          long price = Long.parseLong(priceField.getText().trim());
+          String status = statusCombo.getValue();
+          // Dịch từ Tiếng Việt sang Enum Tiếng Anh trước khi gửi lên Server
+          String category = translateCategoryToEn(categoryCombo.getValue());
+
+          // Ghép Ngày bắt đầu
+          LocalDateTime newStart = LocalDateTime.of(startDatePicker.getValue(),
+              java.time.LocalTime.of(startHourCombo.getValue(), startMinuteCombo.getValue()));
+          String startTimeStr = newStart.toString();
+
+          // Ghép Ngày kết thúc
+          LocalDateTime newEnd = LocalDateTime.of(endDatePicker.getValue(),
+              java.time.LocalTime.of(endHourCombo.getValue(), endMinuteCombo.getValue()));
+          String endTimeStr = newEnd.toString();
+
+          boolean success = serverService.updateAuctionAdmin(auction.getId(), price, status,
+              startTimeStr, endTimeStr, category);
+          if (success) {
+            NotificationUtils.showSuccess((Stage) searchField.getScene().getWindow(),
+                "Cập nhật phiên #" + auction.getId() + " thành công!");
+            loadAuctions();
+          } else {
+            NotificationUtils.showError((Stage) searchField.getScene().getWindow(),
+                "Cập nhật thất bại. Vui lòng thử lại.");
           }
-          return dialogButton;
-      });
+        } catch (Exception e) {
+          NotificationUtils.showError((Stage) searchField.getScene().getWindow(),
+              "Dữ liệu nhập vào không hợp lệ!");
+          e.printStackTrace();
+        }
+      }
+      return dialogButton;
+    });
 
-      dialog.showAndWait();
+    dialog.showAndWait();
   }
 
   /**
@@ -551,7 +579,8 @@ public class AuctionListController implements com.auction.client.observer.Auctio
    * @return chuỗi tiếng Việt tương ứng
    */
   private String translateStatus(AuctionStatus status) {
-    if (status == null) return "Không rõ";
+    if (status == null)
+      return "Không rõ";
     return switch (status) {
       case OPEN -> "Đang mở";
       case RUNNING -> "Đang diễn ra";
@@ -562,98 +591,97 @@ public class AuctionListController implements com.auction.client.observer.Auctio
   }
 
   /**
-   * [Tính năng 1] Thiết lập cột "Còn lại" để hiển thị đếm ngược thời gian thực.
+   * Chuyển đổi Enum Category sang Tiếng Việt để hiển thị trên UI.
    */
-  private void setupTimeLeftColumn() {
-      timeLeftColumn.setCellValueFactory(cellData -> {
-          Auction a = cellData.getValue();
-          return new SimpleStringProperty(formatTimeLeft(a));
-      });
-
-      // Tạo style riêng cho cột này: nếu sắp hết giờ thì hiện chữ đỏ để tạo áp lực cho người mua
-      timeLeftColumn.setCellFactory(column -> new javafx.scene.control.TableCell<>() {
-          @Override
-          protected void updateItem(String item, boolean empty) {
-              super.updateItem(item, empty);
-              if (empty || item == null) {
-                  setText(null);
-                  setStyle("");
-              } else {
-                  setText(item);
-                  // LOGIC MÀU SẮC:
-                  // Nếu còn dưới 1 giờ (định dạng 00:mm:ss), tô màu đỏ rực và in đậm
-                  if (item.startsWith("00:")) {
-                      setStyle("-fx-text-fill: #e74c3c; -fx-font-weight: bold;");
-                  } else if (item.equals("Đã kết thúc")
-                      || item.contains("kết thúc")
-                      || item.equals("Đã thanh toán")
-                      || item.equals("Đã hủy")) {
-                      setStyle("-fx-text-fill: #95a5a6;"); // Màu xám cho phiên đã xong
-                  } else {
-                      setStyle("-fx-text-fill: #27ae60; -fx-font-weight: bold;"); // Màu xanh lá cho phiên còn nhiều thời gian
-                  }
-              }
-          }
-      });
+  private String translateCategoryToVi(String categoryEn) {
+    if (categoryEn == null)
+      return "Khác";
+    return switch (categoryEn.toUpperCase()) {
+      case "ELECTRONICS" -> "Điện tử";
+      case "ARTWORK" -> "Nghệ thuật";
+      case "VEHICLE" -> "Xe cộ";
+      case "OTHER" -> "Khác";
+      default -> "Khác";
+    };
   }
+
+  /**
+   * Chuyển đổi từ Tiếng Việt trên UI về Enum Tiếng Anh để gửi lên Server.
+   */
+  private String translateCategoryToEn(String categoryVi) {
+    if (categoryVi == null)
+      return "OTHER";
+    return switch (categoryVi) {
+      case "Điện tử" -> "ELECTRONICS";
+      case "Nghệ thuật" -> "ARTWORK";
+      case "Xe cộ" -> "VEHICLE";
+      case "Khác" -> "OTHER";
+      default -> "OTHER";
+    };
+  }
+
+  /**
+   * [Tính năng 1] Xóa bỏ column time setup
+   */
 
   /**
    * [Tính năng 1] Khởi chạy bộ đếm 1 giây một lần để cập nhật UI.
    */
   private void startCountdownTimer() {
-      // Timeline là cơ chế đếm nhịp của JavaFX, chạy trên UI Thread nên an toàn để cập nhật giao diện
-      countdownTimeline = new javafx.animation.Timeline(
-          new javafx.animation.KeyFrame(javafx.util.Duration.seconds(1), event -> {
-              // Gọi refresh() để TableView vẽ lại toàn bộ các dòng, từ đó cập nhật số giây mới
-              auctionTable.refresh();
-          })
-      );
-      countdownTimeline.setCycleCount(javafx.animation.Timeline.INDEFINITE);
-      countdownTimeline.play();
+    // Timeline là cơ chế đếm nhịp của JavaFX, chạy trên UI Thread nên an toàn để cập nhật giao diện
+    countdownTimeline = new javafx.animation.Timeline(
+        new javafx.animation.KeyFrame(javafx.util.Duration.seconds(1), event -> {
+          for (Runnable r : timeUpdaters) {
+            r.run();
+          }
+        }));
+    countdownTimeline.setCycleCount(javafx.animation.Timeline.INDEFINITE);
+    countdownTimeline.play();
   }
 
   /**
    * [Tính năng 1] Chuỗi hiển thị cho cột "Còn lại" (đếm ngược theo {@code endTime}).
    *
-   * <p><b>Vì sao trước đây vừa "Đã kết thúc" vừa "Đang kết thúc..."?</b> Trạng thái {@code
-   * FINISHED} trong DB chỉ được gán khi server cập nhật (đặt giá sau giờ, admin sửa, v.v.). Nhiều phiên
-   * vẫn là {@code RUNNING} trên DB dù đồng hồ đã quá {@code endTime} — code cũ coi duration âm là
-   * "Đang kết thúc..." và treo mãi. <b>Theo thời gian thực</b>, hết {@code endTime} là hết phiên đấu:
-   * hiển thị "Đã kết thúc" cho đồng nhất với cột trạng thái mà người dùng kỳ vọng.
+   * <p>
+   * <b>Vì sao trước đây vừa "Đã kết thúc" vừa "Đang kết thúc..."?</b> Trạng thái {@code
+   * FINISHED} trong DB chỉ được gán khi server cập nhật (đặt giá sau giờ, admin sửa, v.v.). Nhiều
+   * phiên vẫn là {@code RUNNING} trên DB dù đồng hồ đã quá {@code endTime} — code cũ coi duration
+   * âm là "Đang kết thúc..." và treo mãi. <b>Theo thời gian thực</b>, hết {@code endTime} là hết
+   * phiên đấu: hiển thị "Đã kết thúc" cho đồng nhất với cột trạng thái mà người dùng kỳ vọng.
    */
   private String formatTimeLeft(Auction a) {
-      if (a.getStatus() == AuctionStatus.FINISHED || a.isFinished()) {
-        return "Đã kết thúc";
-      }
-      if (a.getStatus() == AuctionStatus.PAID) {
-        return "Đã thanh toán";
-      }
-      if (a.getStatus() == AuctionStatus.CANCELED) {
-        return "Đã hủy";
-      }
+    if (a.getStatus() == AuctionStatus.FINISHED || a.isFinished()) {
+      return "Đã kết thúc";
+    }
+    if (a.getStatus() == AuctionStatus.PAID) {
+      return "Đã thanh toán";
+    }
+    if (a.getStatus() == AuctionStatus.CANCELED) {
+      return "Đã hủy";
+    }
 
-      LocalDateTime now = LocalDateTime.now();
-      LocalDateTime end = a.getEndTime();
+    LocalDateTime now = LocalDateTime.now();
+    LocalDateTime end = a.getEndTime();
 
-      // Đã quá mốc kết thúc theo lịch — không phụ thuộc DB đã kịp FINISHED hay chưa
-      if (!now.isBefore(end)) {
-        return "Đã kết thúc";
-      }
+    // Đã quá mốc kết thúc theo lịch — không phụ thuộc DB đã kịp FINISHED hay chưa
+    if (!now.isBefore(end)) {
+      return "Đã kết thúc";
+    }
 
-      if (a.getStatus() == AuctionStatus.OPEN) {
-        return "Chưa bắt đầu";
-      }
+    if (a.getStatus() == AuctionStatus.OPEN) {
+      return "Chưa bắt đầu";
+    }
 
-      java.time.Duration d = java.time.Duration.between(now, end);
-      long days = d.toDays();
-      long hours = d.toHoursPart();
-      long minutes = d.toMinutesPart();
-      long seconds = d.toSecondsPart();
+    java.time.Duration d = java.time.Duration.between(now, end);
+    long days = d.toDays();
+    long hours = d.toHoursPart();
+    long minutes = d.toMinutesPart();
+    long seconds = d.toSecondsPart();
 
-      if (days > 0) {
-        return String.format("%d ngày %02d:%02d", days, hours, minutes);
-      }
-      return String.format("%02d:%02d:%02d", hours, minutes, seconds);
+    if (days > 0) {
+      return String.format("%d ngày %02d:%02d", days, hours, minutes);
+    }
+    return String.format("%02d:%02d:%02d", hours, minutes, seconds);
   }
 
   /**
@@ -661,14 +689,14 @@ public class AuctionListController implements com.auction.client.observer.Auctio
    */
   @Override
   public void onBidUpdated(com.auction.server.model.entity.BidTransaction bid) {
-      Platform.runLater(() -> {
-          // Hiện thông báo nhỏ góc màn hình
-          NotificationUtils.showToast((Stage) auctionTable.getScene().getWindow(), 
-              "📣 Giá mới cho #" + bid.getAuctionId() + ": " + String.format("%,d", bid.getAmount()) + " VNĐ", false);
-          
-          // Refresh lại bảng để số liệu luôn mới nhất
-          loadAuctions();
-      });
+    Platform.runLater(() -> {
+      // Hiện thông báo nhỏ góc màn hình
+      NotificationUtils.showToast((Stage) searchField.getScene().getWindow(), "📣 Giá mới cho #"
+          + bid.getAuctionId() + ": " + String.format("%,d", bid.getAmount()) + " VNĐ", false);
+
+      // Refresh lại bảng để số liệu luôn mới nhất
+      loadAuctions();
+    });
   }
 
   /**
@@ -676,12 +704,12 @@ public class AuctionListController implements com.auction.client.observer.Auctio
    */
   @Override
   public void onAuctionStatusChanged(Long auctionId, String newStatus) {
-      Platform.runLater(() -> {
-          NotificationUtils.showToast((Stage) auctionTable.getScene().getWindow(), 
-              "🔔 Phiên #" + auctionId + " đổi trạng thái: " + newStatus, newStatus.equals("CANCELED"));
-          
-          // Refresh lại bảng
-          loadAuctions();
-      });
+    Platform.runLater(() -> {
+      NotificationUtils.showToast((Stage) searchField.getScene().getWindow(),
+          "🔔 Phiên #" + auctionId + " đổi trạng thái: " + newStatus, newStatus.equals("CANCELED"));
+
+      // Refresh lại bảng
+      loadAuctions();
+    });
   }
 }

@@ -49,8 +49,14 @@ public final class EntityJsonMapper {
     String name = itemOpt.map(Item::getName).orElse("Sản phẩm #" + auction.getItemId());
     String category = itemOpt.map(i -> i.getCategory().name()).orElse("OTHER");
 
+    // Lấy giá khởi điểm từ item vào cho vào json
+    long startingPrice = itemOpt.map(Item::getStartingPrice).orElse(0L);
+    json.put("startingPrice", startingPrice);
+
     json.put("itemName", name);
     json.put("itemCategory", category); // Loại sản phẩm để hiển thị ở bảng Seller Dashboard
+    json.put("itemDescription", itemOpt.map(Item::getDescription).orElse(""));
+    json.put("imageBase64", itemOpt.map(Item::getImageBase64).orElse(null));
     json.put("sellerId", auction.getSellerId());
     json.put("currentPrice", auction.getCurrentPrice());
     json.put("currentWinnerId", auction.getCurrentWinnerId());
@@ -67,6 +73,7 @@ public final class EntityJsonMapper {
     json.put("createdAt", item.getCreatedAt().toString());
     json.put("name", item.getName());
     json.put("description", item.getDescription());
+    json.put("imageBase64", item.getImageBase64());
     json.put("startingPrice", item.getStartingPrice());
     json.put("sellerId", item.getSellerId());
     json.put("category", item.getCategory().name());

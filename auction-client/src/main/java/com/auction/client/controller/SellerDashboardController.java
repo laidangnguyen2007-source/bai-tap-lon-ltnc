@@ -63,6 +63,10 @@ public class SellerDashboardController {
   @FXML private ComboBox<Integer> endHourCombo;
   @FXML private ComboBox<Integer> endMinuteCombo;
   
+  @FXML private javafx.scene.control.TextArea itemDescriptionArea;
+  @FXML private javafx.scene.image.ImageView itemImageView;
+  private String currentImageBase64 = null;
+  
   @FXML private Button createAuctionButton;
   @FXML private Button cancelEditButton;
 
@@ -284,6 +288,58 @@ public class SellerDashboardController {
    * @param event ActionEvent từ createAuctionButton
    */
   @FXML
+  private void handleChooseImage(ActionEvent event) {
+    javafx.stage.FileChooser fileChooser = new javafx.stage.FileChooser();
+    fileChooser.setTitle("Chọn Hình Ảnh Sản Phẩm");
+    fileChooser.getExtensionFilters().addAll(
+        new javafx.stage.FileChooser.ExtensionFilter("Image Files", "*.png", "*.jpg", "*.jpeg")
+    );
+    java.io.File selectedFile = fileChooser.showOpenDialog(itemNameField.getScene().getWindow());
+    if (selectedFile != null) {
+      try {
+        // [Xử lý ảnh Base64] Nén và chuyển đổi file ảnh sang chuỗi Base64 để tránh lỗi max_allowed_packet
+        try {
+          java.awt.image.BufferedImage img = javax.imageio.ImageIO.read(selectedFile);
+          if (img != null) {
+              int targetSize = 800;
+              if (img.getWidth() > targetSize || img.getHeight() > targetSize) {
+                  double scale = Math.min((double)targetSize / img.getWidth(), (double)targetSize / img.getHeight());
+                  int w = (int) (img.getWidth() * scale);
+                  int h = (int) (img.getHeight() * scale);
+                  java.awt.image.BufferedImage resized = new java.awt.image.BufferedImage(w, h, java.awt.image.BufferedImage.TYPE_INT_RGB);
+                  java.awt.Graphics2D g = resized.createGraphics();
+                  g.drawImage(img, 0, 0, w, h, null);
+                  g.dispose();
+                  img = resized;
+              } else {
+                  java.awt.image.BufferedImage noAlpha = new java.awt.image.BufferedImage(img.getWidth(), img.getHeight(), java.awt.image.BufferedImage.TYPE_INT_RGB);
+                  java.awt.Graphics2D g = noAlpha.createGraphics();
+                  g.drawImage(img, 0, 0, null);
+                  g.dispose();
+                  img = noAlpha;
+              }
+              java.io.ByteArrayOutputStream baos = new java.io.ByteArrayOutputStream();
+              javax.imageio.ImageIO.write(img, "jpg", baos);
+              currentImageBase64 = java.util.Base64.getEncoder().encodeToString(baos.toByteArray());
+          } else {
+              byte[] fileContent = java.nio.file.Files.readAllBytes(selectedFile.toPath());
+              currentImageBase64 = java.util.Base64.getEncoder().encodeToString(fileContent);
+          }
+        } catch (Exception e) {
+            byte[] fileContent = java.nio.file.Files.readAllBytes(selectedFile.toPath());
+            currentImageBase64 = java.util.Base64.getEncoder().encodeToString(fileContent);
+        }
+        
+        // Hiển thị preview
+        javafx.scene.image.Image image = new javafx.scene.image.Image(selectedFile.toURI().toString());
+        itemImageView.setImage(image);
+      } catch (Exception e) {
+        formResultLabel.setText("Lỗi khi đọc file ảnh: " + e.getMessage());
+      }
+    }
+  }
+
+  @FXML
   private void handleCreateAuction(ActionEvent event) {
     String itemName = itemNameField.getText().trim();
     String priceText = startingPriceField.getText().trim();
@@ -361,7 +417,7 @@ public class SellerDashboardController {
 
     if (editingAuctionId != null) {
       boolean success = serverService.updateAuctionSeller(
-          editingAuctionId, sellerId, itemName, categoryEnum, startingPrice, startTime, endTime);
+          editingAuctionId, sellerId, itemName, categoryEnum, startingPrice, startTime, endTime, itemDescriptionArea.getText(), currentImageBase64);
       if (success) {
         formResultLabel.setText("Cập nhật phiên đấu giá #" + editingAuctionId + " thành công!");
         handleCancelEdit(null); // Reset form
@@ -370,9 +426,20 @@ public class SellerDashboardController {
         formResultLabel.setText("Cập nhật thất bại. Vui lòng kiểm tra lại trạng thái phiên.");
       }
     } else {
-      // Gửi request lên server kèm itemName + category để tạo mới
-      Long createdId = serverService.createAuction(
-          sellerId, startingPrice, startTime, endTime, itemName, categoryEnum);
+      // Gửi request lên server
+      // Tạo đối tượng Auction tạm thời để đóng gói dữ liệu
+      Auction newAuction = new Auction();
+      newAuction.setSellerId(sellerId);
+      newAuction.setCurrentPrice(startingPrice);
+      newAuction.setStartTime(startTime);
+      newAuction.setEndTime(endTime);
+      // Lưu tạm itemName và category vào object để Handler lấy ra gửi JSON
+      newAuction.setItemName(itemName);
+      newAuction.setItemCategory(categoryEnum); 
+      newAuction.setItemDescription(itemDescriptionArea.getText());
+      newAuction.setImageBase64(currentImageBase64); 
+
+      Long createdId = serverService.createAuction(newAuction);
 
       if (createdId != null && createdId > 0) {
         // [Thông báo trạng thái dựa trên thời gian]
@@ -438,6 +505,20 @@ public class SellerDashboardController {
       endDatePicker.setValue(auction.getEndTime().toLocalDate());
       endHourCombo.setValue(auction.getEndTime().getHour());
       endMinuteCombo.setValue(auction.getEndTime().getMinute());
+    }
+
+    itemDescriptionArea.setText(auction.getItemDescription() != null ? auction.getItemDescription() : "");
+    currentImageBase64 = auction.getImageBase64();
+    if (currentImageBase64 != null && !currentImageBase64.isEmpty()) {
+      try {
+        byte[] imageBytes = java.util.Base64.getDecoder().decode(currentImageBase64);
+        javafx.scene.image.Image image = new javafx.scene.image.Image(new java.io.ByteArrayInputStream(imageBytes));
+        itemImageView.setImage(image);
+      } catch (Exception e) {
+        itemImageView.setImage(null);
+      }
+    } else {
+      itemImageView.setImage(null);
     }
   }
 
@@ -507,5 +588,8 @@ public class SellerDashboardController {
     // Reset giờ về hiện tại
     startHourCombo.setValue(LocalDateTime.now().getHour());
     startMinuteCombo.setValue(LocalDateTime.now().getMinute());
+    itemDescriptionArea.clear();
+    itemImageView.setImage(null);
+    currentImageBase64 = null;
   }
 }
