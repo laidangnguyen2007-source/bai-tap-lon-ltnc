@@ -9,9 +9,9 @@ import java.sql.SQLException;
 import java.sql.Statement;
 
 /*
- * Đây là 1 lớp quản lý kết nối từ Java xuống MySQL Singleton Pattern: Chỉ mở 1 kết nối duy nhất tới
- * Database trong suốt vòng đời của Server. Cái gì cần thao tác dữ liệu thì dùng chung đường ống kết
- * nối này. Tránh tình trạng mở hàng trăm kết nối dư thừa làm ngốn RAM và gây lỗi
+ * Đây là 1 lớp quản lý kết nối từ Java xuống MySQL. Singleton Pattern: Chỉ mở 1 kết nối duy nhất
+ * tới Database trong suốt vòng đời của Server. Cái gì cần thao tác dữ liệu thì dùng chung đường ống
+ * kết nối này. Tránh tình trạng mở hàng trăm kết nối dư thừa làm ngốn RAM và gây lỗi
  * "Too many connections". MySQL URL Format: jdbc:mysql://localhost:3306/auction_db → Kết nối tới
  * Server MySQL ở localhost, database auction_db. createDatabaseIfNotExist=true → Tự động tạo
  * database nếu chưa tồn tại.
@@ -60,8 +60,7 @@ public class DatabaseConfig {
   }
 
   // Đọc và chạy file schema.sql để tạo bảng khi khởi động lần đầu, rồi chia dòng gửi đến database.
-  // CREATE TABLE IF NOT EXISTS đảm
-  // bảo lần sau khởi động lại không bị lỗi bảng đã tồn tại.
+  // CREATE TABLE IF NOT EXISTS đảm bảo lần sau khởi động lại không bị lỗi bảng đã tồn tại.
   private void initializeSchema() throws SQLException {
     try (InputStream is = DatabaseConfig.class.getClassLoader().getResourceAsStream("schema.sql");
         Statement stmt = connection.createStatement()) {
@@ -76,7 +75,17 @@ public class DatabaseConfig {
       for (String statement : sql.split(";")) {
         String trimmed = statement.trim();
         if (!trimmed.isEmpty() && !trimmed.startsWith("--")) {
-          stmt.execute(trimmed);
+          try {
+            stmt.execute(trimmed);
+          } catch (SQLException e) {
+            // Nếu là lỗi "Duplicate column" hoặc "Duplicate key", ta có thể bỏ qua 
+            // để đảm bảo server vẫn khởi động được khi chạy lại script migration.
+            if (trimmed.toUpperCase().contains("ALTER TABLE") || trimmed.toUpperCase().contains("ADD COLUMN")) {
+              System.out.println("Lưu ý: Bỏ qua lỗi cập nhật cấu trúc (có thể cột đã tồn tại): " + e.getMessage());
+            } else {
+              throw e;
+            }
+          }
         }
       }
 

@@ -42,13 +42,17 @@
       <padding><Insets top="20" right="24" bottom="20" left="24"/></padding>
 
       <!-- Cột trái: Form tạo phiên đấu giá mới -->
-      <VBox styleClass="info-card" spacing="14" prefWidth="440" minWidth="400">
+      <VBox styleClass="info-card" spacing="14" prefWidth="460" minWidth="420">
         <padding><Insets top="20" right="20" bottom="20" left="20"/></padding>
 
         <Label text="➕ Tạo Phiên Đấu Giá Mới" styleClass="section-title"/>
         <Separator/>
 
         <GridPane hgap="12" vgap="12">
+          <columnConstraints>
+            <javafx.scene.layout.ColumnConstraints minWidth="130" prefWidth="130" halignment="LEFT"/>
+            <javafx.scene.layout.ColumnConstraints hgrow="ALWAYS" minWidth="200"/>
+          </columnConstraints>
           <!-- Hàng 0: Chọn loại sản phẩm từ dropdown (thay vì nhập mã ID thủ công) -->
           <Label text="Loại sản phẩm:" styleClass="field-label"
                  GridPane.columnIndex="0" GridPane.rowIndex="0"/>
@@ -72,19 +76,36 @@
           <Label text="Ngày bắt đầu:" styleClass="field-label"
                  GridPane.columnIndex="0" GridPane.rowIndex="3"/>
           <HBox spacing="5" GridPane.columnIndex="1" GridPane.rowIndex="3">
-              <DatePicker fx:id="startDatePicker" prefWidth="175" minWidth="160" styleClass="seller-date-picker"/>
-              <ComboBox fx:id="startHourCombo" prefWidth="78" minWidth="72" promptText="Giờ" styleClass="seller-time-combo"/>
-              <ComboBox fx:id="startMinuteCombo" prefWidth="78" minWidth="72" promptText="Phút" styleClass="seller-time-combo"/>
+              <DatePicker fx:id="startDatePicker" prefWidth="150" minWidth="140" styleClass="seller-date-picker"/>
+              <ComboBox fx:id="startHourCombo" prefWidth="65" minWidth="60" promptText="Giờ" styleClass="seller-time-combo"/>
+              <ComboBox fx:id="startMinuteCombo" prefWidth="65" minWidth="60" promptText="Phút" styleClass="seller-time-combo"/>
           </HBox>
 
           <!-- Hàng 4: Ngày giờ kết thúc -->
           <Label text="Ngày kết thúc:" styleClass="field-label"
                  GridPane.columnIndex="0" GridPane.rowIndex="4"/>
           <HBox spacing="5" GridPane.columnIndex="1" GridPane.rowIndex="4">
-              <DatePicker fx:id="endDatePicker" prefWidth="175" minWidth="160" styleClass="seller-date-picker"/>
-              <ComboBox fx:id="endHourCombo" prefWidth="78" minWidth="72" promptText="Giờ" styleClass="seller-time-combo"/>
-              <ComboBox fx:id="endMinuteCombo" prefWidth="78" minWidth="72" promptText="Phút" styleClass="seller-time-combo"/>
+              <DatePicker fx:id="endDatePicker" prefWidth="150" minWidth="140" styleClass="seller-date-picker"/>
+              <ComboBox fx:id="endHourCombo" prefWidth="65" minWidth="60" promptText="Giờ" styleClass="seller-time-combo"/>
+              <ComboBox fx:id="endMinuteCombo" prefWidth="65" minWidth="60" promptText="Phút" styleClass="seller-time-combo"/>
           </HBox>
+
+          <!-- Hàng 5: Hình ảnh sản phẩm -->
+          <Label text="Hình ảnh:" styleClass="field-label" GridPane.columnIndex="0" GridPane.rowIndex="5" GridPane.valignment="TOP">
+             <GridPane.margin><javafx.geometry.Insets top="5"/></GridPane.margin>
+          </Label>
+          <VBox spacing="8" GridPane.columnIndex="1" GridPane.rowIndex="5">
+              <Button text="📷 Chọn ảnh..." onAction="#handleChooseImage" styleClass="secondary-button"/>
+              <javafx.scene.image.ImageView fx:id="itemImageView" fitWidth="120" fitHeight="120" preserveRatio="true"/>
+          </VBox>
+
+          <!-- Hàng 6: Mô tả sản phẩm -->
+          <Label text="Mô tả:" styleClass="field-label" GridPane.columnIndex="0" GridPane.rowIndex="6" GridPane.valignment="TOP">
+             <GridPane.margin><javafx.geometry.Insets top="5"/></GridPane.margin>
+          </Label>
+          <javafx.scene.control.TextArea fx:id="itemDescriptionArea" promptText="Nhập mô tả sản phẩm (ví dụ: thông số, tình trạng...)" 
+                                         wrapText="true" prefRowCount="3" styleClass="custom-text-area"
+                                         GridPane.columnIndex="1" GridPane.rowIndex="6"/>
         </GridPane>
 
         <!-- Thông báo kết quả tạo phiên -->

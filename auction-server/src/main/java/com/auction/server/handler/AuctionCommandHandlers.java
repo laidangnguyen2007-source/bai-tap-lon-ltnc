@@ -18,8 +18,9 @@ import org.json.JSONObject;
 /**
  * Các thao tác <b>thay đổi trạng thái</b> phiên đấu giá: tạo, xóa, admin chỉnh, reset lịch sử bid.
  *
- * <p>Khác {@link CatalogHandlers} (chỉ đọc), lớp này ghi DB + đồng bộ {@link AuctionManager} trong
- * RAM để hành vi giữa socket và persistence không lệch.
+ * <p>
+ * Khác {@link CatalogHandlers} (chỉ đọc), lớp này ghi DB + đồng bộ {@link AuctionManager} trong RAM
+ * để hành vi giữa socket và persistence không lệch.
  */
 public final class AuctionCommandHandlers {
 
@@ -28,11 +29,8 @@ public final class AuctionCommandHandlers {
   private final BidTransactionDao bidTransactionDao;
   private final ClientBroadcaster broadcaster;
 
-  public AuctionCommandHandlers(
-      AuctionDao auctionDao,
-      ItemDao itemDao,
-      BidTransactionDao bidTransactionDao,
-      ClientBroadcaster broadcaster) {
+  public AuctionCommandHandlers(AuctionDao auctionDao, ItemDao itemDao,
+      BidTransactionDao bidTransactionDao, ClientBroadcaster broadcaster) {
     this.auctionDao = auctionDao;
     this.itemDao = itemDao;
     this.bidTransactionDao = bidTransactionDao;
@@ -55,8 +53,9 @@ public final class AuctionCommandHandlers {
   public String createAuction(JSONObject req) throws Exception {
     // --- Đọc dữ liệu từ request JSON ---
     String itemName = req.getString("itemName"); // Tên sản phẩm do Seller đặt
-    String categoryStr =
-        req.getString("category"); // Loại sản phẩm (ELECTRONICS, ARTWORK, VEHICLE, OTHER)
+    String categoryStr = req.getString("category"); // Loại sản phẩm (ELECTRONICS, ARTWORK, VEHICLE, OTHER)
+    String itemDescription = req.optString("itemDescription", "");
+    String imageBase64 = req.optString("imageBase64", null);
     Long sellerId = req.getLong("sellerId");
     Long startingPrice = req.getLong("startingPrice");
     LocalDateTime startTime = LocalDateTime.parse(req.getString("startTime"));
@@ -80,6 +79,8 @@ public final class AuctionCommandHandlers {
     // Sử dụng ItemFactory.createSimpleItem() để tạo Item với giá trị mặc định
     // cho các trường đặc thù (brand, warranty...). ID được AUTO_INCREMENT tự sinh.
     Item newItem = ItemFactory.createSimpleItem(category, itemName.trim(), startingPrice, sellerId);
+    newItem.setDescription(itemDescription);
+    newItem.setImageBase64(imageBase64);
     itemDao.save(newItem); // Sau lệnh này, newItem.getId() sẽ có giá trị từ DB
 
     Long itemId = newItem.getId();
@@ -171,13 +172,8 @@ public final class AuctionCommandHandlers {
       AuctionManager.getInstance().closeAuction(auctionId);
     }
 
-    System.out.println(
-        "ADMIN ACTION: Updated auction #"
-            + auctionId
-            + " to price="
-            + newPrice
-            + ", status="
-            + newStatus);
+    System.out.println("ADMIN ACTION: Updated auction #" + auctionId + " to price=" + newPrice
+        + ", status=" + newStatus);
 
     JSONObject res = new JSONObject();
     res.put("status", "OK");
@@ -225,6 +221,8 @@ public final class AuctionCommandHandlers {
     Long sellerId = req.getLong("sellerId");
     String itemName = req.getString("itemName");
     String categoryStr = req.getString("category");
+    String itemDescription = req.optString("itemDescription", "");
+    String imageBase64 = req.optString("imageBase64", null);
     Long startingPrice = req.getLong("startingPrice");
     LocalDateTime startTime = LocalDateTime.parse(req.getString("startTime"));
     LocalDateTime endTime = LocalDateTime.parse(req.getString("endTime"));
@@ -278,6 +276,8 @@ public final class AuctionCommandHandlers {
       item.setName(itemName);
       item.setCategory(category);
       item.setStartingPrice(startingPrice);
+      item.setDescription(itemDescription);
+      item.setImageBase64(imageBase64);
       itemDao.update(item);
     }
 
