@@ -30,6 +30,7 @@ public class Auction extends BaseEntity {
   private String itemCategory; // Loại sản phẩm (để hiển thị ở bảng Seller Dashboard)
   private String imageBase64; // Hình ảnh (hiển thị UI mới)
   private String itemDescription; // Mô tả sản phẩm (hiển thị UI mới)
+  private long minBidStep; // Bước giá tối thiểu
 
   public Auction() {
     super();
@@ -60,7 +61,8 @@ public class Auction extends BaseEntity {
       Long currentWinnerId,
       AuctionStatus status,
       LocalDateTime startTime,
-      LocalDateTime endTime) {
+      LocalDateTime endTime,
+      long minBidStep) {
     super(id, createdAt);
     this.itemId = itemId;
     this.sellerId = sellerId;
@@ -69,6 +71,7 @@ public class Auction extends BaseEntity {
     this.status = status;
     this.startTime = startTime;
     this.endTime = endTime;
+    this.minBidStep = minBidStep;
   }
 
   // kiểm tra xem phiên đấu giá có đang ở trạng thái Running không
@@ -211,6 +214,14 @@ public class Auction extends BaseEntity {
 
   public void setItemDescription(String itemDescription) {
     this.itemDescription = itemDescription;
+  }
+  
+  public long getMinBidStep() {
+    return minBidStep;
+  }
+  
+  public void setMinBidStep(long minBidStep) {
+    this.minBidStep = minBidStep;
   }
 
   @Override

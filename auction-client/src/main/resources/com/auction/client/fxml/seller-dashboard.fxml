@@ -72,10 +72,16 @@
           <TextField fx:id="startingPriceField" promptText="Ví dụ: 500000"
                       styleClass="text-field" GridPane.columnIndex="1" GridPane.rowIndex="2"/>
 
+          <!-- Hàng mới: Bước giá tối thiểu -->
+          <Label text="Bước giá tối thiểu (VNĐ):" styleClass="field-label"
+                 GridPane.columnIndex="0" GridPane.rowIndex="3"/>
+          <TextField fx:id="minBidStepField" promptText="Mặc định: 1000"
+                     styleClass="text-field" GridPane.columnIndex="1" GridPane.rowIndex="3"/>
+
           <!-- Hàng 3: Ngày giờ bắt đầu -->
           <Label text="Ngày bắt đầu:" styleClass="field-label"
-                 GridPane.columnIndex="0" GridPane.rowIndex="3"/>
-          <HBox spacing="5" GridPane.columnIndex="1" GridPane.rowIndex="3">
+                 GridPane.columnIndex="0" GridPane.rowIndex="4"/>
+          <HBox spacing="5" GridPane.columnIndex="1" GridPane.rowIndex="4">
               <DatePicker fx:id="startDatePicker" prefWidth="150" minWidth="140" styleClass="seller-date-picker"/>
               <ComboBox fx:id="startHourCombo" prefWidth="65" minWidth="60" promptText="Giờ" styleClass="seller-time-combo"/>
               <ComboBox fx:id="startMinuteCombo" prefWidth="65" minWidth="60" promptText="Phút" styleClass="seller-time-combo"/>
@@ -83,29 +89,29 @@
 
           <!-- Hàng 4: Ngày giờ kết thúc -->
           <Label text="Ngày kết thúc:" styleClass="field-label"
-                 GridPane.columnIndex="0" GridPane.rowIndex="4"/>
-          <HBox spacing="5" GridPane.columnIndex="1" GridPane.rowIndex="4">
+                 GridPane.columnIndex="0" GridPane.rowIndex="5"/>
+          <HBox spacing="5" GridPane.columnIndex="1" GridPane.rowIndex="5">
               <DatePicker fx:id="endDatePicker" prefWidth="150" minWidth="140" styleClass="seller-date-picker"/>
               <ComboBox fx:id="endHourCombo" prefWidth="65" minWidth="60" promptText="Giờ" styleClass="seller-time-combo"/>
               <ComboBox fx:id="endMinuteCombo" prefWidth="65" minWidth="60" promptText="Phút" styleClass="seller-time-combo"/>
           </HBox>
 
           <!-- Hàng 5: Hình ảnh sản phẩm -->
-          <Label text="Hình ảnh:" styleClass="field-label" GridPane.columnIndex="0" GridPane.rowIndex="5" GridPane.valignment="TOP">
+          <Label text="Hình ảnh:" styleClass="field-label" GridPane.columnIndex="0" GridPane.rowIndex="6" GridPane.valignment="TOP">
              <GridPane.margin><javafx.geometry.Insets top="5"/></GridPane.margin>
           </Label>
-          <VBox spacing="8" GridPane.columnIndex="1" GridPane.rowIndex="5">
+          <VBox spacing="8" GridPane.columnIndex="1" GridPane.rowIndex="6">
               <Button text="📷 Chọn ảnh..." onAction="#handleChooseImage" styleClass="secondary-button"/>
               <javafx.scene.image.ImageView fx:id="itemImageView" fitWidth="120" fitHeight="120" preserveRatio="true"/>
           </VBox>
 
           <!-- Hàng 6: Mô tả sản phẩm -->
-          <Label text="Mô tả:" styleClass="field-label" GridPane.columnIndex="0" GridPane.rowIndex="6" GridPane.valignment="TOP">
+          <Label text="Mô tả:" styleClass="field-label" GridPane.columnIndex="0" GridPane.rowIndex="7" GridPane.valignment="TOP">
              <GridPane.margin><javafx.geometry.Insets top="5"/></GridPane.margin>
           </Label>
           <javafx.scene.control.TextArea fx:id="itemDescriptionArea" promptText="Nhập mô tả sản phẩm (ví dụ: thông số, tình trạng...)" 
                                          wrapText="true" prefRowCount="3" styleClass="custom-text-area"
-                                         GridPane.columnIndex="1" GridPane.rowIndex="6"/>
+                                         GridPane.columnIndex="1" GridPane.rowIndex="7"/>
         </GridPane>
 
         <!-- Thông báo kết quả tạo phiên -->

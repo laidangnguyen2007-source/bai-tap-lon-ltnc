@@ -19,12 +19,12 @@
 
   Bố cục tổng thể:
   ┌─────────────────────────────────────────────────┐
-  │                    Header                        │
+  │                    Header                       │
   ├───────────────────────────┬─────────────────────┤
   │                           │   Bảng điều khiển   │
-  │   LineChart (biểu đồ     │   - Giá hiện tại     │
-  │   đường giá theo thời    │   - Nhập giá         │
-  │   gian thực)             │   - Lịch sử bid      │
+  │   LineChart (biểu đồ      │  - Giá hiện tại     │
+  │   đường giá theo thời     │  - Nhập giá         │
+  │   gian thực)              │  - Lịch sử bid      │
   │                           │                     │
   └───────────────────────────┴─────────────────────┘
 -->
@@ -86,6 +86,7 @@
           <Label text="💰 Giá Cao Nhất Hiện Tại" styleClass="field-label"/>
           <Label fx:id="currentPriceLabel" text="0 VNĐ" styleClass="price-label-large"/>
           <Label fx:id="timeRemainingLabel" text="Thời gian còn lại: --:--" styleClass="subtitle-label"/>
+          <Label fx:id="minBidStepLabel" text="Bước giá tối thiểu: 0 VNĐ" styleClass="min-step-label"/>
         </VBox>
 
         <Separator/>

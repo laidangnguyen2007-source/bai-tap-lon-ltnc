@@ -63,6 +63,7 @@ public final class EntityJsonMapper {
     json.put("status", auction.getStatus());
     json.put("startTime", auction.getStartTime().toString());
     json.put("endTime", auction.getEndTime().toString());
+    json.put("minBidStep", auction.getMinBidStep());
     return json;
   }
 

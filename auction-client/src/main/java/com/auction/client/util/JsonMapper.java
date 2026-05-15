@@ -71,9 +71,11 @@ public final class JsonMapper {
         AuctionStatus status = AuctionStatus.valueOf(json.get("status").toString());
         LocalDateTime startTime = LocalDateTime.parse(json.get("startTime").toString());
         LocalDateTime endTime   = LocalDateTime.parse(json.get("endTime").toString());
+        long minBidStep = json.get("minBidStep") != null
+            ? Long.parseLong(json.get("minBidStep").toString()) : 0L;
 
         Auction a = new Auction(id, createdAt, itemId, sellerId,
-            currentPrice, currentWinnerId, status, startTime, endTime);
+            currentPrice, currentWinnerId, status, startTime, endTime, minBidStep);
 
         // Tên + loại sản phẩm do server enrichment đính kèm
         a.setItemName(json.get("itemName") != null

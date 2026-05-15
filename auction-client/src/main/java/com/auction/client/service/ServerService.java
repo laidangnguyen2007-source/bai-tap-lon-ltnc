@@ -83,8 +83,8 @@ public class ServerService {
     public boolean registerAutoBid(Long aId, Long bId, long maxBid, long increment) { return bidHandler.registerAutoBid(aId, bId, maxBid, increment); }
     public List<BidTransaction> getBidHistory(Long id) { return bidHandler.getBidHistory(id); }
 
-    public boolean updateAuctionSeller(Long auctionId, Long sellerId, String itemName, String category, long startingPrice, java.time.LocalDateTime startTime, java.time.LocalDateTime endTime, String itemDescription, String imageBase64) {
-        return auctionHandler.updateAuctionSeller(auctionId, sellerId, itemName, category, startingPrice, startTime.toString(), endTime.toString(), itemDescription, imageBase64);
+    public boolean updateAuctionSeller(Long auctionId, Long sellerId, String itemName, String category, long startingPrice, java.time.LocalDateTime startTime, java.time.LocalDateTime endTime, String itemDescription, String imageBase64, long minBidStep) {
+        return auctionHandler.updateAuctionSeller(auctionId, sellerId, itemName, category, startingPrice, startTime.toString(), endTime.toString(), itemDescription, imageBase64, minBidStep);
     }
 
     public boolean deleteAuctionSeller(Long auctionId, Long sellerId) {
