@@ -63,6 +63,7 @@ public final class AuctionCommandHandlers {
     Long startingPrice = req.getLong("startingPrice");
     LocalDateTime startTime = LocalDateTime.parse(req.getString("startTime"));
     LocalDateTime endTime = LocalDateTime.parse(req.getString("endTime"));
+    long minBidStep = req.optLong("minBidStep", 0L);
     LocalDateTime now = LocalDateTime.now();
 
     // --- Validate dữ liệu đầu vào ---
@@ -99,6 +100,7 @@ public final class AuctionCommandHandlers {
     // --- Bước 2: Tạo Auction gắn với Item vừa tạo ---
     Auction auction = new Auction(itemId, sellerId, startTime, endTime);
     auction.setCurrentPrice(startingPrice);
+    auction.setMinBidStep(minBidStep);
 
     // --- Bước 3: Xác định trạng thái dựa trên thời gian ---
     // - startTime đã qua & endTime chưa qua → RUNNING (chạy ngay)
@@ -149,6 +151,7 @@ public final class AuctionCommandHandlers {
     LocalDateTime newStartTime = LocalDateTime.parse(req.getString("startTime"));
     LocalDateTime newEndTime = LocalDateTime.parse(req.getString("endTime"));
     String newCategory = req.getString("category");
+    long minBidStep = req.optLong("minBidStep", 0L);
 
     Optional<Auction> auctionOpt = auctionDao.findById(auctionId);
     if (auctionOpt.isEmpty()) {
@@ -160,6 +163,7 @@ public final class AuctionCommandHandlers {
     auction.setStatus(newStatus);
     auction.setStartTime(newStartTime);
     auction.setEndTime(newEndTime);
+    auction.setMinBidStep(minBidStep);
     auctionDao.update(auction);
 
     Optional<Item> itemOpt = itemDao.findById(auction.getItemId());
@@ -234,6 +238,7 @@ public final class AuctionCommandHandlers {
     Long startingPrice = req.getLong("startingPrice");
     LocalDateTime startTime = LocalDateTime.parse(req.getString("startTime"));
     LocalDateTime endTime = LocalDateTime.parse(req.getString("endTime"));
+    long minBidStep = req.optLong("minBidStep", 0L);
 
     Optional<Auction> auctionOpt = auctionDao.findById(auctionId);
     if (auctionOpt.isEmpty()) {
@@ -260,10 +265,10 @@ public final class AuctionCommandHandlers {
       return JsonResponses.error("Loại sản phẩm không hợp lệ: " + categoryStr);
     }
 
-    // Update Auction
     auction.setCurrentPrice(startingPrice);
     auction.setStartTime(startTime);
     auction.setEndTime(endTime);
+    auction.setMinBidStep(minBidStep);
 
     // Update status based on new times
     LocalDateTime now = LocalDateTime.now();

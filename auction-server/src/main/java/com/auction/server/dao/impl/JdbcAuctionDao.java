@@ -26,8 +26,8 @@ public class JdbcAuctionDao implements AuctionDao { // DIP
   public Auction save(Auction auction) {
     String sql =
         "INSERT INTO auctions (created_at, item_id, seller_id, current_price,"
-            + " current_winner_id, status, start_time, end_time)"
-            + " VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+            + " current_winner_id, status, start_time, end_time, min_bid_step)"
+            + " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
     try (PreparedStatement ps =
         DatabaseConfig.getInstance()
@@ -44,6 +44,7 @@ public class JdbcAuctionDao implements AuctionDao { // DIP
       ps.setString(6, auction.getStatus().name());
       ps.setTimestamp(7, Timestamp.valueOf(auction.getStartTime()));
       ps.setTimestamp(8, Timestamp.valueOf(auction.getEndTime()));
+      ps.setLong(9, auction.getMinBidStep());
       ps.executeUpdate();
 
       try (ResultSet keys = ps.getGeneratedKeys()) {
@@ -95,7 +96,7 @@ public class JdbcAuctionDao implements AuctionDao { // DIP
   @Override
   public Auction update(Auction auction) {
     String sql =
-        "UPDATE auctions SET current_price=?, current_winner_id=?, status=?, start_time=?, end_time=?"
+        "UPDATE auctions SET current_price=?, current_winner_id=?, status=?, start_time=?, end_time=?, min_bid_step=?"
             + " WHERE id=?";
     try (PreparedStatement ps =
         DatabaseConfig.getInstance().getConnection().prepareStatement(sql)) {
@@ -104,7 +105,8 @@ public class JdbcAuctionDao implements AuctionDao { // DIP
       ps.setString(3, auction.getStatus().name());
       ps.setTimestamp(4, Timestamp.valueOf(auction.getStartTime()));
       ps.setTimestamp(5, Timestamp.valueOf(auction.getEndTime()));
-      ps.setLong(6, auction.getId());
+      ps.setLong(6, auction.getMinBidStep());
+      ps.setLong(7, auction.getId());
       ps.executeUpdate();
       return auction;
     } catch (SQLException e) {
@@ -237,7 +239,8 @@ public class JdbcAuctionDao implements AuctionDao { // DIP
         currentWinnerId,
         AuctionStatus.valueOf(rs.getString("status")),
         rs.getTimestamp("start_time").toLocalDateTime(),
-        rs.getTimestamp("end_time").toLocalDateTime());
+        rs.getTimestamp("end_time").toLocalDateTime(),
+        rs.getLong("min_bid_step"));
   }
 
   private void setNullableLong(PreparedStatement ps, int index, Long value) throws SQLException {

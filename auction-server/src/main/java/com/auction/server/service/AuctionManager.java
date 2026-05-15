@@ -97,9 +97,13 @@ public class AuctionManager {
       }
 
       // Kiểm tra giá đặt hợp lệ
-      if (bidPrice <= auction.getCurrentPrice()) {
+      // Rule: Mọi lượt đặt giá (kể cả lượt đầu) đều phải >= giá hiện tại + bước giá tối thiểu.
+      long minRequired = auction.getCurrentPrice() + auction.getMinBidStep();
+
+      if (bidPrice < minRequired) {
         throw new InvalidBidException(
-            "Giá đặt " + bidPrice + " phải cao hơn giá hiện tại " + auction.getCurrentPrice());
+            "Giá đặt " + String.format("%,d", bidPrice) + " chưa đạt mức tối thiểu. " +
+            "Bạn cần đặt ít nhất " + String.format("%,d", minRequired) + " VNĐ");
       }
 
       // Áp dụng Anti-sniping: nếu đặt giá trong khoảng cuối thì gia hạn thêm

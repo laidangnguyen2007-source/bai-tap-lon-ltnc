@@ -53,6 +53,7 @@ public class SellerDashboardController {
   @FXML private TextField itemNameField;
 
   @FXML private TextField startingPriceField;
+  @FXML private TextField minBidStepField; // Bước giá tối thiểu
 
   @FXML private DatePicker startDatePicker;
 
@@ -343,6 +344,7 @@ public class SellerDashboardController {
   private void handleCreateAuction(ActionEvent event) {
     String itemName = itemNameField.getText().trim();
     String priceText = startingPriceField.getText().trim();
+    String minStepText = minBidStepField.getText().trim();
 
     // Validate: các trường bắt buộc không được rỗng
     if (categoryCombo.getValue() == null
@@ -364,6 +366,20 @@ public class SellerDashboardController {
     } catch (NumberFormatException e) {
       formResultLabel.setText("Giá khởi điểm phải là số hợp lệ.");
       return;
+    }
+
+    long minBidStep = 0;
+    if (!minStepText.isEmpty()) {
+      try {
+        minBidStep = Long.parseLong(minStepText);
+        if (minBidStep < 0) {
+          formResultLabel.setText("Bước giá không được âm.");
+          return;
+        }
+      } catch (NumberFormatException e) {
+        formResultLabel.setText("Bước giá phải là số hợp lệ.");
+        return;
+      }
     }
 
     // Validate: giá khởi điểm phải dương
@@ -408,7 +424,8 @@ public class SellerDashboardController {
     confirmAlert.setContentText(
         "Sản phẩm: " + itemName + "\n"
         + "Loại: " + categoryCombo.getValue() + "\n"
-        + "Giá khởi điểm: " + String.format("%,d", startingPrice) + " VNĐ");
+        + "Giá khởi điểm: " + String.format("%,d", startingPrice) + " VNĐ\n"
+        + "Bước giá tối thiểu: " + String.format("%,d", minBidStep) + " VNĐ");
 
     java.util.Optional<javafx.scene.control.ButtonType> confirmResult = confirmAlert.showAndWait();
     if (confirmResult.isEmpty() || confirmResult.get() != javafx.scene.control.ButtonType.OK) {
@@ -417,7 +434,7 @@ public class SellerDashboardController {
 
     if (editingAuctionId != null) {
       boolean success = serverService.updateAuctionSeller(
-          editingAuctionId, sellerId, itemName, categoryEnum, startingPrice, startTime, endTime, itemDescriptionArea.getText(), currentImageBase64);
+          editingAuctionId, sellerId, itemName, categoryEnum, startingPrice, startTime, endTime, itemDescriptionArea.getText(), currentImageBase64, minBidStep);
       if (success) {
         formResultLabel.setText("Cập nhật phiên đấu giá #" + editingAuctionId + " thành công!");
         handleCancelEdit(null); // Reset form
@@ -433,6 +450,7 @@ public class SellerDashboardController {
       newAuction.setCurrentPrice(startingPrice);
       newAuction.setStartTime(startTime);
       newAuction.setEndTime(endTime);
+      newAuction.setMinBidStep(minBidStep);
       // Lưu tạm itemName và category vào object để Handler lấy ra gửi JSON
       newAuction.setItemName(itemName);
       newAuction.setItemCategory(categoryEnum); 
@@ -479,6 +497,7 @@ public class SellerDashboardController {
 
     itemNameField.setText(auction.getItemName());
     startingPriceField.setText(String.valueOf(auction.getCurrentPrice()));
+    minBidStepField.setText(String.valueOf(auction.getMinBidStep()));
 
     // Map Category (Enum) -> Display Name (Vietnamese)
     String enumCat = auction.getItemCategory() != null ? auction.getItemCategory() : "OTHER";
@@ -582,6 +601,7 @@ public class SellerDashboardController {
   private void clearForm() {
     itemNameField.clear();
     startingPriceField.clear();
+    minBidStepField.clear();
     startDatePicker.setValue(null);
     endDatePicker.setValue(null);
     categoryCombo.setValue(CATEGORY_DISPLAY_NAMES[0]); // Reset về "Điện tử"

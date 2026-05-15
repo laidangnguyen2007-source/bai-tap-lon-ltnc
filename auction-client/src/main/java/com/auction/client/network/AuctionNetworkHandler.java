@@ -66,6 +66,7 @@ public class AuctionNetworkHandler {
             req.put("startingPrice", auction.getCurrentPrice());
             req.put("startTime", auction.getStartTime().toString());
             req.put("endTime", auction.getEndTime().toString());
+            req.put("minBidStep", auction.getMinBidStep());
             String json = connection.sendRequest(req.toJSONString());
             JSONObject res = (JSONObject) new JSONParser().parse(json);
             if (!"OK".equals(res.get("status"))) return -1L;
@@ -124,7 +125,7 @@ public class AuctionNetworkHandler {
 
     public boolean updateAuctionSeller(Long auctionId, Long sellerId, String itemName,
             String category, long startingPrice, String startTime, String endTime,
-            String itemDescription, String imageBase64) {
+            String itemDescription, String imageBase64, long minBidStep) {
         try {
             JSONObject req = new JSONObject();
             req.put("action", "SELLER_UPDATE_AUCTION");
@@ -137,6 +138,7 @@ public class AuctionNetworkHandler {
             req.put("startingPrice", startingPrice);
             req.put("startTime", startTime);
             req.put("endTime", endTime);
+            req.put("minBidStep", minBidStep);
             String json = connection.sendRequest(req.toJSONString());
             JSONObject res = (JSONObject) new JSONParser().parse(json);
             return "OK".equals(res.get("status"));

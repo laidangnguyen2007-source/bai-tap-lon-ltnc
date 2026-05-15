@@ -116,6 +116,7 @@ CREATE TABLE IF NOT EXISTS auctions (
                             COMMENT 'OPEN | RUNNING | FINISHED | PAID | CANCELED',
     start_time          DATETIME    NOT NULL,
     end_time            DATETIME    NOT NULL,
+    min_bid_step        BIGINT      NOT NULL DEFAULT 0 COMMENT 'Số tiền tối thiểu phải cộng thêm mỗi lượt',
 
     PRIMARY KEY (id),
     CONSTRAINT fk_auction_item

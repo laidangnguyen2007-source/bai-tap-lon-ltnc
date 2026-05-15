@@ -61,6 +61,7 @@ public class BiddingRoomController implements AuctionObserver {
   @FXML private Label timeRemainingLabel;
 
   @FXML private Label statusLabel;
+  @FXML private Label minBidStepLabel; // Bước giá tối thiểu
 
   @FXML private Label infoLabel; // Thông báo kết quả bid (thành công/thất bại)
 
@@ -124,6 +125,7 @@ public class BiddingRoomController implements AuctionObserver {
 
     currentPriceLabel.setText(String.format("%,d VNĐ", auction.getCurrentPrice()));
     statusLabel.setText(auction.getStatus().name());
+    minBidStepLabel.setText(String.format("Bước giá tối thiểu: %,d VNĐ", auction.getMinBidStep()));
 
     // Thiết lập biểu đồ đường
     setupBidChart();
@@ -385,16 +387,14 @@ public class BiddingRoomController implements AuctionObserver {
       return;
     }
 
-    // Validate: phải dương và lớn hơn giá hiện tại
+    // Validate: kiểm tra bước giá tối thiểu (áp dụng cho mọi lượt bid)
     Auction auction = session.getSelectedAuction();
-    if (amount <= 0) {
-      infoLabel.setText("Số tiền phải lớn hơn 0.");
-      return;
-    }
-    if (amount <= auction.getCurrentPrice()) {
+    long minRequired = auction.getCurrentPrice() + auction.getMinBidStep();
+
+    if (amount < minRequired) {
       infoLabel.setText(
           String.format(
-              "Giá đặt phải cao hơn giá hiện tại (%,d VNĐ).", auction.getCurrentPrice()));
+              "Giá đặt chưa đạt mức tối thiểu. Bạn cần đặt ít nhất %,d VNĐ.", minRequired));
       return;
     }
 
