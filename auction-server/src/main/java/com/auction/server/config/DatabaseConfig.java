@@ -78,19 +78,22 @@ public class DatabaseConfig {
           try {
             stmt.execute(trimmed);
           } catch (SQLException e) {
-            // Nếu là lỗi "Duplicate column" hoặc "Duplicate key", ta có thể bỏ qua
-            // để đảm bảo server vẫn khởi động được khi chạy lại script migration.
-            if (trimmed.toUpperCase().contains("ALTER TABLE")
-                || trimmed.toUpperCase().contains("ADD COLUMN")) {
-              System.out.println(
-                  "Lưu ý: Bỏ qua lỗi cập nhật cấu trúc (có thể cột đã tồn tại): " + e.getMessage());
+            // Bỏ qua các lỗi "đã tồn tại" để hỗ trợ chạy lại script migration nhiều lần
+            int errorCode = e.getErrorCode();
+            String cmd = trimmed.toUpperCase();
+
+            // 1050: Table already exists | 1060: Duplicate column name | 1061: Duplicate key name
+            boolean isAlreadyExists = (errorCode == 1050 || errorCode == 1060 || errorCode == 1061);
+            boolean isSchemaChange = (cmd.contains("CREATE TABLE") || cmd.contains("ALTER TABLE") || cmd.contains("CREATE INDEX"));
+
+            if (isAlreadyExists && isSchemaChange) {
+              System.out.println("Lưu ý: Bỏ qua lệnh (đã tồn tại): " + trimmed.substring(0, Math.min(trimmed.length(), 30)) + "...");
             } else {
               throw e;
             }
           }
         }
       }
-
     } catch (IOException e) {
       throw new SQLException("Lỗi khi đọc schema.sql: " + e.getMessage(), e);
     }
