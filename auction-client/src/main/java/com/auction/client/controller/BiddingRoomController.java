@@ -68,6 +68,11 @@ public class BiddingRoomController implements AuctionObserver {
   @FXML private TextField bidAmountField;
 
   @FXML private Button placeBidButton;
+  
+  // AutoBid
+  @FXML private TextField maxBidField;
+  @FXML private TextField incrementField;
+  @FXML private Button autoBidButton;
 
   // Lịch sử bid gần đây dạng danh sách
   @FXML private ListView<String> bidHistoryList;
@@ -136,6 +141,9 @@ public class BiddingRoomController implements AuctionObserver {
     if (!auction.isRunning()) {
       placeBidButton.setDisable(true);
       bidAmountField.setDisable(true);
+      autoBidButton.setDisable(true);
+      maxBidField.setDisable(true);
+      incrementField.setDisable(true);
       infoLabel.setText(
           switch (auction.getStatus()) {
             case OPEN -> "Phiên chưa bắt đầu — chưa thể đặt giá.";
@@ -341,6 +349,9 @@ public class BiddingRoomController implements AuctionObserver {
               || "PAID".equals(newStatus)) {
             placeBidButton.setDisable(true);
             bidAmountField.setDisable(true);
+            autoBidButton.setDisable(true);
+            maxBidField.setDisable(true);
+            incrementField.setDisable(true);
             infoLabel.setText("Phiên đấu giá đã kết thúc. Không thể đặt thêm giá.");
           }
         });
@@ -432,6 +443,65 @@ public class BiddingRoomController implements AuctionObserver {
         }
       });
     }).start();
+  }
+
+  @FXML
+  private void handleAutoBid(ActionEvent event) {
+    String maxBidText = maxBidField.getText().trim();
+    String incText = incrementField.getText().trim();
+
+    if (maxBidText.isEmpty() || incText.isEmpty()) {
+      infoLabel.setText("Vui lòng nhập giá tối đa và bước giá.");
+      return;
+    }
+
+    long maxBid, inc;
+    try {
+      maxBid = Long.parseLong(maxBidText.replace(",", ""));
+      inc = Long.parseLong(incText.replace(",", ""));
+    } catch (NumberFormatException e) {
+      infoLabel.setText("Số tiền không hợp lệ.");
+      return;
+    }
+
+    Auction auction = session.getSelectedAuction();
+    if (maxBid <= auction.getCurrentPrice()) {
+      infoLabel.setText("Giá tối đa phải lớn hơn giá hiện tại.");
+      return;
+    }
+    if (inc <= 0) {
+      infoLabel.setText("Bước giá phải lớn hơn 0.");
+      return;
+    }
+
+    Long bidderId = session.getCurrentUser().getId();
+
+    javafx.scene.control.Alert confirmAlert = new javafx.scene.control.Alert(javafx.scene.control.Alert.AlertType.CONFIRMATION);
+    NotificationUtils.styleAlert(confirmAlert);
+    confirmAlert.setGraphic(null);
+    confirmAlert.setTitle("Xác Nhận Đăng Ký Auto-Bid");
+    confirmAlert.setHeaderText("Bạn có chắc chắn muốn bật Auto-Bid?");
+    confirmAlert.setContentText("Giá tối đa: " + String.format("%,d", maxBid) + " VNĐ\nBước giá: " + String.format("%,d", inc) + " VNĐ");
+
+    java.util.Optional<javafx.scene.control.ButtonType> result = confirmAlert.showAndWait();
+    if (result.isEmpty() || result.get() != javafx.scene.control.ButtonType.OK) {
+        return;
+    }
+
+    infoLabel.setText("Đang đăng ký Auto-Bid...");
+    autoBidButton.setDisable(true);
+
+    boolean sent = serverService.registerAutoBid(auction.getId(), bidderId, maxBid, inc);
+    if (!sent) {
+      infoLabel.setText("❌ Lỗi kết nối, không thể đăng ký Auto-Bid.");
+      autoBidButton.setDisable(false);
+      return;
+    }
+
+    infoLabel.setText("✅ Đăng ký Auto-Bid thành công!");
+    NotificationUtils.showSuccess((Stage) bidChart.getScene().getWindow(), "Auto-Bid đã được kích hoạt.");
+    maxBidField.clear();
+    incrementField.clear();
   }
 
   /**

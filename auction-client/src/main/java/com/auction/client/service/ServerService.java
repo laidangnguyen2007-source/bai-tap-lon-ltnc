@@ -80,6 +80,7 @@ public class ServerService {
     public Item getItemById(Long id) { return itemHandler.getItemById(id); }
     
     public boolean placeBid(Long aId, Long bId, long amt) { return bidHandler.placeBid(aId, bId, amt); }
+    public boolean registerAutoBid(Long aId, Long bId, long maxBid, long increment) { return bidHandler.registerAutoBid(aId, bId, maxBid, increment); }
     public List<BidTransaction> getBidHistory(Long id) { return bidHandler.getBidHistory(id); }
 
     public boolean updateAuctionSeller(Long auctionId, Long sellerId, String itemName, String category, long startingPrice, java.time.LocalDateTime startTime, java.time.LocalDateTime endTime, String itemDescription, String imageBase64) {

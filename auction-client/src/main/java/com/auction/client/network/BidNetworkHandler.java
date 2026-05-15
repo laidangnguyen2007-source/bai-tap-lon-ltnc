@@ -43,4 +43,18 @@ public class BidNetworkHandler {
             return result;
         } catch (Exception e) { return new ArrayList<>(); }
     }
+
+    public boolean registerAutoBid(Long auctionId, Long bidderId, long maxBid, long increment) {
+        try {
+            JSONObject req = new JSONObject();
+            req.put("action", "REGISTER_AUTOBID");
+            req.put("auctionId", auctionId);
+            req.put("bidderId", bidderId);
+            req.put("maxBid", maxBid);
+            req.put("increment", increment);
+            String json = connection.sendRequest(req.toJSONString());
+            JSONObject res = (JSONObject) new JSONParser().parse(json);
+            return "OK".equals(res.get("status"));
+        } catch (Exception e) { return false; }
+    }
 }
