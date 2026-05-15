@@ -1,20 +1,20 @@
 package com.auction.server.service;
 
 import com.auction.server.model.entity.Auction;
+import com.auction.server.model.entity.BidTransaction;
 import com.auction.server.model.enums.AuctionStatus;
 import com.auction.server.model.exception.AuctionClosedException;
 import com.auction.server.model.exception.AuctionException;
 import com.auction.server.model.exception.InvalidBidException;
+import com.auction.server.model.strategy.AutoBidStrategy;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.ArrayList;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
-import com.auction.server.model.strategy.AutoBidStrategy;
-import com.auction.server.model.entity.BidTransaction;
 
 /*
  * Singleton Pattern — Người điều hành toàn bộ phiên đấu giá đang hoạt động. Chỉ tồn tại duy nhất 1
@@ -32,7 +32,7 @@ public class AuctionManager {
 
   // Bộ nhớ đệm (in-memory) chứa các phiên đang RUNNING
   private final Map<Long, Auction> activeAuctions = new ConcurrentHashMap<>();
-  
+
   // Bộ nhớ đệm chứa các chiến lược AutoBid cho từng phiên
   private final Map<Long, List<AutoBidStrategy>> autoBids = new ConcurrentHashMap<>();
 
@@ -122,39 +122,40 @@ public class AuctionManager {
   }
 
   public List<BidTransaction> resolveAutoBids(Long auctionId) {
-      Auction auction = findActiveAuction(auctionId);
-      List<BidTransaction> autoTransactions = new ArrayList<>();
-      synchronized(auction) {
-         boolean newBidPlaced;
-         do {
-             newBidPlaced = false;
-             List<AutoBidStrategy> strategies = autoBids.getOrDefault(auctionId, Collections.emptyList());
-             
-             AutoBidStrategy bestStrategy = null;
-             BidTransaction bestTx = null;
+    Auction auction = findActiveAuction(auctionId);
+    List<BidTransaction> autoTransactions = new ArrayList<>();
+    synchronized (auction) {
+      boolean newBidPlaced;
+      do {
+        newBidPlaced = false;
+        List<AutoBidStrategy> strategies =
+            autoBids.getOrDefault(auctionId, Collections.emptyList());
 
-             for (AutoBidStrategy strategy : strategies) {
-                 try {
-                     BidTransaction tx = strategy.calculateBid(auction, strategy.getUserId(), 0);
-                     if (tx != null) {
-                         if (bestStrategy == null || strategy.hasPriorityOver(bestStrategy)) {
-                             bestStrategy = strategy;
-                             bestTx = tx;
-                         }
-                     }
-                 } catch (Exception e) {
-                     // ignore invalid bid
-                 }
-             }
+        AutoBidStrategy bestStrategy = null;
+        BidTransaction bestTx = null;
 
-             if (bestTx != null) {
-                 auction.applyBid(bestTx.getAmount(), bestTx.getBidderId());
-                 autoTransactions.add(bestTx);
-                 newBidPlaced = true;
-             }
-         } while (newBidPlaced);
-      }
-      return autoTransactions;
+        for (AutoBidStrategy strategy : strategies) {
+          try {
+            BidTransaction tx = strategy.calculateBid(auction, strategy.getUserId(), 0);
+            if (tx != null) {
+              if (bestStrategy == null || strategy.hasPriorityOver(bestStrategy)) {
+                bestStrategy = strategy;
+                bestTx = tx;
+              }
+            }
+          } catch (Exception e) {
+            // ignore invalid bid
+          }
+        }
+
+        if (bestTx != null) {
+          auction.applyBid(bestTx.getAmount(), bestTx.getBidderId());
+          autoTransactions.add(bestTx);
+          newBidPlaced = true;
+        }
+      } while (newBidPlaced);
+    }
+    return autoTransactions;
   }
 
   // ─── ĐÓNG PHIÊN ─────────────────────────────────────────────────
