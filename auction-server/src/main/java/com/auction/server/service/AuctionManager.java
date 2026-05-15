@@ -127,7 +127,8 @@ public class AuctionManager {
   public synchronized void registerAutoBid(Long auctionId, AutoBidStrategy strategy) {
     Auction auction = findActiveAuction(auctionId);
     if (auction == null) {
-      throw new IllegalArgumentException("Không tìm thấy phiên đấu giá đang diễn ra với ID: " + auctionId);
+      throw new IllegalArgumentException(
+          "Không tìm thấy phiên đấu giá đang diễn ra với ID: " + auctionId);
     }
     autoBids.computeIfAbsent(auctionId, k -> new CopyOnWriteArrayList<>()).add(strategy);
   }
