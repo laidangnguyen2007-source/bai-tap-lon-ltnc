@@ -13,7 +13,6 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.stream.Collectors;
 import javafx.application.Platform;
-import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
@@ -87,6 +86,12 @@ public class AuctionListController implements com.auction.client.observer.Auctio
 
   private final ServerService serverService = new ServerService();
   private final AuctionSessionState session = AuctionSessionState.getInstance();
+
+  // ObservableList để quản lý danh sách Category (dùng cho ComboBox)
+  private final ObservableList<String> categories = FXCollections.observableArrayList("Điện tử", "Nghệ thuật", "Xe cộ", "Khác");
+
+  // Định dạng hiển thị ngày giờ chuẩn Việt Nam
+  private static final DateTimeFormatter DISPLAY_FORMAT = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
 
   /**
    * Được JavaFX gọi tự động sau khi load FXML. Thiết lập cấu hình bảng và load dữ liệu ban đầu.
@@ -308,6 +313,11 @@ public class AuctionListController implements com.auction.client.observer.Auctio
           + translateCategoryToVi(auction.getItemCategory()));
       statusLbl.setStyle("-fx-font-size: 12px; -fx-text-fill: #bdc3c7; -fx-font-style: italic;");
 
+      // Hiển thị thời gian bắt đầu/kết thúc (Sử dụng DISPLAY_FORMAT)
+      Label dateRangeLbl = new Label("📅 " + (auction.getStartTime() != null ? auction.getStartTime().format(DISPLAY_FORMAT) : "N/A") 
+          + " - " + (auction.getEndTime() != null ? auction.getEndTime().format(DISPLAY_FORMAT) : "N/A"));
+      dateRangeLbl.setStyle("-fx-font-size: 11px; -fx-text-fill: #95a5a6;");
+
       // Thời gian còn lại
       Label timeLbl = new Label();
       timeLbl.setStyle("-fx-font-size: 14px;");
@@ -326,7 +336,7 @@ public class AuctionListController implements com.auction.client.observer.Auctio
       updateTime.run();
       timeUpdaters.add(updateTime);
 
-      card.getChildren().addAll(imgContainer, nameLbl, priceLbl, descLbl, statusLbl, timeLbl);
+      card.getChildren().addAll(imgContainer, nameLbl, priceLbl, descLbl, statusLbl, dateRangeLbl, timeLbl);
 
       // Admin Action Buttons
       if (session.isLoggedIn()
@@ -487,9 +497,8 @@ public class AuctionListController implements com.auction.client.observer.Auctio
     endTimePickerBox.setAlignment(Pos.CENTER_LEFT);
     endTimePickerBox.getStyleClass().add("time-picker-unit");
 
-    // 5. Loại sản phẩm (Việt hóa và bổ sung mục KHÁC)
-    ComboBox<String> categoryCombo =
-        new ComboBox<>(FXCollections.observableArrayList("Điện tử", "Nghệ thuật", "Xe cộ", "Khác"));
+    // 5. Loại sản phẩm (Sử dụng ObservableList categories đã khai báo ở trên)
+    ComboBox<String> categoryCombo = new ComboBox<>(categories);
 
     // Tự động chọn giá trị hiện tại của phiên
     String currentCatEn = auction.getItemCategory();

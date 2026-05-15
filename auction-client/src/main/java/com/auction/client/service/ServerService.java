@@ -7,6 +7,7 @@ import com.auction.server.model.entity.Auction;
 import com.auction.server.model.entity.BidTransaction;
 import com.auction.server.model.entity.item.Item;
 import com.auction.server.model.entity.user.User;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
@@ -17,7 +18,6 @@ import org.json.simple.parser.JSONParser;
  * Facade Service — Cổng kết nối duy nhất của ứng dụng Client. Tuân thủ SRP: Lớp này chỉ điều phối
  * (delegate) yêu cầu tới các Handler chuyên biệt.
  */
-@SuppressWarnings("unchecked")
 public class ServerService {
     private final UserNetworkHandler userHandler;
     private final AuctionNetworkHandler auctionHandler;
