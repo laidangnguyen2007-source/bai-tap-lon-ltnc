@@ -105,6 +105,14 @@
 
         <Separator/>
 
+        <!-- Khu vực Auto Bid -->
+        <Label text="Đấu Giá Tự Động (Auto-Bid)" styleClass="section-title"/>
+        <TextField fx:id="maxBidField" promptText="Giá tối đa (VNĐ)" styleClass="text-field"/>
+        <TextField fx:id="incrementField" promptText="Bước giá (VNĐ)" styleClass="text-field"/>
+        <Button fx:id="autoBidButton" text="🤖 Đăng Ký Auto-Bid" onAction="#handleAutoBid" styleClass="secondary-button" maxWidth="Infinity"/>
+
+        <Separator/>
+
         <!-- Lịch sử bid gần đây -->
         <Label text="Lịch Sử Đặt Giá" styleClass="section-title"/>
         <!-- ListView hiển thị chuỗi text của từng lượt bid, mới nhất ở trên cùng -->

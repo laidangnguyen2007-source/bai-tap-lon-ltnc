@@ -10,6 +10,9 @@ import com.auction.server.net.JsonResponses;
 import com.auction.server.service.AuctionManager;
 import com.auction.server.service.AuctionStatusSynchronizer;
 import org.json.JSONObject;
+import java.time.LocalDateTime;
+import java.util.List;
+import com.auction.server.model.strategy.AutoBidStrategy;
 
 /**
  * Luồng <b>đặt giá</b>: phối hợp bộ nhớ đệm {@link AuctionManager}, DAO, và broadcast realtime.
@@ -57,10 +60,67 @@ public final class BiddingHandlers {
       push.put("type", "BID_UPDATE");
       push.put("bid", jsonMapper.bidToJSON(bid));
       broadcaster.broadcast(push.toString());
+
+      // Kích hoạt các AutoBid (nếu có)
+      List<BidTransaction> autoBids = AuctionManager.getInstance().resolveAutoBids(auctionId);
+      for (BidTransaction autoBid : autoBids) {
+          bidTransactionDao.save(autoBid);
+          auctionDao.update(auction);
+          
+          System.out.println("AUTO-BID: auction #" + auctionId + " | bidder #" + autoBid.getBidderId() + " | " + autoBid.getAmount() + " VND");
+          JSONObject autoPush = new JSONObject();
+          autoPush.put("type", "BID_UPDATE");
+          autoPush.put("bid", jsonMapper.bidToJSON(autoBid));
+          broadcaster.broadcast(autoPush.toString());
+      }
+
       return null;
     } catch (Exception e) {
       e.printStackTrace();
       System.out.println("BID REJECTED: " + e.getMessage());
+      return JsonResponses.error(e.getMessage());
+    }
+  }
+
+  /**
+   * Đăng ký một chiến lược AutoBid cho người dùng.
+   */
+  public String registerAutoBid(JSONObject req) throws Exception {
+    try {
+      Long auctionId = req.getLong("auctionId");
+      Long bidderId = req.getLong("bidderId");
+      long maxBid = req.getLong("maxBid");
+      long increment = req.getLong("increment");
+
+      AutoBidStrategy strategy = new AutoBidStrategy(bidderId, maxBid, increment, LocalDateTime.now());
+      AuctionManager.getInstance().registerAutoBid(auctionId, strategy);
+
+      System.out.println("REGISTER AUTOBID: auction #" + auctionId + " | bidder #" + bidderId + " | maxBid=" + maxBid);
+
+      // Kích hoạt AutoBid ngay lập tức phòng trường hợp có thể đấu giá luôn
+      List<BidTransaction> autoBids = AuctionManager.getInstance().resolveAutoBids(auctionId);
+      if (!autoBids.isEmpty()) {
+          Auction auction = AuctionManager.getInstance().findById(auctionId).orElse(null);
+          if (auction != null) {
+              for (BidTransaction autoBid : autoBids) {
+                  bidTransactionDao.save(autoBid);
+                  auctionDao.update(auction);
+                  
+                  System.out.println("AUTO-BID (Immediate): auction #" + auctionId + " | bidder #" + autoBid.getBidderId() + " | " + autoBid.getAmount() + " VND");
+                  JSONObject autoPush = new JSONObject();
+                  autoPush.put("type", "BID_UPDATE");
+                  autoPush.put("bid", jsonMapper.bidToJSON(autoBid));
+                  broadcaster.broadcast(autoPush.toString());
+              }
+          }
+      }
+
+      JSONObject res = new JSONObject();
+      res.put("status", "OK");
+      return res.toString();
+    } catch (Exception e) {
+      e.printStackTrace();
+      System.out.println("REGISTER AUTOBID REJECTED: " + e.getMessage());
       return JsonResponses.error(e.getMessage());
     }
   }
