@@ -20,9 +20,10 @@
 
 /* ── Header / Top Bar ── */
 .top-bar {
-  -fx-background-color: #1a1d27;
-  -fx-border-color: #2d3148;
-  -fx-border-width: 0 0 1 0;
+  -fx-background-color: linear-gradient(to right, #0f1117, #1a1d2f, #0f1117);
+  -fx-border-color: linear-gradient(to right, #6366f1, #a855f7, #ec4899);
+  -fx-border-width: 0 0 1.5 0;
+  -fx-effect: dropshadow(gaussian, rgba(168, 85, 247, 0.2), 10, 0, 0, 1);
 }
 
 .app-title {
@@ -38,12 +39,12 @@
 
 /* ── Card (hộp trắng căn giữa cho Login/Register) ── */
 .card {
-  -fx-background-color: #1a1d27;
+  -fx-background-color: linear-gradient(to bottom right, #1a1d2f, #141828);
   -fx-background-radius: 16px;
-  -fx-border-color: #2d3148;
+  -fx-border-color: linear-gradient(to bottom right, #6366f1, #ec4899);
   -fx-border-radius: 16px;
-  -fx-border-width: 1;
-  -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.4), 20, 0, 0, 8);
+  -fx-border-width: 1.2;
+  -fx-effect: dropshadow(gaussian, rgba(168, 85, 247, 0.15), 15, 0, 0, 0);
 }
 
 /* ── Labels ── */
@@ -54,7 +55,7 @@
 }
 
 .subtitle-label {
-  -fx-text-fill: #64748b;
+  -fx-text-fill: #94a3b8;
   -fx-font-size: 13px;
 }
 
@@ -65,7 +66,7 @@
 }
 
 .field-label {
-  -fx-text-fill: #94a3b8;
+  -fx-text-fill: #cbd5e1;
   -fx-font-size: 12px;
 }
 
@@ -94,7 +95,7 @@
 }
 
 .info-key {
-  -fx-text-fill: #64748b;
+  -fx-text-fill: #94a3b8;
   -fx-font-size: 13px;
 }
 
@@ -192,14 +193,17 @@
 
 /* Nút chính — màu tím gradient nổi bật */
 .primary-button {
-  -fx-background-color: linear-gradient(to right, #6366f1, #8b5cf6);
+  -fx-background-color: linear-gradient(to right, #6366f1, #a855f7, #ec4899);
   -fx-text-fill: white;
   -fx-font-weight: bold;
+  -fx-effect: dropshadow(gaussian, rgba(168, 85, 247, 0.3), 8, 0, 0, 0);
 }
 
 .primary-button:hover {
-  -fx-background-color: linear-gradient(to right, #4f46e5, #7c3aed);
-  -fx-effect: dropshadow(gaussian, rgba(99, 102, 241, 0.4), 10, 0, 0, 2);
+  -fx-background-color: linear-gradient(to right, #4f46e5, #9333ea, #db2777);
+  -fx-effect: dropshadow(gaussian, rgba(236, 72, 153, 0.6), 15, 0, 0, 0);
+  -fx-scale-x: 1.02;
+  -fx-scale-y: 1.02;
 }
 
 /* Nút phụ — viền xám */
@@ -311,46 +315,53 @@
 
 /* ── Info Card (panel thông tin) ── */
 .info-card {
-  -fx-background-color: #1a1d27;
-  -fx-border-color: #2d3148;
-  -fx-border-radius: 12px;
-  -fx-background-radius: 12px;
+  -fx-background-color: linear-gradient(to bottom right, #1a1f35, #141828);
+  -fx-border-color: rgba(99, 102, 241, 0.15);
+  -fx-border-radius: 14px;
+  -fx-background-radius: 14px;
   -fx-border-width: 1;
+  -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.25), 10, 0, 0, 4);
 }
 
 /* ── Hộp hiển thị giá nổi bật ── */
 .price-box {
-  -fx-background-color: linear-gradient(to bottom right, #1e2a45, #1a1d27);
-  -fx-border-color: #3730a3;
-  -fx-border-radius: 10px;
-  -fx-background-radius: 10px;
+  -fx-background-color: linear-gradient(to bottom right, #1e2a50, #15193a);
+  -fx-border-color: rgba(99, 102, 241, 0.4);
+  -fx-border-radius: 14px;
+  -fx-background-radius: 14px;
   -fx-border-width: 1;
+  -fx-effect: dropshadow(gaussian, rgba(99, 102, 241, 0.15), 12, 0, 0, 4);
 }
 
-/* Label giá lớn — nổi bật màu xanh tím */
+/* Label giá lớn — xanh băng cực sắc nét */
 .price-label-large {
-  -fx-text-fill: #a5b4fc;
-  -fx-font-size: 28px;
+  -fx-text-fill: #00ffff;
+  -fx-font-size: 30px;
   -fx-font-weight: bold;
+  -fx-effect: dropshadow(gaussian, rgba(0, 255, 255, 0.4), 10, 0, 0, 0);
 }
 
 /* ── Badge trạng thái ── */
 .status-badge {
-  -fx-text-fill: #e2e8f0;
-  -fx-background-color: #2d3148;
+  -fx-text-fill: #cbd5e1;
+  -fx-background-color: rgba(45, 49, 72, 0.8);
   -fx-background-radius: 20px;
-  -fx-padding: 4 12 4 12;
+  -fx-border-color: rgba(99, 102, 241, 0.15);
+  -fx-border-radius: 20px;
+  -fx-border-width: 1;
+  -fx-padding: 4 14 4 14;
   -fx-font-size: 12px;
 }
 
-/* Badge khi đang RUNNING — màu xanh lá nổi bật */
+/* Badge khi đang RUNNING — neon xanh lá sắc nét */
 .status-badge-running {
-  -fx-text-fill: #0f1117;
-  -fx-background-color: #4ade80;
+  -fx-text-fill: #000000;
+  -fx-background-color: linear-gradient(to right, #00ff88, #05ffd5);
   -fx-background-radius: 20px;
-  -fx-padding: 4 12 4 12;
+  -fx-padding: 4 14 4 14;
   -fx-font-size: 12px;
   -fx-font-weight: bold;
+  -fx-effect: dropshadow(gaussian, rgba(0, 255, 136, 0.5), 8, 0, 0, 0);
 }
 
 /* ── Biểu đồ LineChart (mục 3.2.5) ── */
@@ -481,13 +492,13 @@
 }
 
 .stat-card {
-    -fx-background-color: linear-gradient(to bottom right, #1e293b, #0f172a);
-    -fx-background-radius: 12px;
-    -fx-border-color: rgba(255, 255, 255, 0.05);
-    -fx-border-radius: 12px;
+    -fx-background-color: linear-gradient(to bottom right, #1e2747, #0f1530);
+    -fx-background-radius: 14px;
+    -fx-border-color: rgba(99, 102, 241, 0.2);
+    -fx-border-radius: 14px;
     -fx-border-width: 1px;
-    -fx-padding: 15px;
-    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.3), 10, 0, 0, 4);
+    -fx-padding: 18px;
+    -fx-effect: dropshadow(gaussian, rgba(99, 102, 241, 0.12), 15, 0, 0, 5);
     -fx-alignment: center;
 }
 
@@ -499,20 +510,25 @@
 }
 
 .stat-value {
-    -fx-text-fill: #f8fafc;
-    -fx-font-size: 26px;
+    -fx-text-fill: #00ffee;
+    -fx-font-size: 30px;
     -fx-font-weight: bold;
+    -fx-effect: dropshadow(gaussian, #00ffee, 12, 0, 0, 0);
 }
 
 /* ── [Tính năng 1 & 5] Live Countdown & Interactive Styles ── */
 
 .countdown-label {
-    -fx-text-fill: #f1c40f; /* Màu vàng Gold nổi bật */
+    -fx-text-fill: #ff0077;
     -fx-font-weight: bold;
     -fx-font-size: 14px;
-    -fx-padding: 4 8 4 8;
-    -fx-background-color: rgba(241, 196, 15, 0.1);
+    -fx-padding: 4 10 4 10;
+    -fx-background-color: linear-gradient(to right, rgba(255, 0, 119, 0.15), rgba(255, 120, 0, 0.1));
     -fx-background-radius: 6px;
+    -fx-border-color: linear-gradient(to right, #ff0077, #ff7700);
+    -fx-border-radius: 6px;
+    -fx-border-width: 1.2;
+    -fx-effect: dropshadow(gaussian, rgba(255, 0, 119, 0.3), 8, 0, 0, 0);
 }
 
 /* ── TableView Row Styling (Premium Neon Experience) ── */
@@ -544,22 +560,27 @@
 
 /* Logout button xịn hơn */
 .logout-button {
-    -fx-background-color: rgba(231, 76, 60, 0.1);
-    -fx-text-fill: #e74c3c;
-    -fx-border-color: #e74c3c;
-    -fx-border-radius: 6px;
+    -fx-background-color: transparent;
+    -fx-text-fill: #f87171;
+    -fx-border-color: rgba(248, 113, 113, 0.4);
+    -fx-border-radius: 8px;
+    -fx-background-radius: 8px;
     -fx-font-weight: bold;
+    -fx-border-width: 1;
 }
 
 .logout-button:hover {
-    -fx-background-color: #e74c3c;
-    -fx-text-fill: white;
+    -fx-background-color: rgba(239, 68, 68, 0.15);
+    -fx-border-color: #ef4444;
+    -fx-text-fill: #fca5a5;
+    -fx-effect: dropshadow(gaussian, rgba(239, 68, 68, 0.3), 10, 0, 0, 0);
 }
 
 /* ── Dialog & Alert Styling (Tân trang hộp thoại) ── */
 .dialog-pane {
-    -fx-background-color: #0f172a;
+    -fx-background-color: linear-gradient(to bottom, #0f172a, #131b30);
     -fx-padding: 10px;
+    -fx-effect: dropshadow(gaussian, rgba(99, 102, 241, 0.1), 20, 0, 0, 5);
 }
 
 .dialog-pane .header-panel {
@@ -867,52 +888,60 @@
     -fx-background-radius: 10px;
 }
 
-/* ── Card Grid Styling ── */
+/* ── Card Grid Styling (Modern Neon Elegance) ── */
 .auction-card {
-    -fx-background-color: white;
-    -fx-background-radius: 12px;
-    -fx-border-color: #e2e8f0; /* Màu viền xám nhạt tinh tế */
-    -fx-border-radius: 12px;
-    -fx-border-width: 1px;
-    -fx-padding: 15px;
-    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.15), 10, 0, 0, 5);
+    -fx-background-color: linear-gradient(to bottom right, #1a1f35, #141828);
+    -fx-background-radius: 14px;
+    -fx-border-color: linear-gradient(to right, #6366f1, #a855f7);
+    -fx-border-radius: 14px;
+    -fx-border-width: 1.2px;
+    -fx-padding: 16px;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.4), 10, 0, 0, 4);
 }
 
 .auction-card:hover {
-    -fx-background-color: #242a4d;
-    -fx-border-color: #6366f1;
-    -fx-border-width: 1px;
-    -fx-effect: dropshadow(three-pass-box, rgba(99, 102, 241, 0.4), 15, 0, 0, 5);
+    -fx-background-color: linear-gradient(to bottom right, #202742, #1a1f35);
+    -fx-border-color: linear-gradient(to right, #00ffff, #ec4899);
+    -fx-border-width: 2px;
+    -fx-effect: dropshadow(gaussian, rgba(236, 72, 153, 0.4), 15, 0, 0, 0);
+    -fx-scale-x: 1.02;
+    -fx-scale-y: 1.02;
 }
 
 /* Các lớp chữ bên trong Card */
 .card-title {
     -fx-font-size: 18px;
     -fx-font-weight: bold;
-    -fx-text-fill: #1e293b;
-}
-.auction-card:hover .card-title {
-    -fx-text-fill: white;
+    -fx-text-fill: #ffffff;
 }
 
 .card-price {
-    -fx-font-size: 20px;
+    -fx-font-size: 22px;
     -fx-font-weight: bold;
-    -fx-text-fill: #f97316; /* Cam đậm rực rỡ */
+    -fx-text-fill: #00ffaa;
+    -fx-effect: dropshadow(gaussian, rgba(0, 255, 170, 0.3), 8, 0, 0, 0);
 }
 .auction-card:hover .card-price {
-    -fx-text-fill: #fb923c; /* Cam sáng hơn khi hover */
+    -fx-text-fill: #00ffff;
 }
 
 .card-desc {
     -fx-font-size: 13px;
-    -fx-text-fill: #64748b;
+    -fx-text-fill: #94a3b8;
 }
 .auction-card:hover .card-desc {
-    -fx-text-fill: #cbd5e1; /* Xám sáng khi hover */
+    -fx-text-fill: #cbd5e1;
 }
 
 .auction-card:hover .label {
-    -fx-text-fill: white; /* Các label khác như thời gian, trạng thái cũng chuyển trắng */
+    -fx-text-fill: #e2e8f0;
+}
+
+/* Label bước giá tối thiểu trong phòng bid */
+.min-step-label {
+    -fx-text-fill: #fef08a; /* Vàng chanh siêu sáng */
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+    -fx-effect: dropshadow(gaussian, rgba(254, 240, 138, 0.4), 6, 0, 0, 0);
 }
 
