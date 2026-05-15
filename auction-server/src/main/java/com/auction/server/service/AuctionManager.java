@@ -102,8 +102,12 @@ public class AuctionManager {
 
       if (bidPrice < minRequired) {
         throw new InvalidBidException(
-            "Giá đặt " + String.format("%,d", bidPrice) + " chưa đạt mức tối thiểu. "
-                + "Bạn cần đặt ít nhất " + String.format("%,d", minRequired) + " VNĐ");
+            "Giá đặt "
+                + String.format("%,d", bidPrice)
+                + " chưa đạt mức tối thiểu. "
+                + "Bạn cần đặt ít nhất "
+                + String.format("%,d", minRequired)
+                + " VNĐ");
       }
 
       // Áp dụng Anti-sniping: nếu đặt giá trong khoảng cuối thì gia hạn thêm
@@ -193,7 +197,9 @@ public class AuctionManager {
   // ─── INTERNAL ────────────────────────────────────────────────────
 
   private Auction findActiveAuction(Long auctionId) {
-    return Optional.ofNullable(activeAuctions.get(auctionId)).orElseThrow(
-        () -> new AuctionException("Không tìm thấy phiên đấu giá đang hoạt động: #" + auctionId));
+    return Optional.ofNullable(activeAuctions.get(auctionId))
+        .orElseThrow(
+            () ->
+                new AuctionException("Không tìm thấy phiên đấu giá đang hoạt động: #" + auctionId));
   }
 }

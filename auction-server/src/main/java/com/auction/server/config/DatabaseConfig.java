@@ -84,10 +84,16 @@ public class DatabaseConfig {
 
             // 1050: Table already exists | 1060: Duplicate column name | 1061: Duplicate key name
             boolean isAlreadyExists = (errorCode == 1050 || errorCode == 1060 || errorCode == 1061);
-            boolean isSchemaChange = (cmd.contains("CREATE TABLE") || cmd.contains("ALTER TABLE") || cmd.contains("CREATE INDEX"));
+            boolean isSchemaChange =
+                (cmd.contains("CREATE TABLE")
+                    || cmd.contains("ALTER TABLE")
+                    || cmd.contains("CREATE INDEX"));
 
             if (isAlreadyExists && isSchemaChange) {
-              System.out.println("Lưu ý: Bỏ qua lệnh (đã tồn tại): " + trimmed.substring(0, Math.min(trimmed.length(), 30)) + "...");
+              System.out.println(
+                  "Lưu ý: Bỏ qua lệnh (đã tồn tại): "
+                      + trimmed.substring(0, Math.min(trimmed.length(), 30))
+                      + "...");
             } else {
               throw e;
             }
