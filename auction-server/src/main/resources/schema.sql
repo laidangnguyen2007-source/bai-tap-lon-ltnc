@@ -290,6 +290,9 @@ WHERE id = 1;
 -- ----------------------------------------------------------------
 ALTER TABLE items ADD COLUMN IF NOT EXISTS image_base64 LONGTEXT DEFAULT NULL AFTER description;
 
+-- Thêm cột bước giá tối thiểu cho bảng auctions nếu chưa có
+ALTER TABLE auctions ADD COLUMN IF NOT EXISTS min_bid_step BIGINT NOT NULL DEFAULT 0 COMMENT 'Số tiền tối thiểu phải cộng thêm mỗi lượt' AFTER end_time;
+
 -- Đảm bảo category có hỗ trợ loại 'OTHER'
 ALTER TABLE items MODIFY COLUMN category VARCHAR(50) NOT NULL;
 

@@ -88,13 +88,6 @@ public class AuctionListController implements com.auction.client.observer.Auctio
   private final ServerService serverService = new ServerService();
   private final AuctionSessionState session = AuctionSessionState.getInstance();
 
-  // ObservableList: khi list này thay đổi, TableView tự cập nhật giao diện (binding)
-  private final ObservableList<Auction> auctionData = FXCollections.observableArrayList();
-
-  // Định dạng hiển thị ngày giờ trên bảng
-  private static final DateTimeFormatter DISPLAY_FORMAT =
-      DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
-
   /**
    * Được JavaFX gọi tự động sau khi load FXML. Thiết lập cấu hình bảng và load dữ liệu ban đầu.
    */
