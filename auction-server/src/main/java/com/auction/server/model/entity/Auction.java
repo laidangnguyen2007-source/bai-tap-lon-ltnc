@@ -215,11 +215,11 @@ public class Auction extends BaseEntity {
   public void setItemDescription(String itemDescription) {
     this.itemDescription = itemDescription;
   }
-  
+
   public long getMinBidStep() {
     return minBidStep;
   }
-  
+
   public void setMinBidStep(long minBidStep) {
     this.minBidStep = minBidStep;
   }
