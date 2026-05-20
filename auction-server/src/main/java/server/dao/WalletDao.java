@@ -5,13 +5,13 @@ import server.model.entity.Wallet;
 
 public interface WalletDao extends GenericDao<Wallet> {
 
-    Wallet findWalletWithLock(Long userId);        // SELECT ... FOR UPDATE
-    
-    Wallet findByUserIdNoLock(Long userId);  // READ ONLY
+  Wallet findWalletWithLock(Long userId); // SELECT ... FOR UPDATE
 
-    void updateBalance(Wallet wallet);       // atomic update
+  Wallet findByUserIdNoLock(Long userId); // READ ONLY
 
-    void createWallet(Long userId);          // init wallet
+  void updateBalance(Wallet wallet); // atomic update
 
-    List<Wallet> findAll();                  // admin view (override optional)
+  void createWallet(Long userId); // init wallet
+
+  List<Wallet> findAll(); // admin view (override optional)
 }

@@ -13,9 +13,10 @@ import server.dao.WalletDao;
 import server.model.entity.Wallet;
 import server.model.exception.AuctionException;
 
-public class JdbcWalletDao implements WalletDao{
+public class JdbcWalletDao implements WalletDao {
 
-  public JdbcWalletDao() {};
+  public JdbcWalletDao() {}
+  ;
 
   // ─────────────────────────────────────────────
   // LOCKED READ (FOR UPDATE)
@@ -25,28 +26,31 @@ public class JdbcWalletDao implements WalletDao{
     Connection connection = null;
     boolean originalAutoCommit = true;
     try {
-        connection = DatabaseConfig.getInstance().getConnection();
-        originalAutoCommit = connection.getAutoCommit();
-        connection.setAutoCommit(false);
+      connection = DatabaseConfig.getInstance().getConnection();
+      originalAutoCommit = connection.getAutoCommit();
+      connection.setAutoCommit(false);
 
-        String sql = "SELECT * FROM wallets where user_id = ? FOR UPDATE";
-        try (PreparedStatement ps = connection.prepareStatement(sql)) {
-            ps.setLong(1, userId);
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) return mapRow(rs);
-            }
-            return null;
+      String sql = "SELECT * FROM wallets where user_id = ? FOR UPDATE";
+      try (PreparedStatement ps = connection.prepareStatement(sql)) {
+        ps.setLong(1, userId);
+        try (ResultSet rs = ps.executeQuery()) {
+          if (rs.next()) return mapRow(rs);
         }
-    } catch (SQLException e) { 
-        throw new AuctionException("Error finding wallet with row lock for userId " + userId + ": " + e.getMessage(), e);
+        return null;
+      }
+    } catch (SQLException e) {
+      throw new AuctionException(
+          "Error finding wallet with row lock for userId " + userId + ": " + e.getMessage(), e);
     } finally {
-        if (connection != null) {
-            try {
-                connection.setAutoCommit(originalAutoCommit);
-            } catch (SQLException ignored) {}
+      if (connection != null) {
+        try {
+          connection.setAutoCommit(originalAutoCommit);
+        } catch (SQLException ignored) {
         }
+      }
     }
   }
+
   // ─────────────────────────────────────────────
   // READ ONLY (NO LOCK)
   // ─────────────────────────────────────────────
@@ -54,9 +58,10 @@ public class JdbcWalletDao implements WalletDao{
   public Wallet findByUserIdNoLock(Long userId) {
     String sql = "SELECT * FROM wallets WHERE user_id = ?";
 
-    try (PreparedStatement ps = DatabaseConfig.getInstance().getConnection().prepareStatement(sql)) {
+    try (PreparedStatement ps =
+        DatabaseConfig.getInstance().getConnection().prepareStatement(sql)) {
       ps.setLong(1, userId);
-     
+
       try (ResultSet rs = ps.executeQuery()) {
         if (rs.next()) return mapRow(rs);
       }
@@ -65,7 +70,8 @@ public class JdbcWalletDao implements WalletDao{
     } catch (SQLException e) {
       throw new AuctionException("Error finding wallet (no lock)", e);
     }
-  } 
+  }
+
   // ─────────────────────────────────────────────
   // ATOMIC UPDATE
   // ─────────────────────────────────────────────
@@ -73,11 +79,11 @@ public class JdbcWalletDao implements WalletDao{
   public void updateBalance(Wallet wallet) {
 
     String sql =
-        "UPDATE wallets " +
-        "SET available_balance = ?, " +
-        "    locked_balance = ?, " +
-        "    total_balance = available_balance + locked_balance " +
-        "WHERE user_id = ?";
+        "UPDATE wallets "
+            + "SET available_balance = ?, "
+            + "    locked_balance = ?, "
+            + "    total_balance = available_balance + locked_balance "
+            + "WHERE user_id = ?";
 
     try (PreparedStatement ps =
         DatabaseConfig.getInstance().getConnection().prepareStatement(sql)) {
@@ -104,8 +110,8 @@ public class JdbcWalletDao implements WalletDao{
   public void createWallet(Long userId) {
 
     String sql =
-        "INSERT INTO wallets (user_id, available_balance, locked_balance, total_balance) " +
-        "VALUES (?, 0, 0, 0)";
+        "INSERT INTO wallets (user_id, available_balance, locked_balance, total_balance) "
+            + "VALUES (?, 0, 0, 0)";
 
     try (PreparedStatement ps =
         DatabaseConfig.getInstance().getConnection().prepareStatement(sql)) {
@@ -128,8 +134,7 @@ public class JdbcWalletDao implements WalletDao{
 
     String sql = "SELECT * FROM wallets";
 
-    try (Statement st =
-        DatabaseConfig.getInstance().getConnection().createStatement();
+    try (Statement st = DatabaseConfig.getInstance().getConnection().createStatement();
         ResultSet rs = st.executeQuery(sql)) {
 
       while (rs.next()) {
@@ -199,8 +204,7 @@ public class JdbcWalletDao implements WalletDao{
   public long count() {
     String sql = "SELECT COUNT(1) FROM wallets";
 
-    try (Statement st =
-        DatabaseConfig.getInstance().getConnection().createStatement();
+    try (Statement st = DatabaseConfig.getInstance().getConnection().createStatement();
         ResultSet rs = st.executeQuery(sql)) {
 
       return rs.next() ? rs.getLong(1) : 0;
@@ -229,4 +233,3 @@ public class JdbcWalletDao implements WalletDao{
     return wallet;
   }
 }
-

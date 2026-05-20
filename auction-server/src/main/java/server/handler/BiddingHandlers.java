@@ -50,22 +50,22 @@ public final class BiddingHandlers {
 
     try {
       AuctionStatusSynchronizer.syncWithClock(auctionDao, walletService, broadcaster);
-      
+
       BidInfo prevWinner = AuctionManager.getInstance().getPreviousWinner(auctionId);
-      
+
       walletService.lockForBid(bidderId, auctionId, amount);
 
       Auction auction = AuctionManager.getInstance().placeBid(auctionId, bidderId, amount);
 
       if (prevWinner != null && !prevWinner.isAutoBid) {
-          walletService.releaseForOutbid(prevWinner.bidderId, auctionId, prevWinner.amount);
-          JSONObject outbidPush = new JSONObject();
-          outbidPush.put("type", "OUTBID");
-          outbidPush.put("auctionId", auctionId);
-          outbidPush.put("userId", prevWinner.bidderId);
-          broadcaster.sendToUser(prevWinner.bidderId, outbidPush.toString());
+        walletService.releaseForOutbid(prevWinner.bidderId, auctionId, prevWinner.amount);
+        JSONObject outbidPush = new JSONObject();
+        outbidPush.put("type", "OUTBID");
+        outbidPush.put("auctionId", auctionId);
+        outbidPush.put("userId", prevWinner.bidderId);
+        broadcaster.sendToUser(prevWinner.bidderId, outbidPush.toString());
       }
-      
+
       JSONObject lockedPush = new JSONObject();
       lockedPush.put("type", "FUNDS_LOCKED");
       lockedPush.put("auctionId", auctionId);
@@ -87,33 +87,41 @@ public final class BiddingHandlers {
 
       BidInfo winnerBeforeAuto = AuctionManager.getInstance().getPreviousWinner(auctionId);
       List<BidTransaction> autoBids = AuctionManager.getInstance().resolveAutoBids(auctionId);
-      
-      if (!autoBids.isEmpty()) {
-          BidInfo winnerAfterAuto = AuctionManager.getInstance().getPreviousWinner(auctionId);
-          
-          if (winnerBeforeAuto != null && !winnerBeforeAuto.isAutoBid) {
-              if (winnerAfterAuto == null || !winnerAfterAuto.bidderId.equals(winnerBeforeAuto.bidderId)) {
-                  walletService.releaseForOutbid(winnerBeforeAuto.bidderId, auctionId, winnerBeforeAuto.amount);
-                  
-                  JSONObject outbidPush = new JSONObject();
-                  outbidPush.put("type", "OUTBID");
-                  outbidPush.put("auctionId", auctionId);
-                  outbidPush.put("userId", winnerBeforeAuto.bidderId);
-                  broadcaster.sendToUser(winnerBeforeAuto.bidderId, outbidPush.toString());
-              }
-          }
-          
-          for (BidTransaction autoBid : autoBids) {
-            bidTransactionDao.save(autoBid);
-            auctionDao.update(auction);
 
-            System.out.println(
-                "AUTO-BID: auction #" + auctionId + " | bidder #" + autoBid.getBidderId() + " | " + autoBid.getAmount() + " VND");
-            JSONObject autoPush = new JSONObject();
-            autoPush.put("type", "BID_UPDATE");
-            autoPush.put("bid", jsonMapper.bidToJSON(autoBid));
-            broadcaster.broadcast(autoPush.toString());
+      if (!autoBids.isEmpty()) {
+        BidInfo winnerAfterAuto = AuctionManager.getInstance().getPreviousWinner(auctionId);
+
+        if (winnerBeforeAuto != null && !winnerBeforeAuto.isAutoBid) {
+          if (winnerAfterAuto == null
+              || !winnerAfterAuto.bidderId.equals(winnerBeforeAuto.bidderId)) {
+            walletService.releaseForOutbid(
+                winnerBeforeAuto.bidderId, auctionId, winnerBeforeAuto.amount);
+
+            JSONObject outbidPush = new JSONObject();
+            outbidPush.put("type", "OUTBID");
+            outbidPush.put("auctionId", auctionId);
+            outbidPush.put("userId", winnerBeforeAuto.bidderId);
+            broadcaster.sendToUser(winnerBeforeAuto.bidderId, outbidPush.toString());
           }
+        }
+
+        for (BidTransaction autoBid : autoBids) {
+          bidTransactionDao.save(autoBid);
+          auctionDao.update(auction);
+
+          System.out.println(
+              "AUTO-BID: auction #"
+                  + auctionId
+                  + " | bidder #"
+                  + autoBid.getBidderId()
+                  + " | "
+                  + autoBid.getAmount()
+                  + " VND");
+          JSONObject autoPush = new JSONObject();
+          autoPush.put("type", "BID_UPDATE");
+          autoPush.put("bid", jsonMapper.bidToJSON(autoBid));
+          broadcaster.broadcast(autoPush.toString());
+        }
       }
 
       return null;
@@ -153,25 +161,32 @@ public final class BiddingHandlers {
       broadcaster.sendToUser(bidderId, activatedPush.toString());
 
       System.out.println(
-          "REGISTER AUTOBID: auction #" + auctionId + " | bidder #" + bidderId + " | maxBid=" + maxBid);
+          "REGISTER AUTOBID: auction #"
+              + auctionId
+              + " | bidder #"
+              + bidderId
+              + " | maxBid="
+              + maxBid);
 
       BidInfo winnerBeforeAuto = AuctionManager.getInstance().getPreviousWinner(auctionId);
       List<BidTransaction> autoBids = AuctionManager.getInstance().resolveAutoBids(auctionId);
-      
+
       if (!autoBids.isEmpty()) {
-          BidInfo winnerAfterAuto = AuctionManager.getInstance().getPreviousWinner(auctionId);
-          if (winnerBeforeAuto != null && !winnerBeforeAuto.isAutoBid) {
-              if (winnerAfterAuto == null || !winnerAfterAuto.bidderId.equals(winnerBeforeAuto.bidderId)) {
-                  walletService.releaseForOutbid(winnerBeforeAuto.bidderId, auctionId, winnerBeforeAuto.amount);
-                  
-                  JSONObject outbidPush = new JSONObject();
-                  outbidPush.put("type", "OUTBID");
-                  outbidPush.put("auctionId", auctionId);
-                  outbidPush.put("userId", winnerBeforeAuto.bidderId);
-                  broadcaster.sendToUser(winnerBeforeAuto.bidderId, outbidPush.toString());
-              }
+        BidInfo winnerAfterAuto = AuctionManager.getInstance().getPreviousWinner(auctionId);
+        if (winnerBeforeAuto != null && !winnerBeforeAuto.isAutoBid) {
+          if (winnerAfterAuto == null
+              || !winnerAfterAuto.bidderId.equals(winnerBeforeAuto.bidderId)) {
+            walletService.releaseForOutbid(
+                winnerBeforeAuto.bidderId, auctionId, winnerBeforeAuto.amount);
+
+            JSONObject outbidPush = new JSONObject();
+            outbidPush.put("type", "OUTBID");
+            outbidPush.put("auctionId", auctionId);
+            outbidPush.put("userId", winnerBeforeAuto.bidderId);
+            broadcaster.sendToUser(winnerBeforeAuto.bidderId, outbidPush.toString());
           }
-        
+        }
+
         Auction auction = AuctionManager.getInstance().findById(auctionId).orElse(null);
         if (auction != null) {
           for (BidTransaction autoBid : autoBids) {
@@ -179,7 +194,13 @@ public final class BiddingHandlers {
             auctionDao.update(auction);
 
             System.out.println(
-                "AUTO-BID (Immediate): auction #" + auctionId + " | bidder #" + autoBid.getBidderId() + " | " + autoBid.getAmount() + " VND");
+                "AUTO-BID (Immediate): auction #"
+                    + auctionId
+                    + " | bidder #"
+                    + autoBid.getBidderId()
+                    + " | "
+                    + autoBid.getAmount()
+                    + " VND");
             JSONObject autoPush = new JSONObject();
             autoPush.put("type", "BID_UPDATE");
             autoPush.put("bid", jsonMapper.bidToJSON(autoBid));
@@ -199,49 +220,49 @@ public final class BiddingHandlers {
   }
 
   public String cancelAutoBid(JSONObject req) throws Exception {
-      try {
-          Long auctionId = req.getLong("auctionId");
-          Long bidderId = req.getLong("bidderId");
+    try {
+      Long auctionId = req.getLong("auctionId");
+      Long bidderId = req.getLong("bidderId");
 
-          Optional<AutoBid> opt = autoBidDao.findByAuctionAndBidder(auctionId, bidderId);
-          if (opt.isPresent()) {
-              autoBidDao.deactivate(opt.get().getId());
-          }
-
-          List<AutoBidStrategy> strategies = AuctionManager.getInstance().getAutoBids(auctionId);
-          AutoBidStrategy userStrategy = null;
-          for (AutoBidStrategy s : strategies) {
-              if (s.getUserId().equals(bidderId)) {
-                  userStrategy = s;
-                  break;
-              }
-          }
-
-          if (userStrategy != null) {
-              long lockedAmount = userStrategy.getMaxBid();
-              
-              BidInfo currentWinner = AuctionManager.getInstance().getPreviousWinner(auctionId);
-              if (currentWinner != null && currentWinner.bidderId.equals(bidderId)) {
-                  lockedAmount -= currentWinner.amount;
-              }
-
-              AuctionManager.getInstance().removeAutoBid(auctionId, bidderId);
-              walletService.releaseAutoBid(bidderId, auctionId, lockedAmount);
-
-              JSONObject cancelledPush = new JSONObject();
-              cancelledPush.put("type", "AUTO_BID_CANCELLED");
-              cancelledPush.put("auctionId", auctionId);
-              cancelledPush.put("userId", bidderId);
-              broadcaster.sendToUser(bidderId, cancelledPush.toString());
-          }
-
-          JSONObject res = new JSONObject();
-          res.put("status", "OK");
-          return res.toString();
-      } catch (Exception e) {
-          e.printStackTrace();
-          System.out.println("CANCEL AUTOBID REJECTED: " + e.getMessage());
-          return JsonResponses.error(e.getMessage());
+      Optional<AutoBid> opt = autoBidDao.findByAuctionAndBidder(auctionId, bidderId);
+      if (opt.isPresent()) {
+        autoBidDao.deactivate(opt.get().getId());
       }
+
+      List<AutoBidStrategy> strategies = AuctionManager.getInstance().getAutoBids(auctionId);
+      AutoBidStrategy userStrategy = null;
+      for (AutoBidStrategy s : strategies) {
+        if (s.getUserId().equals(bidderId)) {
+          userStrategy = s;
+          break;
+        }
+      }
+
+      if (userStrategy != null) {
+        long lockedAmount = userStrategy.getMaxBid();
+
+        BidInfo currentWinner = AuctionManager.getInstance().getPreviousWinner(auctionId);
+        if (currentWinner != null && currentWinner.bidderId.equals(bidderId)) {
+          lockedAmount -= currentWinner.amount;
+        }
+
+        AuctionManager.getInstance().removeAutoBid(auctionId, bidderId);
+        walletService.releaseAutoBid(bidderId, auctionId, lockedAmount);
+
+        JSONObject cancelledPush = new JSONObject();
+        cancelledPush.put("type", "AUTO_BID_CANCELLED");
+        cancelledPush.put("auctionId", auctionId);
+        cancelledPush.put("userId", bidderId);
+        broadcaster.sendToUser(bidderId, cancelledPush.toString());
+      }
+
+      JSONObject res = new JSONObject();
+      res.put("status", "OK");
+      return res.toString();
+    } catch (Exception e) {
+      e.printStackTrace();
+      System.out.println("CANCEL AUTOBID REJECTED: " + e.getMessage());
+      return JsonResponses.error(e.getMessage());
+    }
   }
 }

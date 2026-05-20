@@ -41,7 +41,11 @@ public final class ClientBroadcaster {
   /** Đăng ký mapping userId với PrintWriter khi login thành công. */
   public void registerUser(Long userId, PrintWriter out) {
     userSessions.put(userId, out);
-    System.out.println("Broadcaster: User " + userId + " connected. Total active sessions: " + userSessions.size());
+    System.out.println(
+        "Broadcaster: User "
+            + userId
+            + " connected. Total active sessions: "
+            + userSessions.size());
   }
 
   /** Gỡ mapping userId khi disconnect. */
@@ -50,9 +54,7 @@ public final class ClientBroadcaster {
     System.out.println("Broadcaster: User " + userId + " disconnected.");
   }
 
-  /**
-   * Gửi <b>một dòng</b> (một JSON string) tới tất cả client.
-   */
+  /** Gửi <b>một dòng</b> (một JSON string) tới tất cả client. */
   public void broadcast(String message) {
     for (PrintWriter client : connectedClients) {
       try {
@@ -64,9 +66,7 @@ public final class ClientBroadcaster {
     }
   }
 
-  /**
-   * Gửi tin nhắn trực tiếp cho một user cụ thể (targeted push).
-   */
+  /** Gửi tin nhắn trực tiếp cho một user cụ thể (targeted push). */
   public void sendToUser(Long userId, String message) {
     PrintWriter client = userSessions.get(userId);
     if (client != null) {
@@ -79,4 +79,3 @@ public final class ClientBroadcaster {
     }
   }
 }
-
