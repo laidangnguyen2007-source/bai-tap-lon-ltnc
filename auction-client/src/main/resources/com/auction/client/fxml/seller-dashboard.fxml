@@ -32,6 +32,7 @@
       <Label text="🏪 Seller Dashboard" styleClass="app-title"/>
       <Region HBox.hgrow="ALWAYS"/>
       <Label fx:id="sellerNameLabel" styleClass="welcome-label"/>
+      <Button fx:id="walletButton" text="💰 Ví" onAction="#handleOpenWallet" styleClass="secondary-button"/>
       <Button fx:id="logoutButton" text="Đăng Xuất" onAction="#handleLogout" styleClass="danger-button"/>
     </HBox>
   </top>

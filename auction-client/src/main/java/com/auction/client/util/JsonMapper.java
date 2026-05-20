@@ -1,17 +1,17 @@
 package com.auction.client.util;
 
-import com.auction.server.model.entity.Auction;
-import com.auction.server.model.entity.BidTransaction;
-import com.auction.server.model.entity.item.Item;
-import com.auction.server.model.entity.item.ItemFactory;
-import com.auction.server.model.entity.user.Admin;
-import com.auction.server.model.entity.user.Bidder;
-import com.auction.server.model.entity.user.Seller;
-import com.auction.server.model.entity.user.User;
-import com.auction.server.model.enums.AuctionStatus;
-import com.auction.server.model.enums.ItemCategory;
 import java.time.LocalDateTime;
 import org.json.simple.JSONObject;
+import server.model.entity.Auction;
+import server.model.entity.BidTransaction;
+import server.model.entity.item.Item;
+import server.model.entity.item.ItemFactory;
+import server.model.entity.user.Admin;
+import server.model.entity.user.Bidder;
+import server.model.entity.user.Seller;
+import server.model.entity.user.User;
+import server.model.enums.AuctionStatus;
+import server.model.enums.ItemCategory;
 
 /**
  * Utility class chuyên trách việc chuyển đổi JSON sang Java Object (Deserialize).

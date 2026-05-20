@@ -3,11 +3,10 @@ package com.auction.client.service;
 import com.auction.client.network.*;
 import com.auction.client.observer.AuctionObserver;
 import com.auction.client.util.JsonMapper;
-import com.auction.server.model.entity.Auction;
-import com.auction.server.model.entity.BidTransaction;
-import com.auction.server.model.entity.item.Item;
-import com.auction.server.model.entity.user.User;
-import java.time.LocalDateTime;
+import server.model.entity.Auction;
+import server.model.entity.BidTransaction;
+import server.model.entity.item.Item;
+import server.model.entity.user.User;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
@@ -23,6 +22,7 @@ public class ServerService {
     private final AuctionNetworkHandler auctionHandler;
     private final BidNetworkHandler bidHandler;
     private final ItemNetworkHandler itemHandler;
+    private final WalletNetworkHandler walletHandler;
 
     private final List<AuctionObserver> observers = new ArrayList<>();
     private final Consumer<String> pushHandler;
@@ -34,6 +34,7 @@ public class ServerService {
             this.auctionHandler = new AuctionNetworkHandler(connection);
             this.bidHandler = new BidNetworkHandler(connection);
             this.itemHandler = new ItemNetworkHandler(connection);
+            this.walletHandler = new WalletNetworkHandler(connection);
 
             this.pushHandler = this::handlePushMessage;
             connection.addPushListener(this.pushHandler);
@@ -64,6 +65,12 @@ public class ServerService {
                 Long id = ((Number) push.get("auctionId")).longValue();
                 String status = (String) push.get("newStatus");
                 observers.forEach(o -> o.onAuctionStatusChanged(id, status));
+            } else if ("FUNDS_LOCKED".equals(type) || "FUNDS_RELEASED".equals(type)
+                    || "OUTBID".equals(type) || "OUTBID_NOTIFICATION".equals(type)
+                    || "AUCTION_WON".equals(type) || "AUCTION_LOST".equals(type)
+                    || "SELLER_PAYOUT".equals(type) || "ADMIN_BALANCE_ADJUSTED".equals(type)
+                    || "AUTO_BID_CANCELLED".equals(type)) {
+                observers.forEach(o -> o.onWalletEvent(type, push));
             }
         } catch (Exception ignored) {
         }
@@ -135,4 +142,27 @@ public class ServerService {
     public boolean deleteAuctionSeller(Long auctionId, Long sellerId) {
         return auctionHandler.deleteAuctionSeller(auctionId, sellerId);
     }
+
+    // -- WALLET DELEGATION --
+
+    public JSONObject getWallet(Long userId) {
+        return walletHandler.getWallet(userId);
+    }
+
+    public List<JSONObject> getWalletTransactions(Long userId) {
+        return walletHandler.getTransactions(userId);
+    }
+
+    public boolean adminAdjustBalance(Long userId, long amount, Long adminId, String role, String desc) {
+        return walletHandler.adminAdjustBalance(userId, amount, adminId, role, desc);
+    }
+
+    public List<JSONObject> adminGetAllWallets(String role) {
+        return walletHandler.adminGetAllWallets(role);
+    }
+
+    public boolean cancelAutoBid(Long auctionId, Long bidderId) {
+        return walletHandler.cancelAutoBid(auctionId, bidderId);
+    }
 }
+

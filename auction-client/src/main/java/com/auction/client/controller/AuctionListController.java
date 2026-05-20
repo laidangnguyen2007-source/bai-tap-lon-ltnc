@@ -5,8 +5,6 @@ import com.auction.client.service.ServerService;
 import com.auction.client.util.ComboBoxPopupWidthSync;
 import com.auction.client.util.FxmlLoader;
 import com.auction.client.util.NotificationUtils;
-import com.auction.server.model.entity.Auction;
-import com.auction.server.model.enums.AuctionStatus;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -28,6 +26,8 @@ import javafx.scene.control.ButtonBar;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.stage.Stage;
+import server.model.entity.Auction;
+import server.model.enums.AuctionStatus;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.DatePicker;
@@ -65,6 +65,12 @@ public class AuctionListController implements com.auction.client.observer.Auctio
 
   @FXML
   private Button myWinsButton;
+
+  @FXML
+  private Button walletButton;
+
+  @FXML
+  private Button adminWalletButton;
 
   @FXML
   private Label welcomeLabel;
@@ -110,13 +116,19 @@ public class AuctionListController implements com.auction.client.observer.Auctio
 
     // [Tính năng 2] Hiển thị bảng thống kê nếu là Admin
     if (session.isLoggedIn()
-        && session.getCurrentUser().getRole() == com.auction.server.model.enums.UserRole.ADMIN) {
+        && session.getCurrentUser().getRole() == server.model.enums.UserRole.ADMIN) {
       adminStatsPane.setVisible(true);
       adminStatsPane.setManaged(true);
+      adminWalletButton.setVisible(true);
+      adminWalletButton.setManaged(true);
+      walletButton.setVisible(true);
+      walletButton.setManaged(true);
     } else {
       // [Tính năng 3] Hiển thị nút Lịch sử thắng cho Bidder/Seller
       myWinsButton.setVisible(true);
       myWinsButton.setManaged(true);
+      walletButton.setVisible(true);
+      walletButton.setManaged(true);
     }
 
     // Bỏ tự động resize của TableView
@@ -154,6 +166,26 @@ public class AuctionListController implements com.auction.client.observer.Auctio
     try {
       Stage stage = (Stage) myWinsButton.getScene().getWindow();
       FxmlLoader.navigateTo(stage, "my-wins.fxml", "Online Auction System — Lịch Sử Thắng Cuộc");
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+  }
+
+  @FXML
+  private void handleOpenWallet(ActionEvent event) {
+    try {
+      Stage stage = (Stage) walletButton.getScene().getWindow();
+      FxmlLoader.navigateTo(stage, "wallet-view.fxml", "Online Auction System — Quản Lý Ví");
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+  }
+
+  @FXML
+  private void handleOpenAdminWallet(ActionEvent event) {
+    try {
+      Stage stage = (Stage) adminWalletButton.getScene().getWindow();
+      FxmlLoader.navigateTo(stage, "admin-wallet.fxml", "Online Auction System — Quản Lý Ví (Admin)");
     } catch (IOException e) {
       e.printStackTrace();
     }
@@ -340,7 +372,7 @@ public class AuctionListController implements com.auction.client.observer.Auctio
 
       // Admin Action Buttons
       if (session.isLoggedIn()
-          && session.getCurrentUser().getRole() == com.auction.server.model.enums.UserRole.ADMIN) {
+          && session.getCurrentUser().getRole() == server.model.enums.UserRole.ADMIN) {
         Button editBtn = new Button("Sửa");
         editBtn.getStyleClass().add("secondary-button");
         editBtn.setOnAction(e -> showEditDialog(auction));
@@ -690,7 +722,7 @@ public class AuctionListController implements com.auction.client.observer.Auctio
    * [Tính năng 4] Nhận cập nhật khi có người đặt giá mới.
    */
   @Override
-  public void onBidUpdated(com.auction.server.model.entity.BidTransaction bid) {
+  public void onBidUpdated(server.model.entity.BidTransaction bid) {
     Platform.runLater(() -> {
       // Hiện thông báo nhỏ góc màn hình
       NotificationUtils.showToast((Stage) searchField.getScene().getWindow(), "📣 Giá mới cho #"

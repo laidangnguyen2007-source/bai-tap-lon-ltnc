@@ -32,6 +32,8 @@
       <Region HBox.hgrow="ALWAYS"/>
       <Label fx:id="welcomeLabel" styleClass="welcome-label"/>
       <Button fx:id="myWinsButton" text="🏆 Lịch sử thắng" onAction="#handleViewMyWins" styleClass="secondary-button" visible="false" managed="false"/>
+      <Button fx:id="walletButton" text="💰 Ví" onAction="#handleOpenWallet" styleClass="secondary-button" visible="false" managed="false"/>
+      <Button fx:id="adminWalletButton" text="🔧 Quản lý ví" onAction="#handleOpenAdminWallet" styleClass="secondary-button" visible="false" managed="false"/>
       <Button
         fx:id="logoutButton"
         text="Đăng Xuất"

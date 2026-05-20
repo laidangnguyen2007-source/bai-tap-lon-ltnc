@@ -1,9 +1,9 @@
-import com.auction.server.model.entity.Auction;
-import com.auction.server.model.entity.item.Item;
-import com.auction.server.model.entity.item.ItemFactory;
-import com.auction.server.model.enums.ItemCategory;
 import java.time.LocalDateTime;
 import java.util.Map;
+import server.model.entity.Auction;
+import server.model.entity.item.Item;
+import server.model.entity.item.ItemFactory;
+import server.model.enums.ItemCategory;
 
 public class TestAuction {
   public static void main(String[] args) {

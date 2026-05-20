@@ -1,7 +1,7 @@
 package com.auction.client.network;
 
 import com.auction.client.util.JsonMapper;
-import com.auction.server.model.entity.BidTransaction;
+import server.model.entity.BidTransaction;
 import java.util.ArrayList;
 import java.util.List;
 import org.json.simple.JSONArray;

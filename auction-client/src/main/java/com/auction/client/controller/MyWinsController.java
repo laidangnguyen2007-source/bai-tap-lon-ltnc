@@ -3,8 +3,6 @@ package com.auction.client.controller;
 import com.auction.client.model.AuctionSessionState;
 import com.auction.client.service.ServerService;
 import com.auction.client.util.FxmlLoader;
-import com.auction.server.model.entity.Auction;
-import com.auction.server.model.enums.AuctionStatus;
 import java.io.IOException;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -18,6 +16,8 @@ import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.stage.Stage;
+import server.model.entity.Auction;
+import server.model.enums.AuctionStatus;
  
 /**
  * Controller cho màn hình Lịch Sử Thắng Cuộc (my-wins.fxml).
