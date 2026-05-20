@@ -1,7 +1,7 @@
 package com.auction.client.model;
 
-import com.auction.server.model.entity.Auction;
-import com.auction.server.model.entity.user.User;
+import server.model.entity.Auction;
+import server.model.entity.user.User;
 
 /**
  * Model lưu trữ trạng thái phiên làm việc hiện tại của Client.

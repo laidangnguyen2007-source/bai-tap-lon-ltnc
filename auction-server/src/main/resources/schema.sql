@@ -278,8 +278,106 @@ SET current_price = 18500000, current_winner_id = 1
 WHERE id = 1;
 
 
+-- ----------------------------------------------------------------
+-- 6. BẢNG WALLETS
+--    Ví tiền cho tất cả user (Bidder, Seller, Admin).
+--    total_balance = available_balance + locked_balance (luôn đúng).
+--    available_balance: tiền có thể dùng ngay.
+--    locked_balance: tiền đang bị giữ cho các phiên đấu giá đang diễn ra.
+-- ----------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS wallets (
+    id                BIGINT       NOT NULL AUTO_INCREMENT,
+    user_id           BIGINT       NOT NULL,
+    total_balance     BIGINT       NOT NULL DEFAULT 0,
+    available_balance BIGINT       NOT NULL DEFAULT 0,
+    locked_balance    BIGINT       NOT NULL DEFAULT 0,
+    created_at        DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at        DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+
+    PRIMARY KEY (id),
+    UNIQUE KEY uq_wallet_user (user_id),
+    CONSTRAINT fk_wallet_user
+        FOREIGN KEY (user_id) REFERENCES users(id)
+        ON DELETE RESTRICT ON UPDATE CASCADE,
+    CONSTRAINT chk_available_balance CHECK (available_balance >= 0),
+    CONSTRAINT chk_locked_balance    CHECK (locked_balance >= 0)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+
+-- ----------------------------------------------------------------
+-- 7. BẢNG WALLET_TRANSACTIONS
+--    Bất biến (Immutable) — chỉ INSERT + SELECT.
+--    Ghi lại mọi thay đổi số dư ví: lock, release, settlement, admin adjust...
+--    reference_id + reference_type: liên kết đến auction/bid liên quan.
+-- ----------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS wallet_transactions (
+    id               BIGINT       NOT NULL AUTO_INCREMENT,
+    user_id          BIGINT       NOT NULL,
+    type             VARCHAR(30)  NOT NULL
+                         COMMENT 'DEPOSIT|WITHDRAW|BID_LOCK|BID_RELEASE|AUCTION_WIN|SELLER_PAYOUT|AUTO_BID_LOCK|AUTO_BID_RELEASE|ADMIN_ADJUSTMENT|REFUND',
+    amount           BIGINT       NOT NULL,
+    balance_before   BIGINT       NOT NULL,
+    balance_after    BIGINT       NOT NULL,
+    reference_id     BIGINT       DEFAULT NULL  COMMENT 'ID phiên đấu giá hoặc bid liên quan',
+    reference_type   VARCHAR(50)  DEFAULT NULL  COMMENT 'AUCTION, BID, ADMIN...',
+    description      TEXT         DEFAULT NULL,
+    created_by       BIGINT       DEFAULT NULL  COMMENT 'User thực hiện (admin ID nếu là admin adjust)',
+    created_at       DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    PRIMARY KEY (id),
+    CONSTRAINT fk_wt_user
+        FOREIGN KEY (user_id) REFERENCES users(id)
+        ON DELETE RESTRICT ON UPDATE CASCADE,
+
+    INDEX idx_wt_user     (user_id),
+    INDEX idx_wt_type     (type),
+    INDEX idx_wt_ref      (reference_type, reference_id),
+    INDEX idx_wt_created  (created_at DESC)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+
+-- ----------------------------------------------------------------
+-- 8. BẢNG AUTO_BIDS
+--    Lưu trữ các chiến lược auto-bid (persist qua restart).
+--    Mỗi user chỉ có 1 auto-bid active cho mỗi auction.
+-- ----------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS auto_bids (
+    id           BIGINT    NOT NULL AUTO_INCREMENT,
+    auction_id   BIGINT    NOT NULL,
+    bidder_id    BIGINT    NOT NULL,
+    max_bid      BIGINT    NOT NULL,
+    increment    BIGINT    NOT NULL,
+    is_active    BOOLEAN   NOT NULL DEFAULT TRUE,
+    created_at   DATETIME  NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    PRIMARY KEY (id),
+    CONSTRAINT fk_ab_auction
+        FOREIGN KEY (auction_id) REFERENCES auctions(id)
+        ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT fk_ab_bidder
+        FOREIGN KEY (bidder_id) REFERENCES users(id)
+        ON DELETE RESTRICT ON UPDATE CASCADE,
+    UNIQUE KEY uq_autobid (auction_id, bidder_id),
+
+    INDEX idx_ab_auction (auction_id),
+    INDEX idx_ab_bidder  (bidder_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+
 -- ================================================================
--- 8. AUTO-MIGRATION (Cập nhật cho các bản cũ)
+-- 9. SEED WALLETS (Tạo ví cho user mẫu)
+-- ================================================================
+INSERT IGNORE INTO wallets (user_id, total_balance, available_balance, locked_balance)
+VALUES
+    (1, 10000000, 10000000, 0),   -- bidder1: 10 triệu
+    (2, 5000000,  5000000,  0),   -- bidder2: 5 triệu
+    (3, 0,        0,        0),   -- seller1
+    (4, 0,        0,        0),   -- seller2
+    (5, 0,        0,        0);   -- admin
+
+
+-- ================================================================
+-- 10. AUTO-MIGRATION (Cập nhật cho các bản cũ)
 -- Cần dùng thủ thuật hoặc chạy lệnh đơn lẻ vì MySQL không có 'ADD COLUMN IF NOT EXISTS' 
 -- bản cũ. Các câu lệnh dưới đây đảm bảo máy cũ khi pull code về vẫn chạy được.
 -- ================================================================
@@ -288,10 +386,13 @@ WHERE id = 1;
 -- Lưu ý: Nếu máy đã có rồi, các lệnh này có thể báo lỗi nhẹ trong log nhưng không làm dừng Server.
 -- (Server của chúng ta được thiết kế để bỏ qua lỗi nhỏ khi khởi tạo schema).
 -- ----------------------------------------------------------------
-ALTER TABLE items ADD COLUMN IF NOT EXISTS image_base64 LONGTEXT DEFAULT NULL AFTER description;
+ALTER TABLE items ADD COLUMN image_base64 LONGTEXT DEFAULT NULL AFTER description;
 
 -- Thêm cột bước giá tối thiểu cho bảng auctions nếu chưa có
-ALTER TABLE auctions ADD COLUMN IF NOT EXISTS min_bid_step BIGINT NOT NULL DEFAULT 0 COMMENT 'Số tiền tối thiểu phải cộng thêm mỗi lượt' AFTER end_time;
+ALTER TABLE auctions ADD COLUMN min_bid_step BIGINT NOT NULL DEFAULT 0 COMMENT 'Số tiền tối thiểu phải cộng thêm mỗi lượt' AFTER end_time;
+
+-- Thêm cột settled (đánh dấu đã thanh toán) cho bảng auctions — idempotency protection
+ALTER TABLE auctions ADD COLUMN settled BOOLEAN NOT NULL DEFAULT FALSE COMMENT 'TRUE nếu đã settlement xong (chống duplicate)';
 
 -- Đảm bảo category có hỗ trợ loại 'OTHER'
 ALTER TABLE items MODIFY COLUMN category VARCHAR(50) NOT NULL;

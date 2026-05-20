@@ -1,4 +1,4 @@
-import com.auction.server.model.entity.BidTransaction;
+import server.model.entity.BidTransaction;
 
 public class TestBidTransaction {
 

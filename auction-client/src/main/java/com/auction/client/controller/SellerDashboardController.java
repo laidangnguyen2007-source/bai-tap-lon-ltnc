@@ -5,8 +5,6 @@ import com.auction.client.service.ServerService;
 import com.auction.client.util.ComboBoxPopupWidthSync;
 import com.auction.client.util.FxmlLoader;
 import com.auction.client.util.NotificationUtils;
-import com.auction.server.model.entity.Auction;
-
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -25,9 +23,10 @@ import javafx.scene.control.TextField;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.stage.Stage;
 import javafx.util.Callback;
+import server.model.entity.Auction;
+import server.model.enums.AuctionStatus;
 import javafx.scene.control.TableCell;
 import javafx.scene.layout.HBox;
-import com.auction.server.model.enums.AuctionStatus;
 
 /**
  * Controller cho màn hình Dashboard của Seller (seller-dashboard.fxml).
@@ -86,8 +85,8 @@ public class SellerDashboardController {
   @FXML private TableColumn<Auction, String> endTimeCol;
   @FXML private TableColumn<Auction, Void> actionCol;
 
-  // Header
   @FXML private Label sellerNameLabel;
+  @FXML private Button walletButton;
   @FXML private Button logoutButton;
   @FXML private Button refreshButton;
 
@@ -569,6 +568,16 @@ public class SellerDashboardController {
   @FXML
   private void handleRefresh(ActionEvent event) {
     loadMyAuctions();
+  }
+
+  @FXML
+  private void handleOpenWallet(ActionEvent event) {
+    try {
+      Stage stage = (Stage) walletButton.getScene().getWindow();
+      FxmlLoader.navigateTo(stage, "wallet-view.fxml", "Online Auction System — Quản Lý Ví");
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
   }
 
   /**

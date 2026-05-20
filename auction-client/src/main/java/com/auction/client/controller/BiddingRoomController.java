@@ -5,8 +5,6 @@ import com.auction.client.observer.AuctionObserver;
 import com.auction.client.service.ServerService;
 import com.auction.client.util.FxmlLoader;
 import com.auction.client.util.NotificationUtils;
-import com.auction.server.model.entity.Auction;
-import com.auction.server.model.entity.BidTransaction;
 import java.io.IOException;
 import java.time.Duration;
 import java.time.LocalDateTime;
@@ -27,6 +25,8 @@ import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
 import javafx.scene.control.TextField;
 import javafx.stage.Stage;
+import server.model.entity.Auction;
+import server.model.entity.BidTransaction;
 
 /**
  * Controller cho màn hình Phòng Đấu Giá Trực Tiếp (bidding-room.fxml).

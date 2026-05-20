@@ -1,7 +1,7 @@
 package com.auction.client.network;
 
 import com.auction.client.util.JsonMapper;
-import com.auction.server.model.entity.item.Item;
+import server.model.entity.item.Item;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 

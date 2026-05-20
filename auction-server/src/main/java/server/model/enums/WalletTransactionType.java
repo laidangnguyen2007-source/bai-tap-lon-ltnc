@@ -1,0 +1,9 @@
+package server.model.enums;
+
+public enum WalletTransactionType {
+  DEPOSIT, WITHDRAW,
+  BID_LOCK, BID_RELEASE,
+  AUCTION_WIN, SELLER_PAYOUT,
+  AUTO_BID_LOCK, AUTO_BID_RELEASE,
+  ADMIN_ADJUSTMENT, REFUND
+}
