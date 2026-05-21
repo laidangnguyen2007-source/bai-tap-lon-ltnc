@@ -273,20 +273,20 @@ public final class AuctionCommandHandlers {
 
     // Nếu đang OPEN thì mới được sửa Giá, Giờ, Bước giá, v.v.
     if (wasOpen) {
-        auction.setCurrentPrice(startingPrice);
-        auction.setStartTime(startTime);
-        auction.setEndTime(endTime);
-        auction.setMinBidStep(minBidStep);
+      auction.setCurrentPrice(startingPrice);
+      auction.setStartTime(startTime);
+      auction.setEndTime(endTime);
+      auction.setMinBidStep(minBidStep);
 
-        // Update status based on new times
-        LocalDateTime now = LocalDateTime.now();
-        if (now.isAfter(startTime) && now.isBefore(endTime)) {
-          auction.setStatus(AuctionStatus.RUNNING);
-        } else if (now.isAfter(endTime)) {
-          auction.setStatus(AuctionStatus.FINISHED);
-        } else {
-          auction.setStatus(AuctionStatus.OPEN);
-        }
+      // Update status based on new times
+      LocalDateTime now = LocalDateTime.now();
+      if (now.isAfter(startTime) && now.isBefore(endTime)) {
+        auction.setStatus(AuctionStatus.RUNNING);
+      } else if (now.isAfter(endTime)) {
+        auction.setStatus(AuctionStatus.FINISHED);
+      } else {
+        auction.setStatus(AuctionStatus.OPEN);
+      }
     }
 
     auctionDao.update(auction);
@@ -296,14 +296,14 @@ public final class AuctionCommandHandlers {
     if (itemOpt.isPresent()) {
       Item item = itemOpt.get();
       if (wasOpen) {
-          item.setName(itemName);
-          item.setCategory(category);
-          item.setStartingPrice(startingPrice);
+        item.setName(itemName);
+        item.setCategory(category);
+        item.setStartingPrice(startingPrice);
       }
       item.setDescription(itemDescription);
       item.setItemSpecifics(itemSpecifics);
       if (imageBase64 != null && !imageBase64.isEmpty()) {
-          item.setImageBase64(imageBase64);
+        item.setImageBase64(imageBase64);
       }
       itemDao.update(item);
     }
