@@ -38,6 +38,9 @@ public class AuctionDetailController {
 
   @FXML private Label itemDescriptionLabel;
 
+  @FXML private javafx.scene.image.ImageView itemImageView;
+  @FXML private javafx.scene.layout.VBox itemSpecificsContainer;
+
   // Thông tin phiên đấu giá
   @FXML private Label auctionIdLabel;
 
@@ -107,7 +110,55 @@ public class AuctionDetailController {
     if (item != null) {
       itemNameLabel.setText(item.getName());
       itemCategoryLabel.setText("Danh mục: " + item.getCategory().name());
-      itemDescriptionLabel.setText(item.getDescription());
+      itemDescriptionLabel.setText(item.getDescription() != null ? item.getDescription() : "");
+      
+      // Hiển thị ảnh
+      if (item.getImageBase64() != null && !item.getImageBase64().isEmpty()) {
+          try {
+              byte[] imageBytes = java.util.Base64.getDecoder().decode(item.getImageBase64());
+              javafx.scene.image.Image image = new javafx.scene.image.Image(new java.io.ByteArrayInputStream(imageBytes));
+              itemImageView.setImage(image);
+          } catch (Exception e) {
+              itemImageView.setImage(null);
+          }
+      } else {
+          itemImageView.setImage(null);
+      }
+
+      // Hiển thị Thông số kỹ thuật
+      itemSpecificsContainer.getChildren().clear();
+      String specifics = item.getItemSpecifics();
+      if (specifics != null && !specifics.trim().isEmpty()) {
+          String[] lines = specifics.split("\n");
+          javafx.scene.layout.GridPane grid = new javafx.scene.layout.GridPane();
+          grid.setHgap(15);
+          grid.setVgap(8);
+          int row = 0;
+          for (String line : lines) {
+              if (line.trim().isEmpty()) continue;
+              String[] parts = line.split(":", 2);
+              if (parts.length == 2) {
+                  Label keyLabel = new Label("• " + parts[0].trim() + ":");
+                  keyLabel.setStyle("-fx-text-fill: #b0b3b8;");
+                  Label valLabel = new Label(parts[1].trim());
+                  valLabel.setStyle("-fx-text-fill: white; -fx-wrap-text: true;");
+                  valLabel.setMaxWidth(200);
+                  grid.add(keyLabel, 0, row);
+                  grid.add(valLabel, 1, row);
+              } else {
+                  Label valLabel = new Label("• " + line.trim());
+                  valLabel.setStyle("-fx-text-fill: white; -fx-wrap-text: true;");
+                  valLabel.setMaxWidth(300);
+                  grid.add(valLabel, 0, row, 2, 1);
+              }
+              row++;
+          }
+          itemSpecificsContainer.getChildren().add(grid);
+      } else {
+          Label emptyLabel = new Label("Không có thông số kỹ thuật.");
+          emptyLabel.setStyle("-fx-text-fill: gray; -fx-font-style: italic;");
+          itemSpecificsContainer.getChildren().add(emptyLabel);
+      }
     } else {
       // Trường hợp stub chưa có dữ liệu: hiển thị placeholder
       itemNameLabel.setText("Sản phẩm #" + auction.getItemId());
