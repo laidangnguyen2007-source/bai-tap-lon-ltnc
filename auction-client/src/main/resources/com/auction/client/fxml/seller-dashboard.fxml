@@ -110,9 +110,17 @@
           <Label text="Mô tả:" styleClass="field-label" GridPane.columnIndex="0" GridPane.rowIndex="7" GridPane.valignment="TOP">
              <GridPane.margin><javafx.geometry.Insets top="5"/></GridPane.margin>
           </Label>
-          <javafx.scene.control.TextArea fx:id="itemDescriptionArea" promptText="Nhập mô tả sản phẩm (ví dụ: thông số, tình trạng...)" 
+          <javafx.scene.control.TextArea fx:id="itemDescriptionArea" promptText="Nhập mô tả chung sản phẩm..." 
                                          wrapText="true" prefRowCount="3" styleClass="custom-text-area"
                                          GridPane.columnIndex="1" GridPane.rowIndex="7"/>
+
+          <!-- Hàng 7: Thông số kỹ thuật (Item Specifics) -->
+          <Label text="Thông số kỹ thuật:" styleClass="field-label" GridPane.columnIndex="0" GridPane.rowIndex="8" GridPane.valignment="TOP">
+             <GridPane.margin><javafx.geometry.Insets top="5"/></GridPane.margin>
+          </Label>
+          <javafx.scene.control.TextArea fx:id="itemSpecificsArea" promptText="Ví dụ:&#10;Thương hiệu: Apple&#10;Tình trạng: Mới 100%" 
+                                         wrapText="true" prefRowCount="3" styleClass="custom-text-area"
+                                         GridPane.columnIndex="1" GridPane.rowIndex="8"/>
         </GridPane>
 
         <!-- Thông báo kết quả tạo phiên -->

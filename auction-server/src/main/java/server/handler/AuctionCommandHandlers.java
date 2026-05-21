@@ -58,6 +58,7 @@ public final class AuctionCommandHandlers {
     String categoryStr =
         req.getString("category"); // Loại sản phẩm (ELECTRONICS, ARTWORK, VEHICLE, OTHER)
     String itemDescription = req.optString("itemDescription", "");
+    String itemSpecifics = req.optString("itemSpecifics", "");
     String imageBase64 = req.optString("imageBase64", null);
     Long sellerId = req.getLong("sellerId");
     Long startingPrice = req.getLong("startingPrice");
@@ -84,6 +85,7 @@ public final class AuctionCommandHandlers {
     // cho các trường đặc thù (brand, warranty...). ID được AUTO_INCREMENT tự sinh.
     Item newItem = ItemFactory.createSimpleItem(category, itemName.trim(), startingPrice, sellerId);
     newItem.setDescription(itemDescription);
+    newItem.setItemSpecifics(itemSpecifics);
     newItem.setImageBase64(imageBase64);
     itemDao.save(newItem); // Sau lệnh này, newItem.getId() sẽ có giá trị từ DB
 
@@ -234,6 +236,7 @@ public final class AuctionCommandHandlers {
     String itemName = req.getString("itemName");
     String categoryStr = req.getString("category");
     String itemDescription = req.optString("itemDescription", "");
+    String itemSpecifics = req.optString("itemSpecifics", "");
     String imageBase64 = req.optString("imageBase64", null);
     Long startingPrice = req.getLong("startingPrice");
     LocalDateTime startTime = LocalDateTime.parse(req.getString("startTime"));
@@ -250,8 +253,8 @@ public final class AuctionCommandHandlers {
       return JsonResponses.error("Bạn không có quyền sửa phiên đấu giá này.");
     }
 
-    if (auction.getStatus() != AuctionStatus.OPEN) {
-      return JsonResponses.error("Chỉ có thể sửa phiên đấu giá chưa bắt đầu.");
+    if (auction.getStatus() != AuctionStatus.OPEN && auction.getStatus() != AuctionStatus.RUNNING) {
+      return JsonResponses.error("Chỉ có thể sửa phiên đấu giá chưa bắt đầu hoặc đang diễn ra.");
     }
 
     if (itemName == null || itemName.trim().isEmpty()) {
@@ -265,19 +268,25 @@ public final class AuctionCommandHandlers {
       return JsonResponses.error("Loại sản phẩm không hợp lệ: " + categoryStr);
     }
 
-    auction.setCurrentPrice(startingPrice);
-    auction.setStartTime(startTime);
-    auction.setEndTime(endTime);
-    auction.setMinBidStep(minBidStep);
+    // Lưu lại trạng thái ban đầu để so sánh
+    boolean wasOpen = (auction.getStatus() == AuctionStatus.OPEN);
 
-    // Update status based on new times
-    LocalDateTime now = LocalDateTime.now();
-    if (now.isAfter(startTime) && now.isBefore(endTime)) {
-      auction.setStatus(AuctionStatus.RUNNING);
-    } else if (now.isAfter(endTime)) {
-      auction.setStatus(AuctionStatus.FINISHED);
-    } else {
-      auction.setStatus(AuctionStatus.OPEN);
+    // Nếu đang OPEN thì mới được sửa Giá, Giờ, Bước giá, v.v.
+    if (wasOpen) {
+        auction.setCurrentPrice(startingPrice);
+        auction.setStartTime(startTime);
+        auction.setEndTime(endTime);
+        auction.setMinBidStep(minBidStep);
+
+        // Update status based on new times
+        LocalDateTime now = LocalDateTime.now();
+        if (now.isAfter(startTime) && now.isBefore(endTime)) {
+          auction.setStatus(AuctionStatus.RUNNING);
+        } else if (now.isAfter(endTime)) {
+          auction.setStatus(AuctionStatus.FINISHED);
+        } else {
+          auction.setStatus(AuctionStatus.OPEN);
+        }
     }
 
     auctionDao.update(auction);
@@ -286,11 +295,16 @@ public final class AuctionCommandHandlers {
     Optional<Item> itemOpt = itemDao.findById(auction.getItemId());
     if (itemOpt.isPresent()) {
       Item item = itemOpt.get();
-      item.setName(itemName);
-      item.setCategory(category);
-      item.setStartingPrice(startingPrice);
+      if (wasOpen) {
+          item.setName(itemName);
+          item.setCategory(category);
+          item.setStartingPrice(startingPrice);
+      }
       item.setDescription(itemDescription);
-      item.setImageBase64(imageBase64);
+      item.setItemSpecifics(itemSpecifics);
+      if (imageBase64 != null && !imageBase64.isEmpty()) {
+          item.setImageBase64(imageBase64);
+      }
       itemDao.update(item);
     }
 

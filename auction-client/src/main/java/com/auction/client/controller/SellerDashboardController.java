@@ -64,6 +64,7 @@ public class SellerDashboardController {
   @FXML private ComboBox<Integer> endMinuteCombo;
   
   @FXML private javafx.scene.control.TextArea itemDescriptionArea;
+  @FXML private javafx.scene.control.TextArea itemSpecificsArea;
   @FXML private javafx.scene.image.ImageView itemImageView;
   private String currentImageBase64 = null;
   
@@ -208,8 +209,8 @@ public class SellerDashboardController {
             } else {
               Auction auction = getTableView().getItems().get(getIndex());
               // Chỉ hiện thị / enable theo rule Sửa/Xóa mới
-              // Sửa: Chỉ khi OPEN
-              editBtn.setDisable(auction.getStatus() != AuctionStatus.OPEN);
+              // Sửa: Chỉ khi OPEN hoặc RUNNING
+              editBtn.setDisable(auction.getStatus() != AuctionStatus.OPEN && auction.getStatus() != AuctionStatus.RUNNING);
               // Xóa: Chỉ khi chưa có winner (chưa có ai đặt giá)
               deleteBtn.setDisable(auction.getCurrentWinnerId() != null);
               
@@ -433,7 +434,7 @@ public class SellerDashboardController {
 
     if (editingAuctionId != null) {
       boolean success = serverService.updateAuctionSeller(
-          editingAuctionId, sellerId, itemName, categoryEnum, startingPrice, startTime, endTime, itemDescriptionArea.getText(), currentImageBase64, minBidStep);
+          editingAuctionId, sellerId, itemName, categoryEnum, startingPrice, startTime, endTime, itemDescriptionArea.getText(), itemSpecificsArea.getText(), currentImageBase64, minBidStep);
       if (success) {
         formResultLabel.setText("Cập nhật phiên đấu giá #" + editingAuctionId + " thành công!");
         handleCancelEdit(null); // Reset form
@@ -454,6 +455,7 @@ public class SellerDashboardController {
       newAuction.setItemName(itemName);
       newAuction.setItemCategory(categoryEnum); 
       newAuction.setItemDescription(itemDescriptionArea.getText());
+      newAuction.setItemSpecifics(itemSpecificsArea.getText());
       newAuction.setImageBase64(currentImageBase64); 
 
       Long createdId = serverService.createAuction(newAuction);
@@ -484,6 +486,19 @@ public class SellerDashboardController {
     cancelEditButton.setVisible(false);
     cancelEditButton.setManaged(false);
     formResultLabel.setText("");
+    
+    // Mở khóa các trường nhạy cảm
+    itemNameField.setDisable(false);
+    categoryCombo.setDisable(false);
+    startingPriceField.setDisable(false);
+    minBidStepField.setDisable(false);
+    startDatePicker.setDisable(false);
+    startHourCombo.setDisable(false);
+    startMinuteCombo.setDisable(false);
+    endDatePicker.setDisable(false);
+    endHourCombo.setDisable(false);
+    endMinuteCombo.setDisable(false);
+    
     clearForm();
   }
 
@@ -493,6 +508,23 @@ public class SellerDashboardController {
     cancelEditButton.setVisible(true);
     cancelEditButton.setManaged(true);
     formResultLabel.setText("Đang chỉnh sửa phiên #" + auction.getId());
+
+    boolean isRunning = auction.getStatus() == AuctionStatus.RUNNING;
+    // Khóa các trường nhạy cảm nếu đang chạy
+    itemNameField.setDisable(isRunning);
+    categoryCombo.setDisable(isRunning);
+    startingPriceField.setDisable(isRunning);
+    minBidStepField.setDisable(isRunning);
+    startDatePicker.setDisable(isRunning);
+    startHourCombo.setDisable(isRunning);
+    startMinuteCombo.setDisable(isRunning);
+    endDatePicker.setDisable(isRunning);
+    endHourCombo.setDisable(isRunning);
+    endMinuteCombo.setDisable(isRunning);
+    
+    if (isRunning) {
+        formResultLabel.setText("Phiên #" + auction.getId() + " đang diễn ra. Bạn chỉ có thể sửa Mô tả, Thông số và Ảnh.");
+    }
 
     itemNameField.setText(auction.getItemName());
     startingPriceField.setText(String.valueOf(auction.getCurrentPrice()));
@@ -526,6 +558,7 @@ public class SellerDashboardController {
     }
 
     itemDescriptionArea.setText(auction.getItemDescription() != null ? auction.getItemDescription() : "");
+    itemSpecificsArea.setText(auction.getItemSpecifics() != null ? auction.getItemSpecifics() : "");
     currentImageBase64 = auction.getImageBase64();
     if (currentImageBase64 != null && !currentImageBase64.isEmpty()) {
       try {
@@ -618,7 +651,20 @@ public class SellerDashboardController {
     startHourCombo.setValue(LocalDateTime.now().getHour());
     startMinuteCombo.setValue(LocalDateTime.now().getMinute());
     itemDescriptionArea.clear();
+    itemSpecificsArea.clear();
     itemImageView.setImage(null);
     currentImageBase64 = null;
+    
+    // Đảm bảo mở khóa toàn bộ khi xóa form
+    itemNameField.setDisable(false);
+    categoryCombo.setDisable(false);
+    startingPriceField.setDisable(false);
+    minBidStepField.setDisable(false);
+    startDatePicker.setDisable(false);
+    startHourCombo.setDisable(false);
+    startMinuteCombo.setDisable(false);
+    endDatePicker.setDisable(false);
+    endHourCombo.setDisable(false);
+    endMinuteCombo.setDisable(false);
   }
 }

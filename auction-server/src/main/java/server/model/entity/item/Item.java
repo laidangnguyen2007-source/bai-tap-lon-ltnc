@@ -13,6 +13,7 @@ public abstract class Item extends BaseEntity {
   private long startingPrice;
   private Long sellerId;
   private ItemCategory category;
+  private String itemSpecifics;
 
   protected Item() {
     super();
@@ -72,6 +73,14 @@ public abstract class Item extends BaseEntity {
 
   public void setImageBase64(String imageBase64) {
     this.imageBase64 = imageBase64;
+  }
+
+  public String getItemSpecifics() {
+    return itemSpecifics;
+  }
+
+  public void setItemSpecifics(String itemSpecifics) {
+    this.itemSpecifics = itemSpecifics;
   }
 
   public long getStartingPrice() {

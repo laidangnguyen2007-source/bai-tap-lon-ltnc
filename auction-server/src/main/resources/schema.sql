@@ -68,6 +68,7 @@ CREATE TABLE IF NOT EXISTS items (
     name            VARCHAR(255)    NOT NULL,
     description     TEXT            DEFAULT NULL,
     image_base64    LONGTEXT        DEFAULT NULL,
+    item_specifics  TEXT            DEFAULT NULL,
     starting_price  BIGINT          NOT NULL,
     seller_id       BIGINT          NOT NULL,
     category        VARCHAR(20)     NOT NULL COMMENT 'ELECTRONICS | ARTWORK | VEHICLE',
@@ -387,6 +388,7 @@ VALUES
 -- (Server của chúng ta được thiết kế để bỏ qua lỗi nhỏ khi khởi tạo schema).
 -- ----------------------------------------------------------------
 ALTER TABLE items ADD COLUMN image_base64 LONGTEXT DEFAULT NULL AFTER description;
+ALTER TABLE items ADD COLUMN item_specifics TEXT DEFAULT NULL AFTER image_base64;
 
 -- Thêm cột bước giá tối thiểu cho bảng auctions nếu chưa có
 ALTER TABLE auctions ADD COLUMN min_bid_step BIGINT NOT NULL DEFAULT 0 COMMENT 'Số tiền tối thiểu phải cộng thêm mỗi lượt' AFTER end_time;
