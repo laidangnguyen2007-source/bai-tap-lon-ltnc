@@ -51,6 +51,15 @@ public abstract class Item extends BaseEntity {
     this.category = category;
   }
 
+  /**
+   * Trả về mô tả ngắn gọn về sản phẩm — minh họa tính đa hình (Polymorphism). Mỗi lớp con
+   * (Electronics, Artwork, Vehicle) override phương thức này để hiển thị thông tin đặc trưng riêng
+   * của từng loại sản phẩm.
+   *
+   * @return chuỗi mô tả sản phẩm kèm thông tin đặc thù
+   */
+  public abstract String printInfo();
+
   public String getName() {
     return name;
   }

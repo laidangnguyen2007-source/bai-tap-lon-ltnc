@@ -91,6 +91,13 @@ public class Vehicle extends Item {
   }
 
   @Override
+  public String printInfo() {
+    return String.format(
+        "[VEHICLE] %s | Hãng: %s | Năm: %d | Km: %,d | Nhiên liệu: %s | Giá khởi điểm: %,d VNĐ",
+        getName(), manufacturer, yearManufactured, mileageKm, fuelType, getStartingPrice());
+  }
+
+  @Override
   public String toString() {
     return "Vehicle{"
         + "id="
