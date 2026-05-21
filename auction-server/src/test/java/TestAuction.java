@@ -67,14 +67,22 @@ class TestAuction {
         ItemFactory.create(
             ItemCategory.VEHICLE,
             Map.of(
-                "name", "Toyota Camry 2023",
-                "description", "Xe ô tô cũ",
-                "startingPrice", 800000000L,
-                "sellerId", 3L,
-                "manufacturer", "Toyota",
-                "yearManufactured", 2023,
-                "mileageKm", 15000,
-                "fuelType", "Xăng"));
+                "name",
+                "Toyota Camry 2023",
+                "description",
+                "Xe ô tô cũ",
+                "startingPrice",
+                800000000L,
+                "sellerId",
+                3L,
+                "manufacturer",
+                "Toyota",
+                "yearManufactured",
+                2023,
+                "mileageKm",
+                15000,
+                "fuelType",
+                "Xăng"));
 
     assertNotNull(item);
     assertEquals("Toyota Camry 2023", item.getName());
