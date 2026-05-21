@@ -4,7 +4,6 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-
 import server.config.DatabaseConfig;
 import server.dao.AutoBidDao;
 import server.model.entity.AutoBid;
@@ -21,9 +20,9 @@ public class JdbcAutoBidDao implements AutoBidDao {
   public AutoBid save(AutoBid autoBid) {
 
     String sql =
-        "INSERT INTO auto_bids " +
-        "(auction_id, bidder_id, max_bid, increment, is_active, created_at) " +
-        "VALUES (?, ?, ?, ?, ?, ?)";
+        "INSERT INTO auto_bids "
+            + "(auction_id, bidder_id, max_bid, increment, is_active, created_at) "
+            + "VALUES (?, ?, ?, ?, ?, ?)";
 
     try (PreparedStatement ps =
         DatabaseConfig.getInstance()
@@ -58,8 +57,7 @@ public class JdbcAutoBidDao implements AutoBidDao {
   @Override
   public Optional<AutoBid> findByAuctionAndBidder(Long auctionId, Long bidderId) {
 
-    String sql =
-        "SELECT * FROM auto_bids WHERE auction_id = ? AND bidder_id = ?";
+    String sql = "SELECT * FROM auto_bids WHERE auction_id = ? AND bidder_id = ?";
 
     try (PreparedStatement ps =
         DatabaseConfig.getInstance().getConnection().prepareStatement(sql)) {
@@ -88,8 +86,7 @@ public class JdbcAutoBidDao implements AutoBidDao {
 
     List<AutoBid> list = new ArrayList<>();
 
-    String sql =
-        "SELECT * FROM auto_bids WHERE auction_id = ? AND is_active = true";
+    String sql = "SELECT * FROM auto_bids WHERE auction_id = ? AND is_active = true";
 
     try (PreparedStatement ps =
         DatabaseConfig.getInstance().getConnection().prepareStatement(sql)) {
@@ -117,8 +114,7 @@ public class JdbcAutoBidDao implements AutoBidDao {
 
     List<AutoBid> list = new ArrayList<>();
 
-    String sql =
-        "SELECT * FROM auto_bids WHERE bidder_id = ? AND is_active = true";
+    String sql = "SELECT * FROM auto_bids WHERE bidder_id = ? AND is_active = true";
 
     try (PreparedStatement ps =
         DatabaseConfig.getInstance().getConnection().prepareStatement(sql)) {
@@ -144,8 +140,7 @@ public class JdbcAutoBidDao implements AutoBidDao {
   @Override
   public void deactivate(Long id) {
 
-    String sql =
-        "UPDATE auto_bids SET is_active = false WHERE id = ?";
+    String sql = "UPDATE auto_bids SET is_active = false WHERE id = ?";
 
     try (PreparedStatement ps =
         DatabaseConfig.getInstance().getConnection().prepareStatement(sql)) {
@@ -164,8 +159,7 @@ public class JdbcAutoBidDao implements AutoBidDao {
   @Override
   public void deactivateByAuction(Long auctionId) {
 
-    String sql =
-        "UPDATE auto_bids SET is_active = false WHERE auction_id = ?";
+    String sql = "UPDATE auto_bids SET is_active = false WHERE auction_id = ?";
 
     try (PreparedStatement ps =
         DatabaseConfig.getInstance().getConnection().prepareStatement(sql)) {

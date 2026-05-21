@@ -72,7 +72,8 @@ public final class Server {
       for (server.model.entity.user.User u : allUsers) {
         if (walletDao.findByUserIdNoLock(u.getId()) == null) {
           walletService.createWallet(u.getId());
-          System.out.println(" - Created wallet for user: " + u.getUsername() + " (ID: " + u.getId() + ")");
+          System.out.println(
+              " - Created wallet for user: " + u.getUsername() + " (ID: " + u.getId() + ")");
         }
       }
 
@@ -109,11 +110,11 @@ public final class Server {
     CatalogHandlers catalogHandlers =
         new CatalogHandlers(itemDao, auctionDao, bidTransactionDao, jsonMapper, walletService);
     BiddingHandlers biddingHandlers =
-        new BiddingHandlers(auctionDao, bidTransactionDao, jsonMapper, broadcaster, walletService, autoBidDao);
+        new BiddingHandlers(
+            auctionDao, bidTransactionDao, jsonMapper, broadcaster, walletService, autoBidDao);
     AuctionCommandHandlers commandHandlers =
         new AuctionCommandHandlers(auctionDao, itemDao, bidTransactionDao, broadcaster);
-    WalletHandlers walletHandlers =
-        new WalletHandlers(walletService, walletDao, broadcaster);
+    WalletHandlers walletHandlers = new WalletHandlers(walletService, walletDao, broadcaster);
 
     RequestRouter router =
         RequestRouter.createAuctionRouter(
@@ -136,4 +137,3 @@ public final class Server {
     }
   }
 }
-

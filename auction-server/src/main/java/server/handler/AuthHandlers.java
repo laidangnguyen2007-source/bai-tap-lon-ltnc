@@ -98,7 +98,8 @@ public final class AuthHandlers {
       walletService.createWallet(newUser.getId());
       System.out.println("WALLET CREATED for user: " + username + " (id=" + newUser.getId() + ")");
     } catch (Exception e) {
-      System.err.println("WARNING: Failed to create wallet for " + username + ": " + e.getMessage());
+      System.err.println(
+          "WARNING: Failed to create wallet for " + username + ": " + e.getMessage());
     }
 
     System.out.println("REGISTER OK:" + username + " (" + role + ")");
@@ -108,4 +109,3 @@ public final class AuthHandlers {
     return res.toString();
   }
 }
-

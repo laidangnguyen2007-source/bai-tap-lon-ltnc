@@ -1,11 +1,10 @@
 package server.dao.impl;
 
 import java.sql.*;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.time.LocalDateTime;
-
 import server.config.DatabaseConfig;
 import server.dao.WalletTransactionDao;
 import server.model.entity.WalletTransaction;
@@ -24,10 +23,10 @@ public class JdbcWalletTransactionDao implements WalletTransactionDao {
   public WalletTransaction save(WalletTransaction tx) {
 
     String sql =
-        "INSERT INTO wallet_transactions " +
-        "(user_id, type, amount, balance_before, balance_after, " +
-        "reference_id, reference_type, description, created_by, created_at) " +
-        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        "INSERT INTO wallet_transactions "
+            + "(user_id, type, amount, balance_before, balance_after, "
+            + "reference_id, reference_type, description, created_by, created_at) "
+            + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
     try (PreparedStatement ps =
         DatabaseConfig.getInstance()
@@ -69,8 +68,7 @@ public class JdbcWalletTransactionDao implements WalletTransactionDao {
     List<WalletTransaction> list = new ArrayList<>();
 
     String sql =
-        "SELECT * FROM wallet_transactions " +
-        "WHERE user_id = ? ORDER BY created_at DESC";
+        "SELECT * FROM wallet_transactions " + "WHERE user_id = ? ORDER BY created_at DESC";
 
     try (PreparedStatement ps =
         DatabaseConfig.getInstance().getConnection().prepareStatement(sql)) {
@@ -94,16 +92,14 @@ public class JdbcWalletTransactionDao implements WalletTransactionDao {
   // FIND BY REFERENCE
   // ─────────────────────────────────────────────
   @Override
-  public List<WalletTransaction> findByReference(
-      Long refId,
-      WalletReferenceType refType) {
+  public List<WalletTransaction> findByReference(Long refId, WalletReferenceType refType) {
 
     List<WalletTransaction> list = new ArrayList<>();
 
     String sql =
-        "SELECT * FROM wallet_transactions " +
-        "WHERE reference_id = ? AND reference_type = ? " +
-        "ORDER BY created_at DESC";
+        "SELECT * FROM wallet_transactions "
+            + "WHERE reference_id = ? AND reference_type = ? "
+            + "ORDER BY created_at DESC";
 
     try (PreparedStatement ps =
         DatabaseConfig.getInstance().getConnection().prepareStatement(sql)) {
@@ -132,9 +128,7 @@ public class JdbcWalletTransactionDao implements WalletTransactionDao {
 
     List<WalletTransaction> list = new ArrayList<>();
 
-    String sql =
-        "SELECT * FROM wallet_transactions " +
-        "WHERE type = ? ORDER BY created_at DESC";
+    String sql = "SELECT * FROM wallet_transactions " + "WHERE type = ? ORDER BY created_at DESC";
 
     try (PreparedStatement ps =
         DatabaseConfig.getInstance().getConnection().prepareStatement(sql)) {
@@ -162,11 +156,9 @@ public class JdbcWalletTransactionDao implements WalletTransactionDao {
 
     List<WalletTransaction> list = new ArrayList<>();
 
-    String sql =
-        "SELECT * FROM wallet_transactions ORDER BY created_at DESC";
+    String sql = "SELECT * FROM wallet_transactions ORDER BY created_at DESC";
 
-    try (Statement st =
-        DatabaseConfig.getInstance().getConnection().createStatement();
+    try (Statement st = DatabaseConfig.getInstance().getConnection().createStatement();
         ResultSet rs = st.executeQuery(sql)) {
 
       while (rs.next()) {
@@ -191,10 +183,12 @@ public class JdbcWalletTransactionDao implements WalletTransactionDao {
     Long referenceId = rs.wasNull() ? null : refIdVal;
 
     String refTypeStr = rs.getString("reference_type");
-    WalletReferenceType referenceType = refTypeStr != null ? WalletReferenceType.valueOf(refTypeStr) : null;
+    WalletReferenceType referenceType =
+        refTypeStr != null ? WalletReferenceType.valueOf(refTypeStr) : null;
 
     String createdByStr = rs.getString("created_by");
-    server.model.enums.TransactionActor createdBy = createdByStr != null ? server.model.enums.TransactionActor.valueOf(createdByStr) : null;
+    server.model.enums.TransactionActor createdBy =
+        createdByStr != null ? server.model.enums.TransactionActor.valueOf(createdByStr) : null;
 
     return new WalletTransaction(
         rs.getLong("id"),
@@ -207,8 +201,7 @@ public class JdbcWalletTransactionDao implements WalletTransactionDao {
         referenceId,
         referenceType,
         rs.getString("description"),
-        createdBy
-    );
+        createdBy);
   }
 
   // ─────────────────────────────────────────────
@@ -264,8 +257,7 @@ public class JdbcWalletTransactionDao implements WalletTransactionDao {
 
     String sql = "SELECT COUNT(1) FROM wallet_transactions";
 
-    try (Statement st =
-        DatabaseConfig.getInstance().getConnection().createStatement();
+    try (Statement st = DatabaseConfig.getInstance().getConnection().createStatement();
         ResultSet rs = st.executeQuery(sql)) {
 
       return rs.next() ? rs.getLong(1) : 0;

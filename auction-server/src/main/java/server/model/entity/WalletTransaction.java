@@ -16,8 +16,16 @@ public class WalletTransaction extends BaseEntity {
   private final WalletReferenceType referenceType;
   private final String description;
   private final TransactionActor createdBy;
-  public WalletTransaction(Long userId, WalletTransactionType type, Long amount, Long balanceBefore,
-      Long balanceAfter, Long referenceId, WalletReferenceType referenceType, String description,
+
+  public WalletTransaction(
+      Long userId,
+      WalletTransactionType type,
+      Long amount,
+      Long balanceBefore,
+      Long balanceAfter,
+      Long referenceId,
+      WalletReferenceType referenceType,
+      String description,
       TransactionActor createBy) {
     super();
     this.userId = Objects.requireNonNull(userId, "userId must not be null");
@@ -32,9 +40,17 @@ public class WalletTransaction extends BaseEntity {
     this.createdBy = createBy;
   }
 
-  public WalletTransaction(Long id, LocalDateTime createdAt, Long userId,
-      WalletTransactionType type, Long amount, Long balanceBefore, Long balanceAfter,
-      Long referenceId, WalletReferenceType referenceType, String description,
+  public WalletTransaction(
+      Long id,
+      LocalDateTime createdAt,
+      Long userId,
+      WalletTransactionType type,
+      Long amount,
+      Long balanceBefore,
+      Long balanceAfter,
+      Long referenceId,
+      WalletReferenceType referenceType,
+      String description,
       TransactionActor createBy) {
     super(id, createdAt);
     this.userId = userId;
@@ -51,17 +67,32 @@ public class WalletTransaction extends BaseEntity {
   @Override
   public String toString() {
     return "WalletTransaction{"
-        + "id=" + getId()
-        + ", userId=" + userId
-        + ", type='" + type + '\''
-        + ", amount=" + amount
-        + ", balanceBefore=" + balanceBefore
-        + ", balanceAfter=" + balanceAfter
-        + ", referenceId=" + referenceId
-        + ", referenceType='" + referenceType + '\''
-        + ", description='" + description + '\''
-        + ", createdBy='" + createdBy + '\''
-        + ", createdAt=" + getCreatedAt().toString() 
+        + "id="
+        + getId()
+        + ", userId="
+        + userId
+        + ", type='"
+        + type
+        + '\''
+        + ", amount="
+        + amount
+        + ", balanceBefore="
+        + balanceBefore
+        + ", balanceAfter="
+        + balanceAfter
+        + ", referenceId="
+        + referenceId
+        + ", referenceType='"
+        + referenceType
+        + '\''
+        + ", description='"
+        + description
+        + '\''
+        + ", createdBy='"
+        + createdBy
+        + '\''
+        + ", createdAt="
+        + getCreatedAt().toString()
         + '}';
   }
 
@@ -100,5 +131,4 @@ public class WalletTransaction extends BaseEntity {
   public TransactionActor getCreatedBy() {
     return createdBy;
   }
-
 }

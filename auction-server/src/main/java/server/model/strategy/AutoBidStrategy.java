@@ -94,6 +94,8 @@ public class AutoBidStrategy implements BidStrategy {
 
   @Override
   public String toString() {
-    return String.format("Autobid{user='%d', maxBid = %d , increment = %d, registeredAt = %s", userId, maxBid, increment, registerAt);
+    return String.format(
+        "Autobid{user='%d', maxBid = %d , increment = %d, registeredAt = %s",
+        userId, maxBid, increment, registerAt);
   }
 }

@@ -1,4 +1,5 @@
 import static org.junit.jupiter.api.Assertions.*;
+
 import java.time.LocalDateTime;
 import org.junit.jupiter.api.Test;
 import server.model.entity.Auction;
