@@ -10,9 +10,17 @@ public class Wallet extends BaseEntity {
   private Long lockedBalance;
   private LocalDateTime updatedAt;
 
-  public Wallet() {};
-  public Wallet(Long id, Long userId, Long totalBalance,
-      Long availableBalance, Long lockedBalanace, LocalDateTime createdAt, LocalDateTime updatedAt) {
+  public Wallet() {}
+  ;
+
+  public Wallet(
+      Long id,
+      Long userId,
+      Long totalBalance,
+      Long availableBalance,
+      Long lockedBalanace,
+      LocalDateTime createdAt,
+      LocalDateTime updatedAt) {
     super(id, createdAt);
     this.userId = userId;
     this.totalBalance = totalBalance;
@@ -24,7 +32,8 @@ public class Wallet extends BaseEntity {
   public void lockFunds(Long amount) {
     validatePositiveAmount(amount);
 
-    if (availableBalance + amount < 0) throw new IllegalArgumentException("Insufficient available balance");
+    if (availableBalance + amount < 0)
+      throw new IllegalArgumentException("Insufficient available balance");
 
     availableBalance -= amount;
     lockedBalance += amount;
@@ -55,7 +64,7 @@ public class Wallet extends BaseEntity {
 
   @Transient
   public Long getTotalBalance() {
-      return availableBalance + lockedBalance;
+    return availableBalance + lockedBalance;
   }
 
   public void validatePositiveAmount(Long amount) {
@@ -110,6 +119,4 @@ public class Wallet extends BaseEntity {
   public void setUpdatedAt(LocalDateTime updatedAt) {
     this.updatedAt = updatedAt;
   }
-
-  
 }

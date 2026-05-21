@@ -6,20 +6,19 @@ import org.json.JSONObject;
 import server.dao.WalletDao;
 import server.model.entity.Wallet;
 import server.model.entity.WalletTransaction;
-import server.net.JsonResponses;
 import server.net.ClientBroadcaster;
+import server.net.JsonResponses;
 import server.service.WalletService;
 
-/**
- * Handler quản lý ví tiền — xem số dư, lịch sử giao dịch, admin điều chỉnh.
- */
+/** Handler quản lý ví tiền — xem số dư, lịch sử giao dịch, admin điều chỉnh. */
 public final class WalletHandlers {
 
   private final WalletService walletService;
   private final WalletDao walletDao;
   private final ClientBroadcaster broadcaster;
 
-  public WalletHandlers(WalletService walletService, WalletDao walletDao, ClientBroadcaster broadcaster) {
+  public WalletHandlers(
+      WalletService walletService, WalletDao walletDao, ClientBroadcaster broadcaster) {
     this.walletService = walletService;
     this.walletDao = walletDao;
     this.broadcaster = broadcaster;
@@ -68,7 +67,8 @@ public final class WalletHandlers {
         txJson.put("balanceBefore", tx.getBalanceBefore());
         txJson.put("balanceAfter", tx.getBalanceAfter());
         txJson.put("referenceId", tx.getReferenceId());
-        txJson.put("referenceType", tx.getReferenceType() != null ? tx.getReferenceType().name() : null);
+        txJson.put(
+            "referenceType", tx.getReferenceType() != null ? tx.getReferenceType().name() : null);
         txJson.put("description", tx.getDescription());
         txJson.put("createdBy", tx.getCreatedBy() != null ? tx.getCreatedBy().name() : null);
         txJson.put("createdAt", tx.getCreatedAt() != null ? tx.getCreatedAt().toString() : null);
@@ -117,7 +117,8 @@ public final class WalletHandlers {
       res.put("status", "OK");
       res.put("wallet", walletJson);
 
-      System.out.println("ADMIN ADJUST: user #" + userId + " | amount=" + amount + " | by admin #" + adminId);
+      System.out.println(
+          "ADMIN ADJUST: user #" + userId + " | amount=" + amount + " | by admin #" + adminId);
       return res.toString();
 
     } catch (Exception e) {

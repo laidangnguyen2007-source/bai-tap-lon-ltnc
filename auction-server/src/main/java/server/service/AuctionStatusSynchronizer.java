@@ -24,7 +24,10 @@ public final class AuctionStatusSynchronizer {
    *
    * @param auctionDao DAO để đọc phiên “còn sống” và ghi {@code update}
    */
-  public static void syncWithClock(AuctionDao auctionDao, WalletService walletService, server.net.ClientBroadcaster broadcaster) {
+  public static void syncWithClock(
+      AuctionDao auctionDao,
+      WalletService walletService,
+      server.net.ClientBroadcaster broadcaster) {
     LocalDateTime now = LocalDateTime.now();
     List<Auction> active = auctionDao.findActiveAuctions();
     for (Auction a : active) {
@@ -48,7 +51,8 @@ public final class AuctionStatusSynchronizer {
           if (fromRam.isPresent()) {
             auctionDao.update(fromRam.get());
             if (walletService != null) {
-              walletService.settleAuction(fromRam.get(), AuctionManager.getInstance().getAutoBids(a.getId()));
+              walletService.settleAuction(
+                  fromRam.get(), AuctionManager.getInstance().getAutoBids(a.getId()));
               notifySettlement(fromRam.get(), broadcaster);
             }
           } else {

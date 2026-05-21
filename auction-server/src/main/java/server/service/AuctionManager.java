@@ -37,15 +37,15 @@ public class AuctionManager {
   private final Map<Long, List<AutoBidStrategy>> autoBids = new ConcurrentHashMap<>();
 
   public static class BidInfo {
-      public final Long bidderId;
-      public final long amount;
-      public final boolean isAutoBid;
-      
-      public BidInfo(Long bidderId, long amount, boolean isAutoBid) {
-          this.bidderId = bidderId;
-          this.amount = amount;
-          this.isAutoBid = isAutoBid;
-      }
+    public final Long bidderId;
+    public final long amount;
+    public final boolean isAutoBid;
+
+    public BidInfo(Long bidderId, long amount, boolean isAutoBid) {
+      this.bidderId = bidderId;
+      this.amount = amount;
+      this.isAutoBid = isAutoBid;
+    }
   }
 
   // final đảm bảo bộ nhớ chỉ cấp 1 khung Map duy nhất, chống mất bộ nhớ gây sập server
@@ -137,32 +137,32 @@ public class AuctionManager {
   }
 
   public synchronized BidInfo getPreviousWinner(Long auctionId) {
-      Auction auction = activeAuctions.get(auctionId);
-      if (auction == null || auction.getCurrentWinnerId() == null) {
-          return null;
-      }
-      boolean isAuto = hasActiveAutoBid(auctionId, auction.getCurrentWinnerId());
-      return new BidInfo(auction.getCurrentWinnerId(), auction.getCurrentPrice(), isAuto);
+    Auction auction = activeAuctions.get(auctionId);
+    if (auction == null || auction.getCurrentWinnerId() == null) {
+      return null;
+    }
+    boolean isAuto = hasActiveAutoBid(auctionId, auction.getCurrentWinnerId());
+    return new BidInfo(auction.getCurrentWinnerId(), auction.getCurrentPrice(), isAuto);
   }
 
   public synchronized void removeAutoBid(Long auctionId, Long userId) {
-      List<AutoBidStrategy> strategies = autoBids.get(auctionId);
-      if (strategies != null) {
-          strategies.removeIf(s -> s.getUserId().equals(userId));
-      }
+    List<AutoBidStrategy> strategies = autoBids.get(auctionId);
+    if (strategies != null) {
+      strategies.removeIf(s -> s.getUserId().equals(userId));
+    }
   }
 
   public boolean hasActiveAutoBid(Long auctionId, Long userId) {
-      List<AutoBidStrategy> strategies = autoBids.get(auctionId);
-      if (strategies == null) return false;
-      for (AutoBidStrategy s : strategies) {
-          if (s.getUserId().equals(userId)) return true;
-      }
-      return false;
+    List<AutoBidStrategy> strategies = autoBids.get(auctionId);
+    if (strategies == null) return false;
+    for (AutoBidStrategy s : strategies) {
+      if (s.getUserId().equals(userId)) return true;
+    }
+    return false;
   }
 
   public List<AutoBidStrategy> getAutoBids(Long auctionId) {
-      return autoBids.getOrDefault(auctionId, Collections.emptyList());
+    return autoBids.getOrDefault(auctionId, Collections.emptyList());
   }
 
   public synchronized void registerAutoBid(Long auctionId, AutoBidStrategy strategy) {

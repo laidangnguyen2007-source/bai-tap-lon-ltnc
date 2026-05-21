@@ -42,7 +42,8 @@ public final class ClientSession implements Runnable {
 
           // Nếu là action LOGIN thành công, lưu userId và đăng ký targeted push
           try {
-            if (line.contains("\"action\":\"LOGIN\"") || line.contains("\"action\":\"LOGIN\"".replace(" ", ""))) {
+            if (line.contains("\"action\":\"LOGIN\"")
+                || line.contains("\"action\":\"LOGIN\"".replace(" ", ""))) {
               JSONObject resJson = new JSONObject(response);
               if ("OK".equals(resJson.optString("status"))) {
                 Long userId = resJson.optLong("id", -1);
@@ -74,4 +75,3 @@ public final class ClientSession implements Runnable {
     }
   }
 }
-

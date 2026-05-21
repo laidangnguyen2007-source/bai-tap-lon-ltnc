@@ -9,9 +9,10 @@ public class AutoBid extends BaseEntity {
   private Long maxBid;
   private Long increment;
   private boolean isActive;
-  
-  public AutoBid() {};
-  
+
+  public AutoBid() {}
+  ;
+
   public AutoBid(Long auctionId, Long bidderId, Long maxBid, Long increment) {
     if (maxBid < 0) throw new IllegalArgumentException("maxBid must be > 0");
     if (increment < 0) throw new IllegalArgumentException("increment must be > 0");
@@ -23,7 +24,8 @@ public class AutoBid extends BaseEntity {
     this.isActive = true;
     this.setCreatedAt(LocalDateTime.now());
   }
-  //Strategy -> Entity
+
+  // Strategy -> Entity
   public static AutoBid fromStrategy(Long auctionId, AutoBidStrategy strategy) {
     Long bidderId = strategy.getUserId();
     Long maxBid = strategy.getMaxBid();
@@ -79,6 +81,4 @@ public class AutoBid extends BaseEntity {
   public void setActive(boolean isActive) {
     this.isActive = isActive;
   }
-
-  
 }
