@@ -4,6 +4,7 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.time.LocalDateTime;
 
 import server.config.DatabaseConfig;
 import server.dao.WalletTransactionDao;
@@ -183,17 +184,30 @@ public class JdbcWalletTransactionDao implements WalletTransactionDao {
   // MAPPING
   // ─────────────────────────────────────────────
   private WalletTransaction mapRow(ResultSet rs) throws SQLException {
+    Timestamp ts = rs.getTimestamp("created_at");
+    LocalDateTime createdAt = ts != null ? ts.toLocalDateTime() : null;
+
+    long refIdVal = rs.getLong("reference_id");
+    Long referenceId = rs.wasNull() ? null : refIdVal;
+
+    String refTypeStr = rs.getString("reference_type");
+    WalletReferenceType referenceType = refTypeStr != null ? WalletReferenceType.valueOf(refTypeStr) : null;
+
+    String createdByStr = rs.getString("created_by");
+    server.model.enums.TransactionActor createdBy = createdByStr != null ? server.model.enums.TransactionActor.valueOf(createdByStr) : null;
 
     return new WalletTransaction(
         rs.getLong("id"),
+        createdAt,
+        rs.getLong("user_id"),
         WalletTransactionType.valueOf(rs.getString("type")),
         rs.getLong("amount"),
         rs.getLong("balance_before"),
         rs.getLong("balance_after"),
-        rs.getLong("reference_id"),
-        WalletReferenceType.valueOf(rs.getString("reference_type")),
+        referenceId,
+        referenceType,
         rs.getString("description"),
-        server.model.enums.TransactionActor.valueOf(rs.getString("created_by"))
+        createdBy
     );
   }
 

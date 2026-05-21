@@ -321,7 +321,7 @@ CREATE TABLE IF NOT EXISTS wallet_transactions (
     reference_id     BIGINT       DEFAULT NULL  COMMENT 'ID phiên đấu giá hoặc bid liên quan',
     reference_type   VARCHAR(50)  DEFAULT NULL  COMMENT 'AUCTION, BID, ADMIN...',
     description      TEXT         DEFAULT NULL,
-    created_by       BIGINT       DEFAULT NULL  COMMENT 'User thực hiện (admin ID nếu là admin adjust)',
+    created_by       VARCHAR(50)  DEFAULT NULL  COMMENT 'Actor thực hiện (USER, SYSTEM, ADMIN)',
     created_at       DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     PRIMARY KEY (id),
@@ -396,5 +396,8 @@ ALTER TABLE auctions ADD COLUMN settled BOOLEAN NOT NULL DEFAULT FALSE COMMENT '
 
 -- Đảm bảo category có hỗ trợ loại 'OTHER'
 ALTER TABLE items MODIFY COLUMN category VARCHAR(50) NOT NULL;
+
+-- Sửa cột created_by trong wallet_transactions thành VARCHAR(50) để lưu Enum TransactionActor (USER, ADMIN, SYSTEM)
+ALTER TABLE wallet_transactions MODIFY COLUMN created_by VARCHAR(50) DEFAULT NULL COMMENT 'Actor thực hiện (USER, SYSTEM, ADMIN)';
 
 SELECT 'Migration completed successfully' AS status;
