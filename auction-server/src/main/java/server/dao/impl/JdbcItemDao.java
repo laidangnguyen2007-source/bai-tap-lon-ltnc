@@ -33,10 +33,10 @@ public class JdbcItemDao implements ItemDao {
   @Override
   public Item save(Item item) {
     String sql =
-        "INSERT INTO items (created_at, name, description, starting_price, seller_id, category, image_base64,"
+        "INSERT INTO items (created_at, name, description, starting_price, seller_id, category, image_base64, item_specifics,"
             + " brand, warranty_months, power_watts, artist, art_year, medium,"
             + " make, model, vehicle_year, mileage)"
-            + " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+            + " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
     try (PreparedStatement ps =
         DatabaseConfig.getInstance()
@@ -49,7 +49,8 @@ public class JdbcItemDao implements ItemDao {
       ps.setLong(5, item.getSellerId());
       ps.setString(6, item.getCategory().name());
       ps.setString(7, item.getImageBase64());
-      bindItemTypeFields(ps, item, 8); // gán các cột đặc thù bắt đầu từ index 8
+      ps.setString(8, item.getItemSpecifics());
+      bindItemTypeFields(ps, item, 9); // gán các cột đặc thù bắt đầu từ index 9
       ps.executeUpdate();
 
       try (ResultSet keys = ps.getGeneratedKeys()) {
@@ -97,7 +98,7 @@ public class JdbcItemDao implements ItemDao {
   @Override
   public Item update(Item item) {
     String sql =
-        "UPDATE items SET name=?, description=?, starting_price=?, category=?, image_base64=?,"
+        "UPDATE items SET name=?, description=?, starting_price=?, category=?, image_base64=?, item_specifics=?,"
             + " brand=?, warranty_months=?, power_watts=?,"
             + " artist=?, art_year=?, medium=?,"
             + " make=?, model=?, vehicle_year=?, mileage=?"
@@ -109,8 +110,9 @@ public class JdbcItemDao implements ItemDao {
       ps.setLong(3, item.getStartingPrice());
       ps.setString(4, item.getCategory().name());
       ps.setString(5, item.getImageBase64());
-      bindItemTypeFieldsForUpdate(ps, item, 6);
-      ps.setLong(16, item.getId());
+      ps.setString(6, item.getItemSpecifics());
+      bindItemTypeFieldsForUpdate(ps, item, 7);
+      ps.setLong(17, item.getId());
       ps.executeUpdate();
       return item;
     } catch (SQLException e) {
@@ -220,6 +222,7 @@ public class JdbcItemDao implements ItemDao {
     Long sellerId = rs.getLong("seller_id");
     ItemCategory category = ItemCategory.valueOf(rs.getString("category"));
     String imageBase64 = rs.getString("image_base64");
+    String itemSpecifics = rs.getString("item_specifics");
 
     // Factory Pattern: gọi ItemFactory.reconstruct*() thay vì new trực tiếp
     // Giữ cho DAO không bị phụ thuộc vào cụ thể của từng loại Item
@@ -279,6 +282,7 @@ public class JdbcItemDao implements ItemDao {
           }
         };
     result.setImageBase64(imageBase64);
+    result.setItemSpecifics(itemSpecifics);
     return result;
   }
 

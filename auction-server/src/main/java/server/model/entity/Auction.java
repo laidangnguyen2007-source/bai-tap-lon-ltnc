@@ -30,6 +30,7 @@ public class Auction extends BaseEntity {
   private String itemCategory; // Loại sản phẩm (để hiển thị ở bảng Seller Dashboard)
   private String imageBase64; // Hình ảnh (hiển thị UI mới)
   private String itemDescription; // Mô tả sản phẩm (hiển thị UI mới)
+  private String itemSpecifics; // Item specifics (eBay style)
   private long minBidStep; // Bước giá tối thiểu
 
   public Auction() {
@@ -214,6 +215,14 @@ public class Auction extends BaseEntity {
 
   public void setItemDescription(String itemDescription) {
     this.itemDescription = itemDescription;
+  }
+
+  public String getItemSpecifics() {
+    return itemSpecifics;
+  }
+
+  public void setItemSpecifics(String itemSpecifics) {
+    this.itemSpecifics = itemSpecifics;
   }
 
   public long getMinBidStep() {

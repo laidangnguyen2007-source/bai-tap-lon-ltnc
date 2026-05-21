@@ -61,6 +61,7 @@ public class AuctionNetworkHandler {
             req.put("itemName", auction.getItemName());
             req.put("category", auction.getItemCategory());
             req.put("itemDescription", auction.getItemDescription());
+            req.put("itemSpecifics", auction.getItemSpecifics());
             req.put("imageBase64", auction.getImageBase64());
             req.put("sellerId", auction.getSellerId());
             req.put("startingPrice", auction.getCurrentPrice());
@@ -125,7 +126,7 @@ public class AuctionNetworkHandler {
 
     public boolean updateAuctionSeller(Long auctionId, Long sellerId, String itemName,
             String category, long startingPrice, String startTime, String endTime,
-            String itemDescription, String imageBase64, long minBidStep) {
+            String itemDescription, String itemSpecifics, String imageBase64, long minBidStep) {
         try {
             JSONObject req = new JSONObject();
             req.put("action", "SELLER_UPDATE_AUCTION");
@@ -134,6 +135,7 @@ public class AuctionNetworkHandler {
             req.put("itemName", itemName);
             req.put("category", category);
             req.put("itemDescription", itemDescription);
+            req.put("itemSpecifics", itemSpecifics);
             req.put("imageBase64", imageBase64);
             req.put("startingPrice", startingPrice);
             req.put("startTime", startTime);

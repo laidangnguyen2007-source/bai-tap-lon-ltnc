@@ -132,10 +132,10 @@ public class ServerService {
 
     public boolean updateAuctionSeller(Long auctionId, Long sellerId, String itemName,
             String category, long startingPrice, java.time.LocalDateTime startTime,
-            java.time.LocalDateTime endTime, String itemDescription, String imageBase64,
+            java.time.LocalDateTime endTime, String itemDescription, String itemSpecifics, String imageBase64,
             long minBidStep) {
         return auctionHandler.updateAuctionSeller(auctionId, sellerId, itemName, category,
-                startingPrice, startTime.toString(), endTime.toString(), itemDescription,
+                startingPrice, startTime.toString(), endTime.toString(), itemDescription, itemSpecifics,
                 imageBase64, minBidStep);
     }
 

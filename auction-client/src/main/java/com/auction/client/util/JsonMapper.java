@@ -84,6 +84,8 @@ public final class JsonMapper {
             ? json.get("itemCategory").toString() : "OTHER");
         a.setItemDescription(json.get("itemDescription") != null
             ? json.get("itemDescription").toString() : "");
+        a.setItemSpecifics(json.get("itemSpecifics") != null
+            ? json.get("itemSpecifics").toString() : "");
         a.setImageBase64(json.get("imageBase64") != null
             ? json.get("imageBase64").toString() : null);
 
@@ -165,6 +167,9 @@ public final class JsonMapper {
         
         if (json.get("imageBase64") != null) {
             result.setImageBase64((String) json.get("imageBase64"));
+        }
+        if (json.get("itemSpecifics") != null) {
+            result.setItemSpecifics((String) json.get("itemSpecifics"));
         }
         
         return result;
