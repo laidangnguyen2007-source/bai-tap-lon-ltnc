@@ -75,6 +75,13 @@ public class Artwork extends Item {
   }
 
   @Override
+  public String printInfo() {
+    return String.format(
+        "[ARTWORK] %s | Họa sĩ: %s | Năm: %d | Chất liệu: %s | Giá khởi điểm: %,d VNĐ",
+        getName(), artistName, yearCreated, medium, getStartingPrice());
+  }
+
+  @Override
   public String toString() {
     return "Artwork{"
         + "id="

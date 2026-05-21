@@ -78,6 +78,13 @@ public class Electronics extends Item {
   }
 
   @Override
+  public String printInfo() {
+    return String.format(
+        "[ELECTRONICS] %s | Hãng: %s | BH: %d tháng | Công suất: %.1fW | Giá khởi điểm: %,d VNĐ",
+        getName(), brand, warrantyMonths, powerWatts, getStartingPrice());
+  }
+
+  @Override
   public String toString() {
     return "Electronics{"
         + "id="
