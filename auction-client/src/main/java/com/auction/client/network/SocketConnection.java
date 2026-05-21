@@ -10,6 +10,8 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.function.Consumer;
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
 
 public class SocketConnection {
   private static final String HOST = "localhost";
@@ -44,12 +46,17 @@ public class SocketConnection {
           for (String msg : messages) {
             if (msg.trim().isEmpty()) continue;
             
-            // Phân loại: tin push (có "type") hay response đồng bộ
-            if (msg.contains("\"type\":")) {
-              for (Consumer<String> listener2 : pushListeners) {
-                try { listener2.accept(msg); } catch (Exception ignored) {}
+            // Phân loại an toàn hơn: Parse JSON để kiểm tra key ở level ngoài cùng
+            try {
+              JSONObject json = (JSONObject) new JSONParser().parse(msg);
+              if (json.containsKey("type") && !json.containsKey("status")) {
+                for (Consumer<String> listener2 : pushListeners) {
+                  try { listener2.accept(msg); } catch (Exception ignored) {}
+                }
+              } else {
+                responseQueue.put(msg);
               }
-            } else {
+            } catch (Exception e) {
               responseQueue.put(msg);
             }
           }
