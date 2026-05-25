@@ -59,10 +59,6 @@
                  maxWidth="300" GridPane.columnIndex="1" GridPane.rowIndex="2"/>
         </GridPane>
 
-        <Label text="Thông Số Kỹ Thuật:" styleClass="info-key" />
-        <VBox fx:id="itemSpecificsContainer" spacing="5">
-             <!-- Các dòng thông số sẽ được tạo bằng code -->
-        </VBox>
       </VBox>
 
       <!-- Panel phải: Thông tin phiên đấu giá -->

@@ -13,10 +13,10 @@ public class Auction extends BaseEntity {
   // được xử lý ở tầng AuctionServiceImpl.
 
   // số giây trước khi kết thúc đấu giá để kích hoạt anti-snipping
-  public static final int ANTI_SNIPE_WINDOW_SECONDS = 30;
+  public static final int ANTI_SNIPE_WINDOW_SECONDS = 120;
 
   // số giây gia hạn thêm khi anti-snipping kích hoạt
-  public static final int EXTENSION_SECONDS = 30;
+  public static final int EXTENSION_SECONDS = 120;
 
   private long startingPrice;
   private Long itemId;

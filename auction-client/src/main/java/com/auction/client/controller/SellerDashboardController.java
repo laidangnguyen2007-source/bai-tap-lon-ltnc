@@ -64,7 +64,6 @@ public class SellerDashboardController {
   @FXML private ComboBox<Integer> endMinuteCombo;
   
   @FXML private javafx.scene.control.TextArea itemDescriptionArea;
-  @FXML private javafx.scene.control.TextArea itemSpecificsArea;
   @FXML private javafx.scene.image.ImageView itemImageView;
   private String currentImageBase64 = null;
   
@@ -434,7 +433,7 @@ public class SellerDashboardController {
 
     if (editingAuctionId != null) {
       boolean success = serverService.updateAuctionSeller(
-          editingAuctionId, sellerId, itemName, categoryEnum, startingPrice, startTime, endTime, itemDescriptionArea.getText(), itemSpecificsArea.getText(), currentImageBase64, minBidStep);
+          editingAuctionId, sellerId, itemName, categoryEnum, startingPrice, startTime, endTime, itemDescriptionArea.getText(), "", currentImageBase64, minBidStep);
       if (success) {
         formResultLabel.setText("Cập nhật phiên đấu giá #" + editingAuctionId + " thành công!");
         handleCancelEdit(null); // Reset form
@@ -455,7 +454,7 @@ public class SellerDashboardController {
       newAuction.setItemName(itemName);
       newAuction.setItemCategory(categoryEnum); 
       newAuction.setItemDescription(itemDescriptionArea.getText());
-      newAuction.setItemSpecifics(itemSpecificsArea.getText());
+      newAuction.setItemSpecifics("");
       newAuction.setImageBase64(currentImageBase64); 
 
       Long createdId = serverService.createAuction(newAuction);
@@ -558,7 +557,6 @@ public class SellerDashboardController {
     }
 
     itemDescriptionArea.setText(auction.getItemDescription() != null ? auction.getItemDescription() : "");
-    itemSpecificsArea.setText(auction.getItemSpecifics() != null ? auction.getItemSpecifics() : "");
     currentImageBase64 = auction.getImageBase64();
     if (currentImageBase64 != null && !currentImageBase64.isEmpty()) {
       try {
@@ -651,7 +649,6 @@ public class SellerDashboardController {
     startHourCombo.setValue(LocalDateTime.now().getHour());
     startMinuteCombo.setValue(LocalDateTime.now().getMinute());
     itemDescriptionArea.clear();
-    itemSpecificsArea.clear();
     itemImageView.setImage(null);
     currentImageBase64 = null;
     

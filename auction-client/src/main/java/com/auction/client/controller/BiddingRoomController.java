@@ -359,6 +359,26 @@ public class BiddingRoomController implements AuctionObserver {
         });
   }
 
+  @Override
+  public void onAuctionTimeExtended(Long auctionId, String newEndTimeStr) {
+    Auction currentAuction = session.getSelectedAuction();
+    if (currentAuction == null || !currentAuction.getId().equals(auctionId)) {
+      return;
+    }
+
+    Platform.runLater(
+        () -> {
+          try {
+            LocalDateTime newEndTime = LocalDateTime.parse(newEndTimeStr);
+            currentAuction.setEndTime(newEndTime);
+            // Cập nhật lại UI thông báo thời gian đã được gia hạn
+            NotificationUtils.showToast((Stage) bidChart.getScene().getWindow(), "⏰ Phiên đấu giá được gia hạn do có người đặt giá ở phút cuối!", false);
+          } catch (Exception e) {
+            e.printStackTrace();
+          }
+        });
+  }
+
   // ===== XỬ LÝ SỰ KIỆN NGƯỜI DÙNG =====
 
   /**
