@@ -62,7 +62,8 @@ public final class BiddingHandlers {
         walletService.lockForBid(bidderId, auctionId, additionalAmountToLock);
       }
 
-      LocalDateTime oldEndTime = AuctionManager.getInstance().findById(auctionId).map(Auction::getEndTime).orElse(null);
+      LocalDateTime oldEndTime =
+          AuctionManager.getInstance().findById(auctionId).map(Auction::getEndTime).orElse(null);
       Auction auction;
       try {
         auction = AuctionManager.getInstance().placeBid(auctionId, bidderId, amount);
