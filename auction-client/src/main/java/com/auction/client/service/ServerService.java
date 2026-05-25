@@ -65,6 +65,10 @@ public class ServerService {
                 Long id = ((Number) push.get("auctionId")).longValue();
                 String status = (String) push.get("newStatus");
                 observers.forEach(o -> o.onAuctionStatusChanged(id, status));
+            } else if ("AUCTION_TIME_EXTENDED".equals(type)) {
+                Long id = ((Number) push.get("auctionId")).longValue();
+                String newEndTime = (String) push.get("newEndTime");
+                observers.forEach(o -> o.onAuctionTimeExtended(id, newEndTime));
             } else if ("FUNDS_LOCKED".equals(type) || "FUNDS_RELEASED".equals(type)
                     || "OUTBID".equals(type) || "OUTBID_NOTIFICATION".equals(type)
                     || "AUCTION_WON".equals(type) || "AUCTION_LOST".equals(type)

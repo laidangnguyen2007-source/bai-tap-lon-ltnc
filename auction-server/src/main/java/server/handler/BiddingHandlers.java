@@ -62,6 +62,7 @@ public final class BiddingHandlers {
         walletService.lockForBid(bidderId, auctionId, additionalAmountToLock);
       }
 
+      LocalDateTime oldEndTime = AuctionManager.getInstance().findById(auctionId).map(Auction::getEndTime).orElse(null);
       Auction auction;
       try {
         auction = AuctionManager.getInstance().placeBid(auctionId, bidderId, amount);
@@ -99,6 +100,14 @@ public final class BiddingHandlers {
       push.put("type", "BID_UPDATE");
       push.put("bid", jsonMapper.bidToJSON(bid));
       broadcaster.broadcast(push.toString());
+
+      if (oldEndTime != null && auction.getEndTime().isAfter(oldEndTime)) {
+        JSONObject extPush = new JSONObject();
+        extPush.put("type", "AUCTION_TIME_EXTENDED");
+        extPush.put("auctionId", auctionId);
+        extPush.put("newEndTime", auction.getEndTime().toString());
+        broadcaster.broadcast(extPush.toString());
+      }
 
       BidInfo winnerBeforeAuto = AuctionManager.getInstance().getPreviousWinner(auctionId);
       List<BidTransaction> autoBids = AuctionManager.getInstance().resolveAutoBids(auctionId);
