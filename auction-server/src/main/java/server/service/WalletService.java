@@ -348,6 +348,50 @@ public class WalletService {
     }
   }
 
+  // ─── USER TOP UP ───
+  public void topUpWallet(Long userId, long amount) {
+    try {
+      connection.setAutoCommit(false);
+
+      Wallet wallet = getOrCreateWalletWithLock(userId);
+
+      if (amount <= 0) {
+        throw new AuctionException("Số tiền nạp phải lớn hơn 0");
+      }
+
+      long before = wallet.getAvailableBalance();
+      wallet.addAvailable(amount);
+      walletDao.updateBalance(wallet);
+
+      WalletTransaction tx =
+          new WalletTransaction(
+              userId,
+              WalletTransactionType.DEPOSIT,
+              amount,
+              before,
+              wallet.getAvailableBalance(),
+              userId,
+              WalletReferenceType.WALLET,
+              "Người dùng tự nạp tiền",
+              TransactionActor.USER);
+
+      walletTransactionDao.save(tx);
+      connection.commit();
+
+    } catch (Exception e) {
+      try {
+        connection.rollback();
+      } catch (Exception ignored) {
+      }
+      throw new AuctionException(e.getMessage(), e);
+    } finally {
+      try {
+        connection.setAutoCommit(true);
+      } catch (Exception ignored) {
+      }
+    }
+  }
+
   // ─── GET WALLET ───
   public Wallet getWallet(Long userId) {
     return walletDao.findByUserIdNoLock(userId);

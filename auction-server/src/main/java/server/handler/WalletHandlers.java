@@ -157,4 +157,34 @@ public final class WalletHandlers {
       return JsonResponses.error(e.getMessage());
     }
   }
+
+  // ─── USER_TOP_UP ───
+  public String userTopUp(JSONObject req) throws Exception {
+    try {
+      Long userId = req.getLong("userId");
+      long amount = req.getLong("amount");
+
+      walletService.topUpWallet(userId, amount);
+
+      JSONObject notifyPush = new JSONObject();
+      notifyPush.put("type", "USER_TOP_UP");
+      broadcaster.sendToUser(userId, notifyPush.toString());
+
+      Wallet updated = walletService.getWallet(userId);
+
+      JSONObject walletJson = new JSONObject();
+      walletJson.put("availableBalance", updated.getAvailableBalance());
+      walletJson.put("lockedBalance", updated.getLockedBalance());
+      walletJson.put("totalBalance", updated.getTotalBalance());
+
+      JSONObject res = new JSONObject();
+      res.put("status", "OK");
+      res.put("wallet", walletJson);
+
+      return res.toString();
+    } catch (Exception e) {
+      e.printStackTrace();
+      return JsonResponses.error(e.getMessage());
+    }
+  }
 }

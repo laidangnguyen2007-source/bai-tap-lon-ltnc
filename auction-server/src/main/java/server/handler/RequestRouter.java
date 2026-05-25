@@ -82,6 +82,7 @@ public final class RequestRouter {
     // Wallet routes
     map.put("GET_WALLET", wallet::getWallet);
     map.put("GET_WALLET_TRANSACTIONS", wallet::getWalletTransactions);
+    map.put("USER_TOP_UP", wallet::userTopUp);
     map.put("ADMIN_ADJUST_BALANCE", wallet::adminAdjustBalance);
     map.put("ADMIN_GET_ALL_WALLETS", wallet::adminGetAllWallets);
 
