@@ -53,11 +53,26 @@ public final class BiddingHandlers {
 
       BidInfo prevWinner = AuctionManager.getInstance().getPreviousWinner(auctionId);
 
-      walletService.lockForBid(bidderId, auctionId, amount);
+      long additionalAmountToLock = amount;
+      if (prevWinner != null && prevWinner.bidderId.equals(bidderId)) {
+        additionalAmountToLock = amount - prevWinner.amount;
+      }
 
-      Auction auction = AuctionManager.getInstance().placeBid(auctionId, bidderId, amount);
+      if (additionalAmountToLock > 0) {
+        walletService.lockForBid(bidderId, auctionId, additionalAmountToLock);
+      }
 
-      if (prevWinner != null && !prevWinner.isAutoBid) {
+      Auction auction;
+      try {
+        auction = AuctionManager.getInstance().placeBid(auctionId, bidderId, amount);
+      } catch (Exception e) {
+        if (additionalAmountToLock > 0) {
+          walletService.releaseForOutbid(bidderId, auctionId, additionalAmountToLock);
+        }
+        throw e;
+      }
+
+      if (prevWinner != null && !prevWinner.isAutoBid && !prevWinner.bidderId.equals(bidderId)) {
         walletService.releaseForOutbid(prevWinner.bidderId, auctionId, prevWinner.amount);
         JSONObject outbidPush = new JSONObject();
         outbidPush.put("type", "OUTBID");
@@ -124,7 +139,9 @@ public final class BiddingHandlers {
         }
       }
 
-      return null;
+      JSONObject res = new JSONObject();
+      res.put("status", "OK");
+      return res.toString();
     } catch (Exception e) {
       e.printStackTrace();
       System.out.println("BID REJECTED: " + e.getMessage());

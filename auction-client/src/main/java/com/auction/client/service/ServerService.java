@@ -118,7 +118,7 @@ public class ServerService {
         return itemHandler.getItemById(id);
     }
 
-    public boolean placeBid(Long aId, Long bId, long amt) {
+    public String placeBid(Long aId, Long bId, long amt) {
         return bidHandler.placeBid(aId, bId, amt);
     }
 
@@ -128,6 +128,10 @@ public class ServerService {
 
     public List<BidTransaction> getBidHistory(Long id) {
         return bidHandler.getBidHistory(id);
+    }
+
+    public List<BidTransaction> getUserBids(Long userId) {
+        return bidHandler.getUserBids(userId);
     }
 
     public boolean updateAuctionSeller(Long auctionId, Long sellerId, String itemName,

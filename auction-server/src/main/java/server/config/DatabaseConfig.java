@@ -20,7 +20,7 @@ public class DatabaseConfig {
 
   // Đường dẫn tới MySQL Server
   private static final String DB_URL =
-      "jdbc:mysql://localhost:3306/auction_db?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC";
+      "jdbc:mysql://localhost:3306/auction_db?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Ho_Chi_Minh";
   // Tài khoản mặc định của MySQL Local
   private static final String DB_USER = "root";
   private static final String DB_PASSWORD = "1234";

@@ -35,7 +35,7 @@ public class WalletService {
       walletDao.createWallet(userId);
       wallet = walletDao.findWalletWithLock(userId);
       if (wallet == null) {
-        throw new AuctionException("Failed to auto-create wallet for user " + userId);
+        throw new AuctionException("Lỗi hệ thống: Không thể tạo ví cho user " + userId);
       }
     }
     return wallet;
@@ -49,7 +49,7 @@ public class WalletService {
       Wallet wallet = getOrCreateWalletWithLock(userId);
 
       if (wallet.getAvailableBalance() < amount) {
-        throw new AuctionException("Insufficient balance");
+        throw new AuctionException("Số dư ví không đủ");
       }
 
       long before = wallet.getAvailableBalance();
@@ -137,7 +137,7 @@ public class WalletService {
       Wallet wallet = getOrCreateWalletWithLock(userId);
 
       if (wallet.getAvailableBalance() < maxBidAmount) {
-        throw new AuctionException("Insufficient balance for auto-bid");
+        throw new AuctionException("Số dư ví không đủ để đăng ký Auto-Bid");
       }
 
       long before = wallet.getAvailableBalance();
@@ -297,7 +297,7 @@ public class WalletService {
         connection.rollback();
       } catch (Exception ignored) {
       }
-      throw new AuctionException("Error settling auction: " + e.getMessage(), e);
+      throw new AuctionException("Lỗi khi kết toán phiên đấu giá: " + e.getMessage(), e);
     } finally {
       try {
         connection.setAutoCommit(true);
