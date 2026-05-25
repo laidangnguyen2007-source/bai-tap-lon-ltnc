@@ -33,6 +33,9 @@ public class WalletViewController implements com.auction.client.observer.Auction
     @FXML private Button refreshButton;
     @FXML private Button backButton;
 
+    @FXML private javafx.scene.layout.HBox topUpPanel;
+    @FXML private javafx.scene.control.TextField topUpAmountField;
+
     @FXML private TableView<JSONObject> transactionTable;
     @FXML private TableColumn<JSONObject, String> txIdCol;
     @FXML private TableColumn<JSONObject, String> txTypeCol;
@@ -49,6 +52,10 @@ public class WalletViewController implements com.auction.client.observer.Auction
         if (session.isLoggedIn()) {
             userInfoLabel.setText("👤 " + session.getCurrentUser().getUsername()
                 + " (" + translateRole(session.getCurrentUser().getRole()) + ")");
+            if (session.getCurrentUser().getRole() == UserRole.ADMIN) {
+                topUpPanel.setVisible(false);
+                topUpPanel.setManaged(false);
+            }
         }
 
         // Cấu hình cột bảng giao dịch
@@ -139,6 +146,46 @@ public class WalletViewController implements com.auction.client.observer.Auction
         }
     }
 
+    @FXML
+    private void handleTopUp(ActionEvent event) {
+        String amountText = topUpAmountField.getText().trim();
+        if (amountText.isEmpty()) {
+            NotificationUtils.showToast((Stage) refreshButton.getScene().getWindow(), "⚠ Vui lòng nhập số tiền cần nạp!", true);
+            return;
+        }
+
+        try {
+            long amount = Long.parseLong(amountText);
+            if (amount <= 0) {
+                NotificationUtils.showToast((Stage) refreshButton.getScene().getWindow(), "⚠ Số tiền nạp phải lớn hơn 0!", true);
+                return;
+            }
+
+            Long userId = session.getCurrentUser().getId();
+            
+            // Hiện hộp thoại xác nhận chuyên nghiệp
+            javafx.scene.control.Alert alert = new javafx.scene.control.Alert(javafx.scene.control.Alert.AlertType.CONFIRMATION);
+            NotificationUtils.styleAlert(alert);
+            alert.setGraphic(null);
+            alert.setTitle("Xác Nhận Nạp Tiền");
+            alert.setHeaderText("Nạp tiền vào ví của bạn");
+            alert.setContentText("Bạn có chắc chắn muốn nạp " + String.format("%,d VNĐ", amount) + " vào ví không?");
+            
+            java.util.Optional<javafx.scene.control.ButtonType> result = alert.showAndWait();
+            if (result.isPresent() && result.get() == javafx.scene.control.ButtonType.OK) {
+                boolean success = serverService.userTopUp(userId, amount);
+                if (success) {
+                    topUpAmountField.clear();
+                    // loadWalletData() sẽ được gọi thông qua websocket event (USER_TOP_UP)
+                } else {
+                    NotificationUtils.showToast((Stage) refreshButton.getScene().getWindow(), "❌ Nạp tiền thất bại!", true);
+                }
+            }
+        } catch (NumberFormatException e) {
+            NotificationUtils.showToast((Stage) refreshButton.getScene().getWindow(), "⚠ Số tiền không hợp lệ!", true);
+        }
+    }
+
     // -- Observer callbacks --
 
     @Override
@@ -162,6 +209,7 @@ public class WalletViewController implements com.auction.client.observer.Auction
                 case "AUCTION_WON" -> "🎉 Chúc mừng! Bạn đã thắng đấu giá!";
                 case "SELLER_PAYOUT" -> "💵 Bạn đã nhận tiền từ đấu giá!";
                 case "ADMIN_BALANCE_ADJUSTED" -> "🔧 Admin đã điều chỉnh số dư ví của bạn";
+                case "USER_TOP_UP" -> "💸 Đã nạp tiền thành công!";
                 case "AUTO_BID_CANCELLED" -> "❌ Đã hủy đấu giá tự động";
                 default -> "💰 Cập nhật ví";
             };
@@ -193,6 +241,7 @@ public class WalletViewController implements com.auction.client.observer.Auction
             case "AUCTION_WIN" -> "Thắng đấu giá";
             case "SELLER_PAYOUT" -> "Nhận tiền bán";
             case "ADMIN_ADJUSTMENT" -> "Admin điều chỉnh";
+            case "DEPOSIT" -> "Nạp tiền";
             default -> type;
         };
     }
