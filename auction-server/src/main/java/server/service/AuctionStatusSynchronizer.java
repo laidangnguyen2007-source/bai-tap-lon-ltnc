@@ -34,7 +34,8 @@ public final class AuctionStatusSynchronizer {
       AuctionStatus s = a.getStatus();
       if (s == AuctionStatus.OPEN) {
         if (!now.isBefore(a.getEndTime())) {
-          AuctionStatus targetStatus = (a.getCurrentWinnerId() != null) ? AuctionStatus.PAID : AuctionStatus.CANCELED;
+          AuctionStatus targetStatus =
+              (a.getCurrentWinnerId() != null) ? AuctionStatus.PAID : AuctionStatus.CANCELED;
           a.setStatus(targetStatus);
           auctionDao.update(a);
           if (walletService != null) {
@@ -53,7 +54,10 @@ public final class AuctionStatusSynchronizer {
           Optional<Auction> fromRam = AuctionManager.getInstance().closeAuction(a.getId());
           if (fromRam.isPresent()) {
             Auction ramAuction = fromRam.get();
-            AuctionStatus targetStatus = (ramAuction.getCurrentWinnerId() != null) ? AuctionStatus.PAID : AuctionStatus.CANCELED;
+            AuctionStatus targetStatus =
+                (ramAuction.getCurrentWinnerId() != null)
+                    ? AuctionStatus.PAID
+                    : AuctionStatus.CANCELED;
             ramAuction.setStatus(targetStatus);
             auctionDao.update(ramAuction);
             if (walletService != null) {
@@ -63,7 +67,8 @@ public final class AuctionStatusSynchronizer {
             }
             notifyStatusChange(ramAuction, targetStatus, broadcaster);
           } else {
-            AuctionStatus targetStatus = (a.getCurrentWinnerId() != null) ? AuctionStatus.PAID : AuctionStatus.CANCELED;
+            AuctionStatus targetStatus =
+                (a.getCurrentWinnerId() != null) ? AuctionStatus.PAID : AuctionStatus.CANCELED;
             a.setStatus(targetStatus);
             auctionDao.update(a);
             if (walletService != null) {
@@ -79,7 +84,8 @@ public final class AuctionStatusSynchronizer {
     }
   }
 
-  private static void notifyStatusChange(Auction a, AuctionStatus newStatus, server.net.ClientBroadcaster broadcaster) {
+  private static void notifyStatusChange(
+      Auction a, AuctionStatus newStatus, server.net.ClientBroadcaster broadcaster) {
     if (broadcaster != null) {
       try {
         org.json.JSONObject push = new org.json.JSONObject();
