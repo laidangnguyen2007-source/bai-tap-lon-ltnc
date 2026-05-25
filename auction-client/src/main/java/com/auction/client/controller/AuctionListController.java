@@ -67,6 +67,9 @@ public class AuctionListController implements com.auction.client.observer.Auctio
   private Button myWinsButton;
 
   @FXML
+  private Button myBidsButton;
+
+  @FXML
   private Button walletButton;
 
   @FXML
@@ -127,6 +130,8 @@ public class AuctionListController implements com.auction.client.observer.Auctio
       // [Tính năng 3] Hiển thị nút Lịch sử thắng cho Bidder/Seller
       myWinsButton.setVisible(true);
       myWinsButton.setManaged(true);
+      myBidsButton.setVisible(true);
+      myBidsButton.setManaged(true);
       walletButton.setVisible(true);
       walletButton.setManaged(true);
     }
@@ -166,6 +171,16 @@ public class AuctionListController implements com.auction.client.observer.Auctio
     try {
       Stage stage = (Stage) myWinsButton.getScene().getWindow();
       FxmlLoader.navigateTo(stage, "my-wins.fxml", "Online Auction System — Lịch Sử Thắng Cuộc");
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+  }
+
+  @FXML
+  private void handleViewMyBids(ActionEvent event) {
+    try {
+      Stage stage = (Stage) myBidsButton.getScene().getWindow();
+      FxmlLoader.navigateTo(stage, "my-bids.fxml", "Online Auction System — Lịch Sử Đấu Giá");
     } catch (IOException e) {
       e.printStackTrace();
     }
@@ -222,6 +237,29 @@ public class AuctionListController implements com.auction.client.observer.Auctio
       return itemName != null && itemName.toLowerCase().contains(lowerKeyword);
     }).collect(Collectors.toList());
 
+    // Sắp xếp danh sách phiên đấu giá theo yêu cầu:
+    // 1. Đang chạy (thời gian kết thúc tăng dần - sắp kết thúc xếp trước)
+    // 2. Đang mở
+    // 3. Đã kết thúc
+    filtered.sort((a1, a2) -> {
+      int rank1 = getStatusRank(a1.getStatus());
+      int rank2 = getStatusRank(a2.getStatus());
+      if (rank1 != rank2) {
+        return Integer.compare(rank1, rank2);
+      }
+      
+      // Nếu cùng rank
+      if (rank1 == 1) { // Đang chạy
+        if (a1.getEndTime() == null && a2.getEndTime() == null) return 0;
+        if (a1.getEndTime() == null) return 1;
+        if (a2.getEndTime() == null) return -1;
+        return a1.getEndTime().compareTo(a2.getEndTime());
+      }
+      
+      // Mặc định sắp xếp theo ID giảm dần (mới nhất lên đầu)
+      return a2.getId().compareTo(a1.getId());
+    });
+
     // Render thẻ giao diện thay vì TableView
     renderGrid(filtered);
   }
@@ -239,6 +277,18 @@ public class AuctionListController implements com.auction.client.observer.Auctio
     totalValueLabel.setText(String.format("%,d", totalValue));
   }
 
+  /**
+   * Helper method để gán độ ưu tiên (rank) cho các trạng thái phiên đấu giá.
+   * Rank càng nhỏ thì hiển thị càng cao.
+   */
+  private int getStatusRank(AuctionStatus status) {
+    if (status == null) return 99;
+    return switch (status) {
+      case RUNNING -> 1;
+      case OPEN -> 2;
+      case FINISHED, PAID, CANCELED -> 3;
+    };
+  }
 
   /**
    * True nếu điểm bấm nằm trên control “tương tác” (nút, combobox, …) — tránh coi double-click trên

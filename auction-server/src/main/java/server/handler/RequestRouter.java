@@ -66,6 +66,7 @@ public final class RequestRouter {
     map.put("REGISTER", auth::register);
     map.put("GET_ITEM", catalog::getItem);
     map.put("GET_BID_HISTORY", catalog::getBidHistory);
+    map.put("GET_USER_BIDS", catalog::getUserBids);
     map.put("PLACE_BID", bidding::placeBid);
     map.put("CREATE_AUCTION", commands::createAuction);
     map.put("GET_ALL_AUCTIONS", catalog::getAllAuctions);
