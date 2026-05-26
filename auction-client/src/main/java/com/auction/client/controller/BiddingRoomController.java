@@ -314,7 +314,7 @@ public class BiddingRoomController implements AuctionObserver {
 
           // Nếu bid này là của chính mình, hiện thông báo thành công và MỞ KHÓA nút ngay
           if (pendingBidAmount > 0 && bid.getAmount() == pendingBidAmount) {
-            infoLabel.setText("✅ Đặt giá " + String.format("%,d", bid.getAmount()) + " VNĐ thành công!");
+            infoLabel.setText("");
             NotificationUtils.showSuccess((Stage) bidChart.getScene().getWindow(), "Bạn đã dẫn đầu với giá " + String.format("%,d", bid.getAmount()) + " VNĐ");
             pendingBidAmount = -1;
             placeBidButton.setDisable(false); // Mở khóa nút để đặt giá tiếp
@@ -359,6 +359,26 @@ public class BiddingRoomController implements AuctionObserver {
         });
   }
 
+  @Override
+  public void onAuctionTimeExtended(Long auctionId, String newEndTimeStr) {
+    Auction currentAuction = session.getSelectedAuction();
+    if (currentAuction == null || !currentAuction.getId().equals(auctionId)) {
+      return;
+    }
+
+    Platform.runLater(
+        () -> {
+          try {
+            LocalDateTime newEndTime = LocalDateTime.parse(newEndTimeStr);
+            currentAuction.setEndTime(newEndTime);
+            // Cập nhật lại UI thông báo thời gian đã được gia hạn
+            NotificationUtils.showToast((Stage) bidChart.getScene().getWindow(), "⏰ Phiên đấu giá được gia hạn do có người đặt giá ở phút cuối!", false);
+          } catch (Exception e) {
+            e.printStackTrace();
+          }
+        });
+  }
+
   // ===== XỬ LÝ SỰ KIỆN NGƯỜI DÙNG =====
 
   /**
@@ -374,7 +394,8 @@ public class BiddingRoomController implements AuctionObserver {
 
     // Validate: trường không được rỗng
     if (amountText.isEmpty()) {
-      infoLabel.setText("Vui lòng nhập số tiền muốn đặt giá.");
+      infoLabel.setText("");
+      NotificationUtils.showError((Stage) bidChart.getScene().getWindow(), "Vui lòng nhập số tiền muốn đặt giá.");
       return;
     }
 
@@ -383,7 +404,8 @@ public class BiddingRoomController implements AuctionObserver {
       // Validate: phải là số hợp lệ
       amount = Long.parseLong(amountText.replace(",", ""));
     } catch (NumberFormatException e) {
-      infoLabel.setText("Số tiền không hợp lệ. Chỉ nhập số.");
+      infoLabel.setText("");
+      NotificationUtils.showError((Stage) bidChart.getScene().getWindow(), "Số tiền không hợp lệ. Chỉ nhập số.");
       return;
     }
 
@@ -392,7 +414,8 @@ public class BiddingRoomController implements AuctionObserver {
     long minRequired = auction.getCurrentPrice() + auction.getMinBidStep();
 
     if (amount < minRequired) {
-      infoLabel.setText(
+      infoLabel.setText("");
+      NotificationUtils.showError((Stage) bidChart.getScene().getWindow(),
           String.format(
               "Giá đặt chưa đạt mức tối thiểu. Bạn cần đặt ít nhất %,d VNĐ.", minRequired));
       return;
@@ -421,28 +444,19 @@ public class BiddingRoomController implements AuctionObserver {
     placeBidButton.setDisable(true);
     bidAmountField.clear();
 
-    // Gửi đi (fire-and-forget), kết quả xác nhận qua BID_UPDATE push
-    boolean sent = serverService.placeBid(auction.getId(), bidderId, finalAmount);
-    if (!sent) {
-      // Không gửi được (mất kết nối)
-      infoLabel.setText("❌ Không thể kết nối server.");
+    // Gửi đi, kết quả phản hồi ngay lập tức qua sendRequest
+    String errorMsg = serverService.placeBid(auction.getId(), bidderId, finalAmount);
+    if (errorMsg != null) {
+      // Có lỗi từ server (ví dụ: số dư không đủ)
+      infoLabel.setText("");
+      NotificationUtils.showError((Stage) bidChart.getScene().getWindow(), "Đặt giá thất bại: " + errorMsg);
       placeBidButton.setDisable(false);
       pendingBidAmount = -1;
       return;
     }
 
-    // Sau 3 giây (giảm từ 6s), nếu BID_UPDATE chưa về thì báo thất bại
-    new Thread(() -> {
-      try { Thread.sleep(3000); } catch (InterruptedException ignored) {}
-      Platform.runLater(() -> {
-        if (pendingBidAmount == finalAmount) {
-          // Chưa nhận được BID_UPDATE → bid bị từ chối hoặc mạng lag
-          infoLabel.setText("❌ Đặt giá thất bại. Giá có thể đã bị vượt qua.");
-          pendingBidAmount = -1;
-          placeBidButton.setDisable(false);
-        }
-      });
-    }).start();
+    // Nếu errorMsg == null (thành công), UI sẽ được cập nhật tự động và mở khóa nút
+    // qua cơ chế Push (onBidUpdated) từ server.
   }
 
   @FXML
@@ -451,7 +465,8 @@ public class BiddingRoomController implements AuctionObserver {
     String incText = incrementField.getText().trim();
 
     if (maxBidText.isEmpty() || incText.isEmpty()) {
-      infoLabel.setText("Vui lòng nhập giá tối đa và bước giá.");
+      infoLabel.setText("");
+      NotificationUtils.showError((Stage) bidChart.getScene().getWindow(), "Vui lòng nhập giá tối đa và bước giá.");
       return;
     }
 
@@ -460,17 +475,20 @@ public class BiddingRoomController implements AuctionObserver {
       maxBid = Long.parseLong(maxBidText.replace(",", ""));
       inc = Long.parseLong(incText.replace(",", ""));
     } catch (NumberFormatException e) {
-      infoLabel.setText("Số tiền không hợp lệ.");
+      infoLabel.setText("");
+      NotificationUtils.showError((Stage) bidChart.getScene().getWindow(), "Số tiền không hợp lệ.");
       return;
     }
 
     Auction auction = session.getSelectedAuction();
     if (maxBid <= auction.getCurrentPrice()) {
-      infoLabel.setText("Giá tối đa phải lớn hơn giá hiện tại.");
+      infoLabel.setText("");
+      NotificationUtils.showError((Stage) bidChart.getScene().getWindow(), "Giá tối đa phải lớn hơn giá hiện tại.");
       return;
     }
     if (inc <= 0) {
-      infoLabel.setText("Bước giá phải lớn hơn 0.");
+      infoLabel.setText("");
+      NotificationUtils.showError((Stage) bidChart.getScene().getWindow(), "Bước giá phải lớn hơn 0.");
       return;
     }
 
@@ -493,12 +511,13 @@ public class BiddingRoomController implements AuctionObserver {
 
     boolean sent = serverService.registerAutoBid(auction.getId(), bidderId, maxBid, inc);
     if (!sent) {
-      infoLabel.setText("❌ Lỗi kết nối, không thể đăng ký Auto-Bid.");
+      infoLabel.setText("");
+      NotificationUtils.showError((Stage) bidChart.getScene().getWindow(), "Lỗi kết nối, không thể đăng ký Auto-Bid.");
       autoBidButton.setDisable(false);
       return;
     }
 
-    infoLabel.setText("✅ Đăng ký Auto-Bid thành công!");
+    infoLabel.setText("");
     NotificationUtils.showSuccess((Stage) bidChart.getScene().getWindow(), "Auto-Bid đã được kích hoạt.");
     maxBidField.clear();
     incrementField.clear();

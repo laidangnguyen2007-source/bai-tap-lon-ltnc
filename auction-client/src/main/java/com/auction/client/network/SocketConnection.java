@@ -90,6 +90,7 @@ public class SocketConnection {
 
   // Gửi request và chờ response đồng bộ
   public String sendRequest(String jsonRequest) throws IOException {
+    responseQueue.clear(); // Xóa rác/stale message trước khi gửi request mới để chống lỗi desync
     out.println(jsonRequest);
     try {
       // Timeout 10 giây

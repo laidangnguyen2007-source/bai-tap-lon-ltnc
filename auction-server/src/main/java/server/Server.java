@@ -67,7 +67,6 @@ public final class Server {
       walletService = new WalletService(walletDao, walletTransactionDao);
       System.out.println("MySQL connection successful — auction_db is ready.");
 
-      System.out.println("Migrating wallets for existing users...");
       List<server.model.entity.user.User> allUsers = userDao.findAll();
       for (server.model.entity.user.User u : allUsers) {
         if (walletDao.findByUserIdNoLock(u.getId()) == null) {

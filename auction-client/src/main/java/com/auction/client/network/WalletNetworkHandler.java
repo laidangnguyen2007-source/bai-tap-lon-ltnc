@@ -112,4 +112,20 @@ public class WalletNetworkHandler {
             return false;
         }
     }
+
+    /** User nạp tiền. Trả về true nếu thành công. */
+    public boolean userTopUp(Long userId, long amount) {
+        try {
+            JSONObject req = new JSONObject();
+            req.put("action", "USER_TOP_UP");
+            req.put("userId", userId);
+            req.put("amount", amount);
+            String json = connection.sendRequest(req.toJSONString());
+            JSONObject res = (JSONObject) new JSONParser().parse(json);
+            return "OK".equals(res.get("status"));
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
 }

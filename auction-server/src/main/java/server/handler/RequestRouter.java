@@ -66,6 +66,7 @@ public final class RequestRouter {
     map.put("REGISTER", auth::register);
     map.put("GET_ITEM", catalog::getItem);
     map.put("GET_BID_HISTORY", catalog::getBidHistory);
+    map.put("GET_USER_BIDS", catalog::getUserBids);
     map.put("PLACE_BID", bidding::placeBid);
     map.put("CREATE_AUCTION", commands::createAuction);
     map.put("GET_ALL_AUCTIONS", catalog::getAllAuctions);
@@ -81,6 +82,7 @@ public final class RequestRouter {
     // Wallet routes
     map.put("GET_WALLET", wallet::getWallet);
     map.put("GET_WALLET_TRANSACTIONS", wallet::getWalletTransactions);
+    map.put("USER_TOP_UP", wallet::userTopUp);
     map.put("ADMIN_ADJUST_BALANCE", wallet::adminAdjustBalance);
     map.put("ADMIN_GET_ALL_WALLETS", wallet::adminGetAllWallets);
 

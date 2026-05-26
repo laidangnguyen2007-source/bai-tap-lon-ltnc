@@ -40,5 +40,15 @@ public interface AuctionObserver {
   default void onWalletEvent(String eventType, JSONObject payload) {
     // Default no-op — override trong controller cần xử lý
   }
+
+  /**
+   * Được gọi khi thời gian kết thúc phiên đấu giá được gia hạn (ví dụ: do Anti-sniping).
+   *
+   * @param auctionId ID của phiên bị thay đổi
+   * @param newEndTime thời gian kết thúc mới (định dạng ISO 8601 chuỗi)
+   */
+  default void onAuctionTimeExtended(Long auctionId, String newEndTime) {
+    // Default no-op
+  }
 }
 

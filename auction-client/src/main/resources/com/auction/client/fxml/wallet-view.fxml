@@ -53,6 +53,14 @@
         </VBox>
       </HBox>
 
+      <!-- Top Up Panel (Chỉ hiển thị cho BIDDER/SELLER) -->
+      <HBox fx:id="topUpPanel" spacing="15" alignment="CENTER_LEFT" styleClass="info-card">
+         <padding><Insets top="15" right="20" bottom="15" left="20"/></padding>
+         <Label text="Thêm quỹ vào ví:" styleClass="field-label" style="-fx-font-weight: bold;"/>
+         <javafx.scene.control.TextField fx:id="topUpAmountField" promptText="Nhập số tiền (VNĐ)..." styleClass="text-field" prefWidth="250"/>
+         <Button text="Nạp Tiền" onAction="#handleTopUp" styleClass="primary-button" style="-fx-background-color: #2ecc71;"/>
+      </HBox>
+
       <!-- Transaction History -->
       <Label text="📋 Lịch Sử Giao Dịch" styleClass="section-title"/>
 

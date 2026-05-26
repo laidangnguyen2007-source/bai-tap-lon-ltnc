@@ -689,7 +689,6 @@ public class SellerDashboardController {
     startHourCombo.setValue(LocalDateTime.now().getHour());
     startMinuteCombo.setValue(LocalDateTime.now().getMinute());
     itemDescriptionArea.clear();
-    itemSpecificsArea.clear();
     itemImageView.setImage(null);
     currentImageBase64 = null;
 
