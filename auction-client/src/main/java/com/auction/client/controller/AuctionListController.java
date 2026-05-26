@@ -55,6 +55,9 @@ public class AuctionListController implements com.auction.client.observer.Auctio
   private ComboBox<String> statusFilterCombo;
 
   @FXML
+  private ComboBox<String> categoryFilterCombo;
+
+  @FXML
   private Button refreshButton;
 
   @FXML
@@ -146,6 +149,14 @@ public class AuctionListController implements com.auction.client.observer.Auctio
         "Đang chạy (RUNNING)", "Đã kết thúc (FINISHED)"));
     statusFilterCombo.setValue("Tất cả");
     ComboBoxPopupWidthSync.install(statusFilterCombo);
+    statusFilterCombo.setOnAction(e -> loadAuctions());
+
+    // Cấu hình ComboBox lọc danh mục
+    ObservableList<String> filterCategories = FXCollections.observableArrayList("Tất cả danh mục", "Điện tử", "Nghệ thuật", "Xe cộ", "Khác");
+    categoryFilterCombo.setItems(filterCategories);
+    categoryFilterCombo.setValue("Tất cả danh mục");
+    ComboBoxPopupWidthSync.install(categoryFilterCombo);
+    categoryFilterCombo.setOnAction(e -> loadAuctions());
 
     // [Tính năng 5] Tìm kiếm theo tên sản phẩm — lọc tức thì khi gõ (không cần nhấn Enter)
     searchField.textProperty().addListener((obs, oldText, newText) -> loadAuctions());
@@ -210,6 +221,7 @@ public class AuctionListController implements com.auction.client.observer.Auctio
   private void loadAuctions() {
     List<Auction> allAuctions = serverService.getAllAuctions();
     String filter = statusFilterCombo.getValue();
+    String categoryFilter = categoryFilterCombo.getValue();
 
     // [Tính năng 2] Cập nhật số liệu thống kê cho Admin
     if (adminStatsPane.isVisible()) {
@@ -227,6 +239,11 @@ public class AuctionListController implements com.auction.client.observer.Auctio
       if ("Đã kết thúc (FINISHED)".equals(filter))
         return auction.isFinished();
       return true;
+    }).filter(auction -> {
+      if (categoryFilter == null || "Tất cả danh mục".equals(categoryFilter))
+        return true;
+      String currentCatVi = translateCategoryToVi(auction.getItemCategory());
+      return categoryFilter.equals(currentCatVi);
     }).filter(auction -> {
       // [Tính năng 5] Lọc theo từ khóa tìm kiếm (không phân biệt hoa thường)
       String keyword = searchField.getText();
