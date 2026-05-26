@@ -69,7 +69,11 @@
       <!-- Thanh lọc, tìm kiếm và refresh -->
       <HBox spacing="10" alignment="CENTER_LEFT">
         <Label text="Lọc theo trạng thái:" styleClass="field-label"/>
-        <ComboBox fx:id="statusFilterCombo" prefWidth="220" styleClass="combo-box"/>
+        <ComboBox fx:id="statusFilterCombo" prefWidth="180" styleClass="combo-box"/>
+        
+        <Label text="Danh mục:" styleClass="field-label"/>
+        <ComboBox fx:id="categoryFilterCombo" prefWidth="150" styleClass="combo-box"/>
+
         <Button
           fx:id="refreshButton"
           text="🔄 Làm mới"
