@@ -40,6 +40,8 @@ public class AuctionDetailController {
 
   @FXML private javafx.scene.image.ImageView itemImageView;
 
+  @FXML private javafx.scene.layout.VBox itemSpecificsContainer;
+
   // Thông tin phiên đấu giá
   @FXML private Label auctionIdLabel;
 
@@ -113,6 +115,24 @@ public class AuctionDetailController {
       itemCategoryLabel.setText("Danh mục: " + item.getCategory().name());
       itemDescriptionLabel.setText(item.getDescription() != null ? item.getDescription() : "");
       
+      // Hiển thị thông số kỹ thuật
+      itemSpecificsContainer.getChildren().clear();
+      if (item.getItemSpecifics() != null && !item.getItemSpecifics().trim().isEmpty()) {
+          String[] lines = item.getItemSpecifics().split("\n");
+          for (String line : lines) {
+              if (!line.trim().isEmpty()) {
+                  Label specLabel = new Label("• " + line.trim());
+                  specLabel.setStyle("-fx-text-fill: #e2e8f0; -fx-font-size: 14px;");
+                  specLabel.setWrapText(true);
+                  itemSpecificsContainer.getChildren().add(specLabel);
+              }
+          }
+      } else {
+          Label emptySpec = new Label("Không có thông số kỹ thuật.");
+          emptySpec.setStyle("-fx-text-fill: #a0aab5; -fx-font-style: italic;");
+          itemSpecificsContainer.getChildren().add(emptySpec);
+      }
+
       // Hiển thị ảnh
       if (item.getImageBase64() != null && !item.getImageBase64().isEmpty()) {
           try {
