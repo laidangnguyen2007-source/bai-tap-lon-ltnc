@@ -64,7 +64,7 @@
         -->
         <LineChart fx:id="bidChart" VBox.vgrow="ALWAYS" styleClass="bid-chart">
           <xAxis>
-            <NumberAxis fx:id="xAxis" label="Thứ tự lượt đặt giá"/>
+            <NumberAxis fx:id="xAxis" label="Thời gian đặt giá"/>
           </xAxis>
           <yAxis>
             <NumberAxis fx:id="yAxis" label="Giá đặt (VNĐ)"/>

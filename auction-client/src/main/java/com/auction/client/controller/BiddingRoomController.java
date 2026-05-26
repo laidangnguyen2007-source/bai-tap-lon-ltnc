@@ -49,7 +49,7 @@ public class BiddingRoomController implements AuctionObserver {
   // Biểu đồ đường giá theo thời gian thực (mục 3.2.5)
   @FXML private LineChart<Number, Number> bidChart;
 
-  @FXML private NumberAxis xAxis; // Trục X: thứ tự lượt bid (tự động cập nhật)
+  @FXML private NumberAxis xAxis; // Trục X: thời gian
 
   @FXML private NumberAxis yAxis; // Trục Y: giá tiền (VNĐ)
 
@@ -97,8 +97,8 @@ public class BiddingRoomController implements AuctionObserver {
   private Timer countdownTimer;
   private volatile long pendingBidAmount = -1;
 
-  private static final DateTimeFormatter TIME_FORMAT = DateTimeFormatter.ofPattern("HH:mm:ss");
-
+  private static final DateTimeFormatter LIST_TIME_FORMAT = DateTimeFormatter.ofPattern("dd/MM HH:mm:ss");
+  private static final DateTimeFormatter CHART_TIME_FORMAT = DateTimeFormatter.ofPattern("dd/MM\nHH:mm:ss");
   /**
    * Được JavaFX gọi tự động sau khi load FXML. Khởi tạo biểu đồ, đăng ký Observer, và load lịch sử
    * bid ban đầu.
@@ -118,7 +118,13 @@ public class BiddingRoomController implements AuctionObserver {
 
     // Thêm giá khởi điểm vào Chart
     if (bidSeries.getData().isEmpty()) {
-      XYChart.Data<Number, Number> dataPoint = new XYChart.Data<>(bidCount, auction.getStartingPrice());
+      long millis;
+      if (auction.getStartTime() != null) {
+        millis = auction.getStartTime().atZone(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli();
+      } else {
+        millis = LocalDateTime.now().atZone(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli();
+      }
+      XYChart.Data<Number, Number> dataPoint = new XYChart.Data<>(millis, auction.getStartingPrice());
       bidSeries.getData().add(dataPoint);
     }
 
@@ -196,34 +202,36 @@ public class BiddingRoomController implements AuctionObserver {
     bidSeries.setName("Đường giá đấu");
 
     // Thiết lập label cho 2 trục
-    xAxis.setLabel("Lượt đặt giá (thứ tự)");
+    xAxis.setLabel("Thời gian");
     yAxis.setLabel("Giá (VNĐ)");
 
     // Không tự động giới hạn khoảng trục Y — để chart tự mở rộng theo dữ liệu
     yAxis.setAutoRanging(true);
     xAxis.setAutoRanging(true);
+    
+    // RẤT QUAN TRỌNG: Phải tắt bắt đầu từ 0 vì Epoch Time là số cực lớn, nếu không chart sẽ dồn thành 1 cục
+    xAxis.setForceZeroInRange(false);
+    yAxis.setForceZeroInRange(false); // Giúp giá bám sát hơn
 
-    // Cấu hình trục X chỉ hiển thị số nguyên (lượt bid) và tránh lặp số
-    xAxis.setTickUnit(1);
-    xAxis.setMinorTickCount(0);
-    xAxis.setMinorTickVisible(false);
+    // Định dạng số của trục X thành chuỗi Ngày/Giờ
     xAxis.setTickLabelFormatter(new javafx.util.StringConverter<Number>() {
         @Override
         public String toString(Number object) {
-            // Nếu là số nguyên thì hiện, số lẻ (do auto-scaling) thì ẩn để tránh lặp
-            if (object.doubleValue() % 1 == 0) {
-                return String.valueOf(object.intValue());
-            }
-            return "";
+            java.time.LocalDateTime time = java.time.Instant.ofEpochMilli(object.longValue())
+                .atZone(java.time.ZoneId.systemDefault())
+                .toLocalDateTime();
+            return time.format(CHART_TIME_FORMAT);
         }
+
         @Override
         public Number fromString(String string) {
-            return string.isEmpty() ? 0 : Double.valueOf(string);
+            return 0; // Chiều ngược lại không cần dùng
         }
     });
 
     // Tắt animation mỗi khi thêm điểm mới (animation chậm sẽ gây lag khi cập nhật liên tục)
     bidChart.setAnimated(false);
+    xAxis.setAnimated(false);
 
     // Tắt hiển thị symbols (chấm tròn) trên mỗi điểm để chart gọn hơn khi có nhiều điểm
     bidChart.setCreateSymbols(true);
@@ -257,8 +265,15 @@ public class BiddingRoomController implements AuctionObserver {
    */
   private void addBidToChart(BidTransaction bid) {
     bidCount++;
-    // Tạo điểm mới (x = thứ tự bid, y = số tiền) và thêm vào series
-    XYChart.Data<Number, Number> dataPoint = new XYChart.Data<>(bidCount, bid.getAmount());
+    long millis;
+    if (bid.getTimestamp() != null) {
+      millis = bid.getTimestamp().atZone(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli();
+    } else {
+      millis = LocalDateTime.now().atZone(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli();
+    }
+
+    // Tạo điểm mới (x = thời gian hệ timestamp, y = số tiền) và thêm vào series
+    XYChart.Data<Number, Number> dataPoint = new XYChart.Data<>(millis, bid.getAmount());
     bidSeries.getData().add(dataPoint);
   }
 
@@ -269,7 +284,7 @@ public class BiddingRoomController implements AuctionObserver {
    * @param bid giao dịch đặt giá cần hiển thị
    */
   private void addBidToHistoryList(BidTransaction bid) {
-    String timeStr = bid.getTimestamp() != null ? bid.getTimestamp().format(TIME_FORMAT) : "--:--";
+    String timeStr = bid.getTimestamp() != null ? bid.getTimestamp().format(LIST_TIME_FORMAT) : "--:--";
     String entry =
         String.format(
             "[%s] Bidder #%d đặt giá: %,d VNĐ", timeStr, bid.getBidderId(), bid.getAmount());
