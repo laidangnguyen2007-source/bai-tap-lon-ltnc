@@ -37,18 +37,18 @@ public class Bidder extends User {
 
   public void setBalance(long balance) {
     if (balance < 0) {
-      throw new IllegalArgumentException("Balance must not be negative: " + balance);
+      throw new IllegalArgumentException("Số dư không được là số âm: " + balance);
     }
     this.balance = balance;
   }
 
   public void deductBalance(long amount) {
     if (amount <= 0) {
-      throw new IllegalArgumentException("Deduction amount must be positive: " + amount);
+      throw new IllegalArgumentException("Số tiền trừ phải lớn hơn 0: " + amount);
     }
     if (amount > balance) {
       throw new IllegalArgumentException(
-          "Insufficient balance. Required: " + amount + ", available: " + balance);
+          "Số dư không đủ. Yêu cầu: " + amount + ", hiện có: " + balance);
     }
     this.balance -= amount;
   }

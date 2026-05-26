@@ -18,6 +18,8 @@ import javafx.util.Duration;
  */
 public class NotificationUtils {
  
+    private static final java.util.List<Popup> activePopups = new java.util.ArrayList<>();
+
     /**
      * Hiển thị một thông báo Toast.
      * 
@@ -47,9 +49,54 @@ public class NotificationUtils {
             popup.getContent().add(container);
  
             // Vị trí: Ở góc trên bên phải màn hình
-            popup.show(stage);
-            popup.setX(stage.getX() + stage.getWidth() - container.getWidth() - 40);
+            // Đặt vị trí tạm thời để show, sau đó lấy kích thước chuẩn
+            popup.setX(stage.getX() + stage.getWidth() - 340);
             popup.setY(stage.getY() + 60);
+            popup.show(stage);
+
+            // Force layout sau khi đã gắn vào Scene của popup để lấy kích thước chính xác
+            container.applyCss();
+            container.layout();
+
+            double width = container.getWidth() > 0 ? container.getWidth() : container.prefWidth(-1);
+            double height = container.getHeight() > 0 ? container.getHeight() : container.prefHeight(300);
+
+            // Cập nhật lại vị trí chính xác
+            popup.setX(stage.getX() + stage.getWidth() - width - 40);
+
+            // Giới hạn tối đa 3 popup hiển thị cùng lúc
+            if (activePopups.size() >= 3) {
+                Popup oldest = activePopups.remove(0);
+                if (!oldest.getContent().isEmpty()) {
+                    FadeTransition hideOldest = new FadeTransition(Duration.millis(200), oldest.getContent().get(0));
+                    hideOldest.setToValue(0);
+                    hideOldest.setOnFinished(e -> oldest.hide());
+                    hideOldest.play();
+                } else {
+                    oldest.hide();
+                }
+            }
+
+            // Tính khoảng cách cần đẩy xuống (chiều cao popup + 15px margin)
+            double shiftHeight = height + 15;
+
+            // Đẩy các popup cũ xuống dưới với hiệu ứng mượt
+            for (Popup p : activePopups) {
+                final double startY = p.getY();
+                final double endY = startY + shiftHeight;
+                javafx.animation.Transition transition = new javafx.animation.Transition() {
+                    {
+                        setCycleDuration(Duration.millis(300));
+                        setInterpolator(javafx.animation.Interpolator.EASE_OUT);
+                    }
+                    @Override
+                    protected void interpolate(double frac) {
+                        p.setY(startY + (endY - startY) * frac);
+                    }
+                };
+                transition.play();
+            }
+            activePopups.add(popup);
  
             // Hiệu ứng: Hiện lên (FadeIn) -> Chờ 3s -> Biến mất (FadeOut) -> Đóng Popup
             FadeTransition fadeIn = new FadeTransition(Duration.millis(300), container);
@@ -61,7 +108,10 @@ public class NotificationUtils {
             FadeTransition fadeOut = new FadeTransition(Duration.millis(500), container);
             fadeOut.setFromValue(1);
             fadeOut.setToValue(0);
-            fadeOut.setOnFinished(e -> popup.hide());
+            fadeOut.setOnFinished(e -> {
+                popup.hide();
+                activePopups.remove(popup);
+            });
  
             new SequentialTransition(fadeIn, stay, fadeOut).play();
         });

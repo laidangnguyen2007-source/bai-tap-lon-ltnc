@@ -16,16 +16,19 @@ public class BidNetworkHandler {
         this.connection = connection;
     }
 
-    public boolean placeBid(Long auctionId, Long bidderId, long amount) {
+    public String placeBid(Long auctionId, Long bidderId, long amount) {
         try {
             JSONObject req = new JSONObject();
             req.put("action", "PLACE_BID");
             req.put("auctionId", auctionId);
             req.put("bidderId", bidderId);
             req.put("amount", amount);
-            connection.sendOneWay(req.toJSONString());
-            return true;
-        } catch (Exception e) { return false; }
+            String json = connection.sendRequest(req.toJSONString());
+            if (json == null) return "Không thể kết nối đến server.";
+            JSONObject res = (JSONObject) new JSONParser().parse(json);
+            if ("OK".equals(res.get("status"))) return null;
+            return (String) res.get("message");
+        } catch (Exception e) { return "Lỗi: " + e.getMessage(); }
     }
 
     public List<BidTransaction> getBidHistory(Long auctionId) {
@@ -33,6 +36,22 @@ public class BidNetworkHandler {
             JSONObject req = new JSONObject();
             req.put("action", "GET_BID_HISTORY");
             req.put("auctionId", auctionId);
+            String json = connection.sendRequest(req.toJSONString());
+            JSONObject res = (JSONObject) new JSONParser().parse(json);
+            if (!"OK".equals(res.get("status"))) return new ArrayList<>();
+            List<BidTransaction> result = new ArrayList<>();
+            for (Object obj : (JSONArray) res.get("bids")) {
+                result.add(JsonMapper.mapToBid((JSONObject) obj));
+            }
+            return result;
+        } catch (Exception e) { return new ArrayList<>(); }
+    }
+
+    public List<BidTransaction> getUserBids(Long userId) {
+        try {
+            JSONObject req = new JSONObject();
+            req.put("action", "GET_USER_BIDS");
+            req.put("userId", userId);
             String json = connection.sendRequest(req.toJSONString());
             JSONObject res = (JSONObject) new JSONParser().parse(json);
             if (!"OK".equals(res.get("status"))) return new ArrayList<>();

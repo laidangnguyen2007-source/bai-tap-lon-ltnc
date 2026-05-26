@@ -34,38 +34,67 @@ public final class AuctionStatusSynchronizer {
       AuctionStatus s = a.getStatus();
       if (s == AuctionStatus.OPEN) {
         if (!now.isBefore(a.getEndTime())) {
-          a.setStatus(AuctionStatus.FINISHED);
+          AuctionStatus targetStatus =
+              (a.getCurrentWinnerId() != null) ? AuctionStatus.PAID : AuctionStatus.CANCELED;
+          a.setStatus(targetStatus);
           auctionDao.update(a);
           if (walletService != null) {
             walletService.settleAuction(a, AuctionManager.getInstance().getAutoBids(a.getId()));
             notifySettlement(a, broadcaster);
           }
+          notifyStatusChange(a, targetStatus, broadcaster);
         } else if (!now.isBefore(a.getStartTime())) {
           a.setStatus(AuctionStatus.RUNNING);
           auctionDao.update(a);
           AuctionManager.getInstance().restoreRunningAuction(a);
+          notifyStatusChange(a, AuctionStatus.RUNNING, broadcaster);
         }
       } else if (s == AuctionStatus.RUNNING) {
         if (!now.isBefore(a.getEndTime())) {
           Optional<Auction> fromRam = AuctionManager.getInstance().closeAuction(a.getId());
           if (fromRam.isPresent()) {
-            auctionDao.update(fromRam.get());
+            Auction ramAuction = fromRam.get();
+            AuctionStatus targetStatus =
+                (ramAuction.getCurrentWinnerId() != null)
+                    ? AuctionStatus.PAID
+                    : AuctionStatus.CANCELED;
+            ramAuction.setStatus(targetStatus);
+            auctionDao.update(ramAuction);
             if (walletService != null) {
               walletService.settleAuction(
-                  fromRam.get(), AuctionManager.getInstance().getAutoBids(a.getId()));
-              notifySettlement(fromRam.get(), broadcaster);
+                  ramAuction, AuctionManager.getInstance().getAutoBids(a.getId()));
+              notifySettlement(ramAuction, broadcaster);
             }
+            notifyStatusChange(ramAuction, targetStatus, broadcaster);
           } else {
-            a.setStatus(AuctionStatus.FINISHED);
+            AuctionStatus targetStatus =
+                (a.getCurrentWinnerId() != null) ? AuctionStatus.PAID : AuctionStatus.CANCELED;
+            a.setStatus(targetStatus);
             auctionDao.update(a);
             if (walletService != null) {
               walletService.settleAuction(a, AuctionManager.getInstance().getAutoBids(a.getId()));
               notifySettlement(a, broadcaster);
             }
+            notifyStatusChange(a, targetStatus, broadcaster);
           }
         } else {
           AuctionManager.getInstance().restoreRunningAuction(a);
         }
+      }
+    }
+  }
+
+  private static void notifyStatusChange(
+      Auction a, AuctionStatus newStatus, server.net.ClientBroadcaster broadcaster) {
+    if (broadcaster != null) {
+      try {
+        org.json.JSONObject push = new org.json.JSONObject();
+        push.put("type", "AUCTION_STATUS_CHANGED");
+        push.put("auctionId", a.getId());
+        push.put("newStatus", newStatus.name());
+        broadcaster.broadcast(push.toString());
+      } catch (Exception e) {
+        e.printStackTrace();
       }
     }
   }

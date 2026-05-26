@@ -66,6 +66,19 @@ public final class CatalogHandlers {
     return res.toString();
   }
 
+  public String getUserBids(JSONObject req) throws Exception {
+    Long userId = req.getLong("userId");
+    List<BidTransaction> bids = bidTransactionDao.findByBidderId(userId);
+    JSONArray arr = new JSONArray();
+    for (BidTransaction bid : bids) {
+      arr.put(jsonMapper.bidToJSON(bid));
+    }
+    JSONObject res = new JSONObject();
+    res.put("status", "OK");
+    res.put("bids", arr);
+    return res.toString();
+  }
+
   public String getAllAuctions(JSONObject req) throws Exception {
     AuctionStatusSynchronizer.syncWithClock(auctionDao, walletService, null);
     List<Auction> auctions = auctionDao.findAll();

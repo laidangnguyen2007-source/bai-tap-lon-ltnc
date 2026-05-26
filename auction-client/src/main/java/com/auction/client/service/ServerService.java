@@ -65,11 +65,15 @@ public class ServerService {
                 Long id = ((Number) push.get("auctionId")).longValue();
                 String status = (String) push.get("newStatus");
                 observers.forEach(o -> o.onAuctionStatusChanged(id, status));
+            } else if ("AUCTION_TIME_EXTENDED".equals(type)) {
+                Long id = ((Number) push.get("auctionId")).longValue();
+                String newEndTime = (String) push.get("newEndTime");
+                observers.forEach(o -> o.onAuctionTimeExtended(id, newEndTime));
             } else if ("FUNDS_LOCKED".equals(type) || "FUNDS_RELEASED".equals(type)
                     || "OUTBID".equals(type) || "OUTBID_NOTIFICATION".equals(type)
                     || "AUCTION_WON".equals(type) || "AUCTION_LOST".equals(type)
                     || "SELLER_PAYOUT".equals(type) || "ADMIN_BALANCE_ADJUSTED".equals(type)
-                    || "AUTO_BID_CANCELLED".equals(type)) {
+                    || "AUTO_BID_CANCELLED".equals(type) || "USER_TOP_UP".equals(type)) {
                 observers.forEach(o -> o.onWalletEvent(type, push));
             }
         } catch (Exception ignored) {
@@ -118,7 +122,7 @@ public class ServerService {
         return itemHandler.getItemById(id);
     }
 
-    public boolean placeBid(Long aId, Long bId, long amt) {
+    public String placeBid(Long aId, Long bId, long amt) {
         return bidHandler.placeBid(aId, bId, amt);
     }
 
@@ -128,6 +132,10 @@ public class ServerService {
 
     public List<BidTransaction> getBidHistory(Long id) {
         return bidHandler.getBidHistory(id);
+    }
+
+    public List<BidTransaction> getUserBids(Long userId) {
+        return bidHandler.getUserBids(userId);
     }
 
     public boolean updateAuctionSeller(Long auctionId, Long sellerId, String itemName,
@@ -163,6 +171,10 @@ public class ServerService {
 
     public boolean cancelAutoBid(Long auctionId, Long bidderId) {
         return walletHandler.cancelAutoBid(auctionId, bidderId);
+    }
+
+    public boolean userTopUp(Long userId, long amount) {
+        return walletHandler.userTopUp(userId, amount);
     }
 }
 
