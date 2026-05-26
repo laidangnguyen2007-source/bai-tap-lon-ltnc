@@ -14,6 +14,7 @@
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.Region?>
 <?import javafx.scene.layout.VBox?>
+<?import javafx.scene.control.ScrollPane?>
 
 <!--
   View: Dashboard của Seller — Tạo phiên đấu giá và xem phiên đã tạo
@@ -43,19 +44,21 @@
       <padding><Insets top="20" right="24" bottom="20" left="24"/></padding>
 
       <!-- Cột trái: Form tạo phiên đấu giá mới -->
-      <VBox styleClass="info-card" spacing="14" prefWidth="460" minWidth="420">
+      <VBox styleClass="info-card" spacing="14" prefWidth="500" minWidth="480">
         <padding><Insets top="20" right="20" bottom="20" left="20"/></padding>
 
         <Label text="➕ Tạo Phiên Đấu Giá Mới" styleClass="section-title"/>
         <Separator/>
 
-        <GridPane hgap="12" vgap="12">
-          <columnConstraints>
-            <javafx.scene.layout.ColumnConstraints minWidth="130" prefWidth="130" halignment="LEFT"/>
-            <javafx.scene.layout.ColumnConstraints hgrow="ALWAYS" minWidth="200"/>
-          </columnConstraints>
-          <!-- Hàng 0: Chọn loại sản phẩm từ dropdown (thay vì nhập mã ID thủ công) -->
-          <Label text="Loại sản phẩm:" styleClass="field-label"
+        <ScrollPane fitToWidth="true" hbarPolicy="NEVER" style="-fx-background: transparent; -fx-background-color: transparent; -fx-padding: 0;" VBox.vgrow="ALWAYS">
+          <content>
+            <GridPane hgap="12" vgap="12" style="-fx-padding: 0 15 0 0;">
+              <columnConstraints>
+                <javafx.scene.layout.ColumnConstraints minWidth="130" prefWidth="130" halignment="LEFT"/>
+                <javafx.scene.layout.ColumnConstraints hgrow="ALWAYS" minWidth="200"/>
+              </columnConstraints>
+              <!-- Hàng 0: Chọn loại sản phẩm từ dropdown (thay vì nhập mã ID thủ công) -->
+              <Label text="Loại sản phẩm:" styleClass="field-label"
                  GridPane.columnIndex="0" GridPane.rowIndex="0"/>
           <ComboBox fx:id="categoryCombo" promptText="Chọn loại sản phẩm..."
                      styleClass="text-field" GridPane.columnIndex="1" GridPane.rowIndex="0"
@@ -121,7 +124,9 @@
           <javafx.scene.control.TextArea fx:id="itemSpecificsArea" promptText="Ví dụ:&#10;Thương hiệu: Apple&#10;Tình trạng: Mới 100%" 
                                          wrapText="true" prefRowCount="3" styleClass="custom-text-area"
                                          GridPane.columnIndex="1" GridPane.rowIndex="8"/>
-        </GridPane>
+            </GridPane>
+          </content>
+        </ScrollPane>
 
         <!-- Thông báo kết quả tạo phiên -->
         <Label fx:id="formResultLabel" text="" styleClass="info-label" wrapText="true"/>
