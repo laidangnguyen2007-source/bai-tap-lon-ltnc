@@ -31,11 +31,13 @@ import javafx.scene.layout.HBox;
 /**
  * Controller cho màn hình Dashboard của Seller (seller-dashboard.fxml).
  *
- * <p>Cho phép người bán (Seller): 1. Xem danh sách các phiên đấu giá mình đã tạo 2. Tạo phiên đấu
- * giá mới bằng cách chọn loại sản phẩm, đặt tên, và thiết lập thời gian
+ * <p>
+ * Cho phép người bán (Seller): 1. Xem danh sách các phiên đấu giá mình đã tạo 2. Tạo phiên đấu giá
+ * mới bằng cách chọn loại sản phẩm, đặt tên, và thiết lập thời gian
  *
- * <p>Màn hình này chỉ dành cho user có role SELLER. LoginController đã đảm bảo điều này bằng cách
- * chỉ điều hướng Seller đến đây.
+ * <p>
+ * Màn hình này chỉ dành cho user có role SELLER. LoginController đã đảm bảo điều này bằng cách chỉ
+ * điều hướng Seller đến đây.
  */
 public class SellerDashboardController {
 
@@ -45,54 +47,83 @@ public class SellerDashboardController {
 
   // ComboBox chọn loại sản phẩm (thay thế TextField itemIdField cũ)
   // Seller chọn 1 trong 4 loại: Điện tử, Nghệ thuật, Xe cộ, Khác
-  @FXML private ComboBox<String> categoryCombo;
+  @FXML
+  private ComboBox<String> categoryCombo;
 
   // TextField nhập tên sản phẩm (mới thêm)
   // Seller tự đặt tên cho sản phẩm thay vì phải nhớ mã ID
-  @FXML private TextField itemNameField;
+  @FXML
+  private TextField itemNameField;
 
-  @FXML private TextField startingPriceField;
-  @FXML private TextField minBidStepField; // Bước giá tối thiểu
+  @FXML
+  private TextField startingPriceField;
+  @FXML
+  private TextField minBidStepField; // Bước giá tối thiểu
 
-  @FXML private DatePicker startDatePicker;
+  @FXML
+  private DatePicker startDatePicker;
 
-  @FXML private DatePicker endDatePicker;
-  
-  @FXML private ComboBox<Integer> startHourCombo;
-  @FXML private ComboBox<Integer> startMinuteCombo;
-  @FXML private ComboBox<Integer> endHourCombo;
-  @FXML private ComboBox<Integer> endMinuteCombo;
-  
-  @FXML private javafx.scene.control.TextArea itemDescriptionArea;
-  @FXML private javafx.scene.control.TextArea itemSpecificsArea;
-  @FXML private javafx.scene.image.ImageView itemImageView;
+  @FXML
+  private DatePicker endDatePicker;
+
+  @FXML
+  private ComboBox<Integer> startHourCombo;
+  @FXML
+  private ComboBox<Integer> startMinuteCombo;
+  @FXML
+  private ComboBox<Integer> endHourCombo;
+  @FXML
+  private ComboBox<Integer> endMinuteCombo;
+
+  @FXML
+  private javafx.scene.control.TextArea itemDescriptionArea;
+  @FXML
+  private javafx.scene.control.TextArea itemSpecificsArea;
+  @FXML
+  private javafx.scene.image.ImageView itemImageView;
   private String currentImageBase64 = null;
-  
-  @FXML private Button createAuctionButton;
-  @FXML private Button cancelEditButton;
 
-  @FXML private Label formResultLabel;
+  @FXML
+  private Button createAuctionButton;
+  @FXML
+  private Button cancelEditButton;
+
+  @FXML
+  private Label formResultLabel;
 
   // Bảng danh sách phiên đấu giá đã tạo
-  @FXML private TableView<Auction> myAuctionsTable;
+  @FXML
+  private TableView<Auction> myAuctionsTable;
 
-  @FXML private TableColumn<Auction, Long> idCol;
-  @FXML private TableColumn<Auction, String> itemNameCol;
+  @FXML
+  private TableColumn<Auction, Long> idCol;
+  @FXML
+  private TableColumn<Auction, String> itemNameCol;
   // Cột loại sản phẩm (mới) — hiển thị ELECTRONICS/ARTWORK/VEHICLE/OTHER bằng tiếng Việt
-  @FXML private TableColumn<Auction, String> categoryCol;
-  @FXML private TableColumn<Auction, Long> priceCol;
-  @FXML private TableColumn<Auction, String> statusCol;
-  @FXML private TableColumn<Auction, String> startTimeCol;
-  @FXML private TableColumn<Auction, String> endTimeCol;
-  @FXML private TableColumn<Auction, Void> actionCol;
+  @FXML
+  private TableColumn<Auction, String> categoryCol;
+  @FXML
+  private TableColumn<Auction, Long> priceCol;
+  @FXML
+  private TableColumn<Auction, String> statusCol;
+  @FXML
+  private TableColumn<Auction, String> startTimeCol;
+  @FXML
+  private TableColumn<Auction, String> endTimeCol;
+  @FXML
+  private TableColumn<Auction, Void> actionCol;
 
-  @FXML private Label sellerNameLabel;
-  @FXML private Button walletButton;
-  @FXML private Button logoutButton;
-  @FXML private Button refreshButton;
+  @FXML
+  private Label sellerNameLabel;
+  @FXML
+  private Button walletButton;
+  @FXML
+  private Button logoutButton;
+  @FXML
+  private Button refreshButton;
 
   // -- Dữ liệu & Dependency --
-  private final java.time.format.DateTimeFormatter formatter = 
+  private final java.time.format.DateTimeFormatter formatter =
       java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
 
   private final ServerService serverService = new ServerService();
@@ -102,15 +133,13 @@ public class SellerDashboardController {
 
   // Bảng ánh xạ: Tên tiếng Việt hiển thị trên ComboBox → giá trị enum gửi lên server
   // Giúp Seller dễ hiểu hơn so với tên enum tiếng Anh (ELECTRONICS, ARTWORK, VEHICLE, OTHER)
-  private static final String[] CATEGORY_DISPLAY_NAMES = {
-      "Điện tử",      // → ELECTRONICS
-      "Nghệ thuật",   // → ARTWORK
-      "Xe cộ",         // → VEHICLE
-      "Khác"           // → OTHER
+  private static final String[] CATEGORY_DISPLAY_NAMES = {"Điện tử", // → ELECTRONICS
+      "Nghệ thuật", // → ARTWORK
+      "Xe cộ", // → VEHICLE
+      "Khác" // → OTHER
   };
-  private static final String[] CATEGORY_ENUM_VALUES = {
-      "ELECTRONICS", "ARTWORK", "VEHICLE", "OTHER"
-  };
+  private static final String[] CATEGORY_ENUM_VALUES =
+      {"ELECTRONICS", "ARTWORK", "VEHICLE", "OTHER"};
 
   private Long editingAuctionId = null;
 
@@ -126,22 +155,22 @@ public class SellerDashboardController {
     // Cấu hình cột bảng
     idCol.setCellValueFactory(new PropertyValueFactory<>("id"));
     itemNameCol.setCellValueFactory(new PropertyValueFactory<>("itemName"));
-    
+
     // Cột loại sản phẩm — chuyển enum tiếng Anh sang tiếng Việt để dễ đọc
-    categoryCol.setCellValueFactory(
-        cell -> {
-          String cat = cell.getValue().getItemCategory();
-          if (cat == null) cat = "OTHER";
-          String vietnameseCategory = switch (cat) {
-            case "ELECTRONICS" -> "Điện tử";
-            case "ARTWORK" -> "Nghệ thuật";
-            case "VEHICLE" -> "Xe cộ";
-            case "OTHER" -> "Khác";
-            default -> cat;
-          };
-          return new javafx.beans.property.SimpleStringProperty(vietnameseCategory);
-        });
-    
+    categoryCol.setCellValueFactory(cell -> {
+      String cat = cell.getValue().getItemCategory();
+      if (cat == null)
+        cat = "OTHER";
+      String vietnameseCategory = switch (cat) {
+        case "ELECTRONICS" -> "Điện tử";
+        case "ARTWORK" -> "Nghệ thuật";
+        case "VEHICLE" -> "Xe cộ";
+        case "OTHER" -> "Khác";
+        default -> cat;
+      };
+      return new javafx.beans.property.SimpleStringProperty(vietnameseCategory);
+    });
+
     priceCol.setCellFactory(column -> new javafx.scene.control.TableCell<>() {
       @Override
       protected void updateItem(Long price, boolean empty) {
@@ -155,27 +184,24 @@ public class SellerDashboardController {
     });
     priceCol.setCellValueFactory(new PropertyValueFactory<>("currentPrice"));
 
-    statusCol.setCellValueFactory(
-        cell -> {
-          String s = cell.getValue().getStatus().name();
-          String vietnameseStatus = switch (s) {
-            case "OPEN" -> "Đang mở";
-            case "RUNNING" -> "Đang diễn ra";
-            case "FINISHED" -> "Đã kết thúc";
-            case "PAID" -> "Đã thanh toán";
-            case "CANCELED" -> "Đã hủy";
-            default -> s;
-          };
-          return new javafx.beans.property.SimpleStringProperty(vietnameseStatus);
-        });
+    statusCol.setCellValueFactory(cell -> {
+      String s = cell.getValue().getStatus().name();
+      String vietnameseStatus = switch (s) {
+        case "OPEN" -> "Đang mở";
+        case "RUNNING" -> "Đang diễn ra";
+        case "FINISHED" -> "Đã kết thúc";
+        case "PAID" -> "Đã thanh toán";
+        case "CANCELED" -> "Đã hủy";
+        default -> s;
+      };
+      return new javafx.beans.property.SimpleStringProperty(vietnameseStatus);
+    });
 
-    startTimeCol.setCellValueFactory(
-        cell -> new javafx.beans.property.SimpleStringProperty(
-            cell.getValue().getStartTime().format(formatter)));
-            
-    endTimeCol.setCellValueFactory(
-        cell -> new javafx.beans.property.SimpleStringProperty(
-            cell.getValue().getEndTime().format(formatter)));
+    startTimeCol.setCellValueFactory(cell -> new javafx.beans.property.SimpleStringProperty(
+        cell.getValue().getStartTime().format(formatter)));
+
+    endTimeCol.setCellValueFactory(cell -> new javafx.beans.property.SimpleStringProperty(
+        cell.getValue().getEndTime().format(formatter)));
 
     // Cột Hành động (Sửa/Xóa)
     actionCol.setCellFactory(new Callback<>() {
@@ -210,10 +236,11 @@ public class SellerDashboardController {
               Auction auction = getTableView().getItems().get(getIndex());
               // Chỉ hiện thị / enable theo rule Sửa/Xóa mới
               // Sửa: Chỉ khi OPEN hoặc RUNNING
-              editBtn.setDisable(auction.getStatus() != AuctionStatus.OPEN && auction.getStatus() != AuctionStatus.RUNNING);
+              editBtn.setDisable(auction.getStatus() != AuctionStatus.OPEN
+                  && auction.getStatus() != AuctionStatus.RUNNING);
               // Xóa: Chỉ khi chưa có winner (chưa có ai đặt giá)
               deleteBtn.setDisable(auction.getCurrentWinnerId() != null);
-              
+
               setGraphic(pane);
             }
           }
@@ -230,9 +257,11 @@ public class SellerDashboardController {
 
     // Khởi tạo ComboBox giờ và phút cho Form
     ObservableList<Integer> hours = FXCollections.observableArrayList();
-    for (int i = 0; i < 24; i++) hours.add(i);
+    for (int i = 0; i < 24; i++)
+      hours.add(i);
     ObservableList<Integer> minutes = FXCollections.observableArrayList();
-    for (int i = 0; i < 60; i++) minutes.add(i);
+    for (int i = 0; i < 60; i++)
+      minutes.add(i);
 
     startHourCombo.setItems(hours);
     startMinuteCombo.setItems(minutes);
@@ -252,6 +281,9 @@ public class SellerDashboardController {
 
     // Load danh sách phiên của seller hiện tại
     loadMyAuctions();
+
+    // Fix lỗi hiển thị newline của promptText trong FXML (JavaFX strip \n nên phải dùng \r)
+    itemSpecificsArea.setPromptText("Ví dụ: \rThương hiệu: Apple \rTình trạng: Mới 100%");
   }
 
   /** Gọi server lấy danh sách phiên của seller và cập nhật bảng. */
@@ -262,8 +294,8 @@ public class SellerDashboardController {
   }
 
   /**
-   * Chuyển đổi tên hiển thị tiếng Việt trong ComboBox sang giá trị enum để gửi lên server.
-   * Ví dụ: "Điện tử" → "ELECTRONICS", "Nghệ thuật" → "ARTWORK"
+   * Chuyển đổi tên hiển thị tiếng Việt trong ComboBox sang giá trị enum để gửi lên server. Ví dụ:
+   * "Điện tử" → "ELECTRONICS", "Nghệ thuật" → "ARTWORK"
    *
    * @param displayName tên hiển thị tiếng Việt từ categoryCombo
    * @return tên enum tiếng Anh tương ứng, hoặc "OTHER" nếu không tìm thấy
@@ -278,13 +310,12 @@ public class SellerDashboardController {
   }
 
   /**
-   * Xử lý khi Seller nhấn nút "Tạo Phiên Mới" hoặc "Lưu Thay Đổi".
-   * Validate form, tạo hoặc cập nhật Item + Auction trên server.
+   * Xử lý khi Seller nhấn nút "Tạo Phiên Mới" hoặc "Lưu Thay Đổi". Validate form, tạo hoặc cập nhật
+   * Item + Auction trên server.
    *
-   * <p>Luồng xử lý:
-   * 1. Validate: kiểm tra các trường bắt buộc
-   * 2. Chuyển đổi category từ tiếng Việt sang enum
-   * 3. Gửi request lên server
+   * <p>
+   * Luồng xử lý: 1. Validate: kiểm tra các trường bắt buộc 2. Chuyển đổi category từ tiếng Việt
+   * sang enum 3. Gửi request lên server
    *
    * @param event ActionEvent từ createAuctionButton
    */
@@ -293,46 +324,50 @@ public class SellerDashboardController {
     javafx.stage.FileChooser fileChooser = new javafx.stage.FileChooser();
     fileChooser.setTitle("Chọn Hình Ảnh Sản Phẩm");
     fileChooser.getExtensionFilters().addAll(
-        new javafx.stage.FileChooser.ExtensionFilter("Image Files", "*.png", "*.jpg", "*.jpeg")
-    );
+        new javafx.stage.FileChooser.ExtensionFilter("Image Files", "*.png", "*.jpg", "*.jpeg"));
     java.io.File selectedFile = fileChooser.showOpenDialog(itemNameField.getScene().getWindow());
     if (selectedFile != null) {
       try {
-        // [Xử lý ảnh Base64] Nén và chuyển đổi file ảnh sang chuỗi Base64 để tránh lỗi max_allowed_packet
+        // [Xử lý ảnh Base64] Nén và chuyển đổi file ảnh sang chuỗi Base64 để tránh lỗi
+        // max_allowed_packet
         try {
           java.awt.image.BufferedImage img = javax.imageio.ImageIO.read(selectedFile);
           if (img != null) {
-              int targetSize = 800;
-              if (img.getWidth() > targetSize || img.getHeight() > targetSize) {
-                  double scale = Math.min((double)targetSize / img.getWidth(), (double)targetSize / img.getHeight());
-                  int w = (int) (img.getWidth() * scale);
-                  int h = (int) (img.getHeight() * scale);
-                  java.awt.image.BufferedImage resized = new java.awt.image.BufferedImage(w, h, java.awt.image.BufferedImage.TYPE_INT_RGB);
-                  java.awt.Graphics2D g = resized.createGraphics();
-                  g.drawImage(img, 0, 0, w, h, null);
-                  g.dispose();
-                  img = resized;
-              } else {
-                  java.awt.image.BufferedImage noAlpha = new java.awt.image.BufferedImage(img.getWidth(), img.getHeight(), java.awt.image.BufferedImage.TYPE_INT_RGB);
-                  java.awt.Graphics2D g = noAlpha.createGraphics();
-                  g.drawImage(img, 0, 0, null);
-                  g.dispose();
-                  img = noAlpha;
-              }
-              java.io.ByteArrayOutputStream baos = new java.io.ByteArrayOutputStream();
-              javax.imageio.ImageIO.write(img, "jpg", baos);
-              currentImageBase64 = java.util.Base64.getEncoder().encodeToString(baos.toByteArray());
+            int targetSize = 800;
+            if (img.getWidth() > targetSize || img.getHeight() > targetSize) {
+              double scale = Math.min((double) targetSize / img.getWidth(),
+                  (double) targetSize / img.getHeight());
+              int w = (int) (img.getWidth() * scale);
+              int h = (int) (img.getHeight() * scale);
+              java.awt.image.BufferedImage resized =
+                  new java.awt.image.BufferedImage(w, h, java.awt.image.BufferedImage.TYPE_INT_RGB);
+              java.awt.Graphics2D g = resized.createGraphics();
+              g.drawImage(img, 0, 0, w, h, null);
+              g.dispose();
+              img = resized;
+            } else {
+              java.awt.image.BufferedImage noAlpha = new java.awt.image.BufferedImage(
+                  img.getWidth(), img.getHeight(), java.awt.image.BufferedImage.TYPE_INT_RGB);
+              java.awt.Graphics2D g = noAlpha.createGraphics();
+              g.drawImage(img, 0, 0, null);
+              g.dispose();
+              img = noAlpha;
+            }
+            java.io.ByteArrayOutputStream baos = new java.io.ByteArrayOutputStream();
+            javax.imageio.ImageIO.write(img, "jpg", baos);
+            currentImageBase64 = java.util.Base64.getEncoder().encodeToString(baos.toByteArray());
           } else {
-              byte[] fileContent = java.nio.file.Files.readAllBytes(selectedFile.toPath());
-              currentImageBase64 = java.util.Base64.getEncoder().encodeToString(fileContent);
-          }
-        } catch (Exception e) {
             byte[] fileContent = java.nio.file.Files.readAllBytes(selectedFile.toPath());
             currentImageBase64 = java.util.Base64.getEncoder().encodeToString(fileContent);
+          }
+        } catch (Exception e) {
+          byte[] fileContent = java.nio.file.Files.readAllBytes(selectedFile.toPath());
+          currentImageBase64 = java.util.Base64.getEncoder().encodeToString(fileContent);
         }
-        
+
         // Hiển thị preview
-        javafx.scene.image.Image image = new javafx.scene.image.Image(selectedFile.toURI().toString());
+        javafx.scene.image.Image image =
+            new javafx.scene.image.Image(selectedFile.toURI().toString());
         itemImageView.setImage(image);
       } catch (Exception e) {
         formResultLabel.setText("Lỗi khi đọc file ảnh: " + e.getMessage());
@@ -347,15 +382,10 @@ public class SellerDashboardController {
     String minStepText = minBidStepField.getText().trim();
 
     // Validate: các trường bắt buộc không được rỗng
-    if (categoryCombo.getValue() == null
-        || itemName.isEmpty()
-        || priceText.isEmpty()
-        || startDatePicker.getValue() == null
-        || endDatePicker.getValue() == null
-        || startHourCombo.getValue() == null
-        || startMinuteCombo.getValue() == null
-        || endHourCombo.getValue() == null
-        || endMinuteCombo.getValue() == null) {
+    if (categoryCombo.getValue() == null || itemName.isEmpty() || priceText.isEmpty()
+        || startDatePicker.getValue() == null || endDatePicker.getValue() == null
+        || startHourCombo.getValue() == null || startMinuteCombo.getValue() == null
+        || endHourCombo.getValue() == null || endMinuteCombo.getValue() == null) {
       formResultLabel.setText("Vui lòng điền đầy đủ tất cả thông tin!");
       return;
     }
@@ -393,19 +423,19 @@ public class SellerDashboardController {
 
     // [Xử lý thời gian] Chuyển đổi dữ liệu từ DatePicker và ComboBox Giờ/Phút sang LocalDateTime
     LocalDateTime now = LocalDateTime.now();
-    LocalDateTime startTime = startDatePicker.getValue().atTime(
-        startHourCombo.getValue(), startMinuteCombo.getValue());
-    
-    // [Validation] Chống tạo phiên đấu giá trong quá khứ. 
+    LocalDateTime startTime =
+        startDatePicker.getValue().atTime(startHourCombo.getValue(), startMinuteCombo.getValue());
+
+    // [Validation] Chống tạo phiên đấu giá trong quá khứ.
     // Chúng ta cho phép sai số 10 giây để bù đắp cho độ trễ khi thao tác form.
     // if (startTime.isBefore(now.minusSeconds(10))) {
-    //     formResultLabel.setText("Lỗi: Thời gian bắt đầu không được ở trong quá khứ!");
-    //     return;
+    // formResultLabel.setText("Lỗi: Thời gian bắt đầu không được ở trong quá khứ!");
+    // return;
     // }
-    
+
     // Tương tự cho thời gian kết thúc
-    LocalDateTime endTime = endDatePicker.getValue().atTime(
-        endHourCombo.getValue(), endMinuteCombo.getValue());
+    LocalDateTime endTime =
+        endDatePicker.getValue().atTime(endHourCombo.getValue(), endMinuteCombo.getValue());
 
     // [Validation] Thời gian kết thúc phải sau thời gian bắt đầu
     if (!endTime.isAfter(startTime)) {
@@ -416,25 +446,25 @@ public class SellerDashboardController {
     Long sellerId = session.getCurrentUser().getId();
 
     // [Thêm bước xác nhận] Hỏi Seller trước khi tạo phiên đấu giá chính thức
-    javafx.scene.control.Alert confirmAlert = new javafx.scene.control.Alert(javafx.scene.control.Alert.AlertType.CONFIRMATION);
+    javafx.scene.control.Alert confirmAlert =
+        new javafx.scene.control.Alert(javafx.scene.control.Alert.AlertType.CONFIRMATION);
     NotificationUtils.styleAlert(confirmAlert);
     confirmAlert.setGraphic(null); // Bỏ dấu "?"
     confirmAlert.setTitle("Xác Nhận Tạo Phiên");
     confirmAlert.setHeaderText("Bạn có chắc chắn muốn tạo phiên đấu giá mới này không?");
-    confirmAlert.setContentText(
-        "Sản phẩm: " + itemName + "\n"
-        + "Loại: " + categoryCombo.getValue() + "\n"
-        + "Giá khởi điểm: " + String.format("%,d", startingPrice) + " VNĐ\n"
+    confirmAlert.setContentText("Sản phẩm: " + itemName + "\n" + "Loại: " + categoryCombo.getValue()
+        + "\n" + "Giá khởi điểm: " + String.format("%,d", startingPrice) + " VNĐ\n"
         + "Bước giá tối thiểu: " + String.format("%,d", minBidStep) + " VNĐ");
 
     java.util.Optional<javafx.scene.control.ButtonType> confirmResult = confirmAlert.showAndWait();
     if (confirmResult.isEmpty() || confirmResult.get() != javafx.scene.control.ButtonType.OK) {
-        return; // Hủy tạo/sửa phiên
+      return; // Hủy tạo/sửa phiên
     }
 
     if (editingAuctionId != null) {
-      boolean success = serverService.updateAuctionSeller(
-          editingAuctionId, sellerId, itemName, categoryEnum, startingPrice, startTime, endTime, itemDescriptionArea.getText(), itemSpecificsArea.getText(), currentImageBase64, minBidStep);
+      boolean success = serverService.updateAuctionSeller(editingAuctionId, sellerId, itemName,
+          categoryEnum, startingPrice, startTime, endTime, itemDescriptionArea.getText(),
+          itemSpecificsArea.getText(), currentImageBase64, minBidStep);
       if (success) {
         formResultLabel.setText("Cập nhật phiên đấu giá #" + editingAuctionId + " thành công!");
         handleCancelEdit(null); // Reset form
@@ -453,10 +483,10 @@ public class SellerDashboardController {
       newAuction.setMinBidStep(minBidStep);
       // Lưu tạm itemName và category vào object để Handler lấy ra gửi JSON
       newAuction.setItemName(itemName);
-      newAuction.setItemCategory(categoryEnum); 
+      newAuction.setItemCategory(categoryEnum);
       newAuction.setItemDescription(itemDescriptionArea.getText());
       newAuction.setItemSpecifics(itemSpecificsArea.getText());
-      newAuction.setImageBase64(currentImageBase64); 
+      newAuction.setImageBase64(currentImageBase64);
 
       Long createdId = serverService.createAuction(newAuction);
 
@@ -486,7 +516,7 @@ public class SellerDashboardController {
     cancelEditButton.setVisible(false);
     cancelEditButton.setManaged(false);
     formResultLabel.setText("");
-    
+
     // Mở khóa các trường nhạy cảm
     itemNameField.setDisable(false);
     categoryCombo.setDisable(false);
@@ -498,7 +528,7 @@ public class SellerDashboardController {
     endDatePicker.setDisable(false);
     endHourCombo.setDisable(false);
     endMinuteCombo.setDisable(false);
-    
+
     clearForm();
   }
 
@@ -521,9 +551,10 @@ public class SellerDashboardController {
     endDatePicker.setDisable(isRunning);
     endHourCombo.setDisable(isRunning);
     endMinuteCombo.setDisable(isRunning);
-    
+
     if (isRunning) {
-        formResultLabel.setText("Phiên #" + auction.getId() + " đang diễn ra. Bạn chỉ có thể sửa Mô tả, Thông số và Ảnh.");
+      formResultLabel.setText("Phiên #" + auction.getId()
+          + " đang diễn ra. Bạn chỉ có thể sửa Mô tả, Thông số và Ảnh.");
     }
 
     itemNameField.setText(auction.getItemName());
@@ -557,13 +588,15 @@ public class SellerDashboardController {
       endMinuteCombo.setValue(auction.getEndTime().getMinute());
     }
 
-    itemDescriptionArea.setText(auction.getItemDescription() != null ? auction.getItemDescription() : "");
+    itemDescriptionArea
+        .setText(auction.getItemDescription() != null ? auction.getItemDescription() : "");
     itemSpecificsArea.setText(auction.getItemSpecifics() != null ? auction.getItemSpecifics() : "");
     currentImageBase64 = auction.getImageBase64();
     if (currentImageBase64 != null && !currentImageBase64.isEmpty()) {
       try {
         byte[] imageBytes = java.util.Base64.getDecoder().decode(currentImageBase64);
-        javafx.scene.image.Image image = new javafx.scene.image.Image(new java.io.ByteArrayInputStream(imageBytes));
+        javafx.scene.image.Image image =
+            new javafx.scene.image.Image(new java.io.ByteArrayInputStream(imageBytes));
         itemImageView.setImage(image);
       } catch (Exception e) {
         itemImageView.setImage(null);
@@ -574,21 +607,25 @@ public class SellerDashboardController {
   }
 
   private void handleDelete(Auction auction) {
-    javafx.scene.control.Alert confirmAlert = new javafx.scene.control.Alert(javafx.scene.control.Alert.AlertType.CONFIRMATION);
+    javafx.scene.control.Alert confirmAlert =
+        new javafx.scene.control.Alert(javafx.scene.control.Alert.AlertType.CONFIRMATION);
     NotificationUtils.styleAlert(confirmAlert);
     confirmAlert.setGraphic(null);
     confirmAlert.setTitle("Xác Nhận Xóa");
-    confirmAlert.setHeaderText("Bạn có chắc chắn muốn xóa phiên đấu giá #" + auction.getId() + " không?");
+    confirmAlert
+        .setHeaderText("Bạn có chắc chắn muốn xóa phiên đấu giá #" + auction.getId() + " không?");
     confirmAlert.setContentText("Hành động này không thể hoàn tác!");
 
     java.util.Optional<javafx.scene.control.ButtonType> confirmResult = confirmAlert.showAndWait();
     if (confirmResult.isPresent() && confirmResult.get() == javafx.scene.control.ButtonType.OK) {
-      boolean success = serverService.deleteAuctionSeller(auction.getId(), session.getCurrentUser().getId());
+      boolean success =
+          serverService.deleteAuctionSeller(auction.getId(), session.getCurrentUser().getId());
       if (success) {
         formResultLabel.setText("Đã xóa phiên đấu giá #" + auction.getId());
         loadMyAuctions();
       } else {
-        formResultLabel.setText("Xóa thất bại. Vui lòng kiểm tra xem phiên đấu giá đã có người đặt giá chưa.");
+        formResultLabel
+            .setText("Xóa thất bại. Vui lòng kiểm tra xem phiên đấu giá đã có người đặt giá chưa.");
       }
     }
   }
@@ -621,21 +658,22 @@ public class SellerDashboardController {
   @FXML
   private void handleLogout(ActionEvent event) {
     // [Thêm bước xác nhận] Hỏi bạn trước khi đăng xuất
-    javafx.scene.control.Alert alert = new javafx.scene.control.Alert(javafx.scene.control.Alert.AlertType.CONFIRMATION);
+    javafx.scene.control.Alert alert =
+        new javafx.scene.control.Alert(javafx.scene.control.Alert.AlertType.CONFIRMATION);
     NotificationUtils.styleAlert(alert);
     alert.setGraphic(null); // Bỏ dấu "?"
     alert.setTitle("Xác Nhận Đăng Xuất");
     alert.setHeaderText("Bạn có thực sự muốn đăng xuất không?");
-    
+
     java.util.Optional<javafx.scene.control.ButtonType> result = alert.showAndWait();
     if (result.isPresent() && result.get() == javafx.scene.control.ButtonType.OK) {
-        session.clearSession();
-        try {
-          Stage stage = (Stage) logoutButton.getScene().getWindow();
-          FxmlLoader.navigateTo(stage, "login.fxml", "Online Auction System — Đăng Nhập");
-        } catch (IOException e) {
-          e.printStackTrace();
-        }
+      session.clearSession();
+      try {
+        Stage stage = (Stage) logoutButton.getScene().getWindow();
+        FxmlLoader.navigateTo(stage, "login.fxml", "Online Auction System — Đăng Nhập");
+      } catch (IOException e) {
+        e.printStackTrace();
+      }
     }
   }
 
@@ -654,7 +692,7 @@ public class SellerDashboardController {
     itemSpecificsArea.clear();
     itemImageView.setImage(null);
     currentImageBase64 = null;
-    
+
     // Đảm bảo mở khóa toàn bộ khi xóa form
     itemNameField.setDisable(false);
     categoryCombo.setDisable(false);
