@@ -78,6 +78,8 @@ public class AuctionDetailController {
    */
   @FXML
   public void initialize() {
+    itemImageView.setCursor(javafx.scene.Cursor.HAND);
+
     Auction auction = session.getSelectedAuction();
 
     // Lập trình phòng thủ: nếu không có dữ liệu thì không làm gì để tránh NullPointerException
@@ -294,5 +296,76 @@ public class AuctionDetailController {
       if (countdownTimeline != null) {
           countdownTimeline.stop();
       }
+  }
+
+  /**
+   * Xử lý sự kiện click vào ảnh sản phẩm để mở trình xem ảnh (Image Viewer) với tính năng Zoom.
+   *
+   * @param event MouseEvent
+   */
+  @FXML
+  private void handleImageClick(javafx.scene.input.MouseEvent event) {
+      if (itemImageView.getImage() == null) return;
+
+      javafx.stage.Stage zoomStage = new javafx.stage.Stage();
+      zoomStage.setTitle("Chi Tiết Hình Ảnh");
+      zoomStage.initModality(javafx.stage.Modality.APPLICATION_MODAL);
+      
+      javafx.scene.image.ImageView fullImageView = new javafx.scene.image.ImageView(itemImageView.getImage());
+      fullImageView.setPreserveRatio(true);
+      
+      // Lấy kích thước ảnh gốc
+      double originalW = itemImageView.getImage().getWidth();
+      double originalH = itemImageView.getImage().getHeight();
+      
+      // Giới hạn kích thước cửa sổ không quá to
+      double stageW = Math.min(originalW + 60, 1000);
+      double stageH = Math.min(originalH + 100, 800);
+      
+      if (originalW > 1000 || originalH > 800) {
+          fullImageView.setFitWidth(1000);
+          fullImageView.setFitHeight(800);
+      }
+
+      // Đưa ImageView vào Group để ScrollPane có thể nhận diện đúng kích thước khi Scale (Zoom)
+      javafx.scene.Group group = new javafx.scene.Group(fullImageView);
+      javafx.scene.layout.StackPane imageContainer = new javafx.scene.layout.StackPane(group);
+      imageContainer.setStyle("-fx-background-color: #0f111a;");
+
+      javafx.scene.control.ScrollPane scrollPane = new javafx.scene.control.ScrollPane(imageContainer);
+      scrollPane.setPannable(true); // Cho phép kéo chuột để cuộn (Pan)
+      scrollPane.setFitToWidth(true);
+      scrollPane.setFitToHeight(true);
+      scrollPane.setStyle("-fx-background: #0f111a; -fx-background-color: #0f111a;");
+
+      // Logic Zoom bằng thao tác Cuộn chuột (Scroll) + giữ Ctrl
+      scrollPane.addEventFilter(javafx.scene.input.ScrollEvent.SCROLL, e -> {
+          if (e.isControlDown()) {
+              double zoomFactor = 1.1;
+              if (e.getDeltaY() < 0) {
+                  zoomFactor = 1 / zoomFactor; // Thu nhỏ
+              }
+              // Tính toán tỷ lệ zoom mới, giới hạn từ 0.2x đến 5.0x
+              double newScale = fullImageView.getScaleX() * zoomFactor;
+              if (newScale >= 0.2 && newScale <= 5.0) {
+                  fullImageView.setScaleX(newScale);
+                  fullImageView.setScaleY(newScale);
+              }
+              e.consume();
+          }
+      });
+      
+      // Thêm thanh thông báo hướng dẫn sử dụng
+      javafx.scene.control.Label hintLabel = new javafx.scene.control.Label("💡 Giữ Ctrl + Cuộn chuột để Thu/Phóng. Kéo thả chuột để di chuyển ảnh.");
+      hintLabel.setStyle("-fx-text-fill: white; -fx-padding: 12px; -fx-background-color: #1a1d29; -fx-font-size: 13px; -fx-alignment: center;");
+      hintLabel.setMaxWidth(Double.MAX_VALUE);
+      
+      javafx.scene.layout.BorderPane root = new javafx.scene.layout.BorderPane();
+      root.setCenter(scrollPane);
+      root.setBottom(hintLabel);
+
+      javafx.scene.Scene scene = new javafx.scene.Scene(root, stageW, stageH);
+      zoomStage.setScene(scene);
+      zoomStage.show();
   }
 }

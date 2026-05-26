@@ -42,27 +42,39 @@
         <Label text="Thông Tin Sản Phẩm" styleClass="section-title"/>
         <Separator/>
 
-        <!-- Hình ảnh sản phẩm -->
-        <HBox alignment="CENTER">
-            <javafx.scene.image.ImageView fx:id="itemImageView" fitWidth="250" fitHeight="250" preserveRatio="true"/>
+        <HBox spacing="20" alignment="TOP_LEFT">
+          <!-- Cột trái: Hình ảnh -->
+          <VBox alignment="TOP_CENTER" spacing="8" minWidth="250" maxWidth="250">
+            <javafx.scene.image.ImageView fx:id="itemImageView" fitWidth="250" fitHeight="250" preserveRatio="true" onMouseClicked="#handleImageClick"/>
+            <Label text="🔍 Nhấn vào ảnh để phóng to" style="-fx-font-size: 12px; -fx-text-fill: #a0aab5;"/>
+          </VBox>
+
+          <!-- Cột phải: Thông tin chi tiết -->
+          <VBox spacing="14" HBox.hgrow="ALWAYS">
+            <GridPane hgap="12" vgap="10">
+              <columnConstraints>
+                <javafx.scene.layout.ColumnConstraints minWidth="100" prefWidth="100" halignment="LEFT"/>
+                <javafx.scene.layout.ColumnConstraints hgrow="ALWAYS" minWidth="200"/>
+              </columnConstraints>
+
+              <Label text="Tên sản phẩm:" styleClass="info-key" GridPane.columnIndex="0" GridPane.rowIndex="0"/>
+              <Label fx:id="itemNameLabel" text="—" styleClass="info-value" GridPane.columnIndex="1" GridPane.rowIndex="0" wrapText="true"/>
+
+              <Label text="Danh mục:" styleClass="info-key" GridPane.columnIndex="0" GridPane.rowIndex="1"/>
+              <Label fx:id="itemCategoryLabel" text="—" styleClass="info-value" GridPane.columnIndex="1" GridPane.rowIndex="1" wrapText="true"/>
+
+              <Label text="Mô tả:" styleClass="info-key" GridPane.columnIndex="0" GridPane.rowIndex="2" GridPane.valignment="TOP"/>
+              <Label fx:id="itemDescriptionLabel" text="—" styleClass="info-value" wrapText="true" GridPane.columnIndex="1" GridPane.rowIndex="2"/>
+            </GridPane>
+
+            <Separator/>
+
+            <Label text="Thông Số Kỹ Thuật:" styleClass="info-key" />
+            <VBox fx:id="itemSpecificsContainer" spacing="5">
+                 <!-- Các dòng thông số sẽ được tạo bằng code -->
+            </VBox>
+          </VBox>
         </HBox>
-
-        <GridPane hgap="12" vgap="10">
-          <Label text="Tên sản phẩm:" styleClass="info-key" GridPane.columnIndex="0" GridPane.rowIndex="0"/>
-          <Label fx:id="itemNameLabel" text="—" styleClass="info-value" GridPane.columnIndex="1" GridPane.rowIndex="0"/>
-
-          <Label text="Danh mục:" styleClass="info-key" GridPane.columnIndex="0" GridPane.rowIndex="1"/>
-          <Label fx:id="itemCategoryLabel" text="—" styleClass="info-value" GridPane.columnIndex="1" GridPane.rowIndex="1"/>
-
-          <Label text="Mô tả:" styleClass="info-key" GridPane.columnIndex="0" GridPane.rowIndex="2" GridPane.valignment="TOP"/>
-          <Label fx:id="itemDescriptionLabel" text="—" styleClass="info-value" wrapText="true"
-                 maxWidth="300" GridPane.columnIndex="1" GridPane.rowIndex="2"/>
-        </GridPane>
-
-        <Label text="Thông Số Kỹ Thuật:" styleClass="info-key" />
-        <VBox fx:id="itemSpecificsContainer" spacing="5">
-             <!-- Các dòng thông số sẽ được tạo bằng code -->
-        </VBox>
       </VBox>
 
       <!-- Panel phải: Thông tin phiên đấu giá -->
