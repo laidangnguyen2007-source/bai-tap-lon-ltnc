@@ -58,13 +58,13 @@
               </columnConstraints>
 
               <Label text="Tên sản phẩm:" styleClass="info-key" GridPane.columnIndex="0" GridPane.rowIndex="0"/>
-              <Label fx:id="itemNameLabel" text="—" styleClass="info-value" GridPane.columnIndex="1" GridPane.rowIndex="0" wrapText="true"/>
+              <Label fx:id="itemNameLabel" text="—" styleClass="info-value" GridPane.columnIndex="1" GridPane.rowIndex="0" wrapText="true" minWidth="0"/>
 
               <Label text="Danh mục:" styleClass="info-key" GridPane.columnIndex="0" GridPane.rowIndex="1"/>
-              <Label fx:id="itemCategoryLabel" text="—" styleClass="info-value" GridPane.columnIndex="1" GridPane.rowIndex="1" wrapText="true"/>
+              <Label fx:id="itemCategoryLabel" text="—" styleClass="info-value" GridPane.columnIndex="1" GridPane.rowIndex="1" wrapText="true" minWidth="0"/>
 
               <Label text="Mô tả:" styleClass="info-key" GridPane.columnIndex="0" GridPane.rowIndex="2" GridPane.valignment="TOP"/>
-              <Label fx:id="itemDescriptionLabel" text="—" styleClass="info-value" wrapText="true" GridPane.columnIndex="1" GridPane.rowIndex="2"/>
+              <Label fx:id="itemDescriptionLabel" text="—" styleClass="info-value" wrapText="true" GridPane.columnIndex="1" GridPane.rowIndex="2" minWidth="0"/>
             </GridPane>
 
             <Separator/>
@@ -78,7 +78,7 @@
       </VBox>
 
       <!-- Panel phải: Thông tin phiên đấu giá -->
-      <VBox styleClass="info-card" spacing="14" prefWidth="320">
+      <VBox styleClass="info-card" spacing="14" prefWidth="320" minWidth="320" maxWidth="320">
         <padding><Insets top="20" right="20" bottom="20" left="20"/></padding>
 
         <Label text="Thông Tin Phiên Đấu Giá" styleClass="section-title"/>
