@@ -482,10 +482,24 @@ public class SellerDashboardController implements com.auction.client.observer.Au
 
         Long sellerId = session.getCurrentUser().getId();
 
+        String imageToSave = currentImageBase64;
+        if (imageToSave == null || imageToSave.isEmpty()) {
+            try (java.io.InputStream is = getClass().getResourceAsStream("/anh.jpg")) {
+                if (is != null) {
+                    byte[] fileContent = is.readAllBytes();
+                    imageToSave = Base64.getEncoder().encodeToString(fileContent);
+                } else {
+                    System.err.println("Không tìm thấy /anh.jpg trong resources.");
+                }
+            } catch (Exception e) {
+                System.err.println("Không thể load ảnh mặc định anh.jpg: " + e.getMessage());
+            }
+        }
+
         if (editingAuctionId != null) {
             boolean success = serverService.updateAuctionSeller(editingAuctionId, sellerId, itemName,
                 categoryEnum, startingPrice, startTime, endTime, itemDescriptionArea.getText(),
-                itemSpecificsArea.getText(), currentImageBase64, minBidStep);
+                itemSpecificsArea.getText(), imageToSave, minBidStep);
             if (success) {
                 hideCreateModal(null);
                 NotificationUtils.showSuccess((Stage) refreshButton.getScene().getWindow(), "Cập nhật phiên #" + editingAuctionId + " thành công!");
@@ -505,7 +519,7 @@ public class SellerDashboardController implements com.auction.client.observer.Au
             newAuction.setItemCategory(categoryEnum);
             newAuction.setItemDescription(itemDescriptionArea.getText());
             newAuction.setItemSpecifics(itemSpecificsArea.getText());
-            newAuction.setImageBase64(currentImageBase64);
+            newAuction.setImageBase64(imageToSave);
 
             Long createdId = serverService.createAuction(newAuction);
             if (createdId != null && createdId > 0) {
