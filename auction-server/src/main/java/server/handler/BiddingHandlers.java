@@ -48,10 +48,17 @@ public final class BiddingHandlers {
     Long bidderId = req.getLong("bidderId");
     long amount = req.getLong("amount");
 
-    try {
-      AuctionStatusSynchronizer.syncWithClock(auctionDao, walletService, broadcaster);
+      try {
+        AuctionStatusSynchronizer.syncWithClock(auctionDao, walletService, broadcaster);
 
-      BidInfo prevWinner = AuctionManager.getInstance().getPreviousWinner(auctionId);
+        List<AutoBidStrategy> strategies = AuctionManager.getInstance().getAutoBids(auctionId);
+        for (AutoBidStrategy s : strategies) {
+          if (s.getUserId().equals(bidderId)) {
+            throw new Exception("Bạn đang bật chế độ Auto-Bid cho phiên này. Không thể đặt giá thủ công.");
+          }
+        }
+
+        BidInfo prevWinner = AuctionManager.getInstance().getPreviousWinner(auctionId);
 
       long additionalAmountToLock = amount;
       if (prevWinner != null && prevWinner.bidderId.equals(bidderId)) {
@@ -324,6 +331,29 @@ public final class BiddingHandlers {
     } catch (Exception e) {
       e.printStackTrace();
       System.out.println("CANCEL AUTOBID REJECTED: " + e.getMessage());
+      return JsonResponses.error(e.getMessage());
+    }
+  }
+  public String checkAutoBidStatus(JSONObject req) throws Exception {
+    try {
+      Long auctionId = req.getLong("auctionId");
+      Long bidderId = req.getLong("bidderId");
+
+      List<AutoBidStrategy> strategies = AuctionManager.getInstance().getAutoBids(auctionId);
+      boolean isActive = false;
+      for (AutoBidStrategy s : strategies) {
+        if (s.getUserId().equals(bidderId)) {
+          isActive = true;
+          break;
+        }
+      }
+
+      JSONObject res = new JSONObject();
+      res.put("status", "OK");
+      res.put("isActive", isActive);
+      return res.toString();
+    } catch (Exception e) {
+      e.printStackTrace();
       return JsonResponses.error(e.getMessage());
     }
   }

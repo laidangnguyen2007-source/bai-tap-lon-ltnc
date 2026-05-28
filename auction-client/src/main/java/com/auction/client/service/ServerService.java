@@ -73,7 +73,8 @@ public class ServerService {
                     || "OUTBID".equals(type) || "OUTBID_NOTIFICATION".equals(type)
                     || "AUCTION_WON".equals(type) || "AUCTION_LOST".equals(type)
                     || "SELLER_PAYOUT".equals(type) || "ADMIN_BALANCE_ADJUSTED".equals(type)
-                    || "AUTO_BID_CANCELLED".equals(type) || "USER_TOP_UP".equals(type)) {
+                    || "AUTO_BID_CANCELLED".equals(type) || "USER_TOP_UP".equals(type)
+                    || "AUTO_BID_ACTIVATED".equals(type)) {
                 observers.forEach(o -> o.onWalletEvent(type, push));
             }
         } catch (Exception ignored) {
@@ -128,6 +129,10 @@ public class ServerService {
 
     public boolean registerAutoBid(Long aId, Long bId, long maxBid, long increment) {
         return bidHandler.registerAutoBid(aId, bId, maxBid, increment);
+    }
+
+    public boolean checkAutoBidStatus(Long auctionId, Long bidderId) {
+        return bidHandler.checkAutoBidStatus(auctionId, bidderId);
     }
 
     public List<BidTransaction> getBidHistory(Long id) {

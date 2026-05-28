@@ -76,4 +76,23 @@ public class BidNetworkHandler {
             return "OK".equals(res.get("status"));
         } catch (Exception e) { return false; }
     }
+
+    public boolean checkAutoBidStatus(Long auctionId, Long bidderId) {
+        try {
+            JSONObject req = new JSONObject();
+            req.put("action", "CHECK_AUTO_BID_STATUS");
+            req.put("auctionId", auctionId);
+            req.put("bidderId", bidderId);
+            String json = connection.sendRequest(req.toJSONString());
+            if (json == null) return false;
+            JSONObject res = (JSONObject) new JSONParser().parse(json);
+            if ("OK".equals(res.get("status"))) {
+                Object isActive = res.get("isActive");
+                if (isActive instanceof Boolean) {
+                    return (Boolean) isActive;
+                }
+            }
+            return false;
+        } catch (Exception e) { return false; }
+    }
 }

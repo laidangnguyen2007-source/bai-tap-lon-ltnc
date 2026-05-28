@@ -71,9 +71,11 @@ public class BiddingRoomController implements AuctionObserver {
   @FXML private Button placeBidButton;
   
   // AutoBid
+  @FXML private Label autoBidStatusLabel;
   @FXML private TextField maxBidField;
   @FXML private TextField incrementField;
   @FXML private Button autoBidButton;
+  @FXML private Button cancelAutoBidButton;
 
   // Lịch sử bid gần đây dạng danh sách
   @FXML private ListView<String> bidHistoryList;
@@ -164,6 +166,13 @@ public class BiddingRoomController implements AuctionObserver {
 
     // Bắt đầu đếm ngược thời gian còn lại
     startCountdownTimer(auction);
+
+    // Lấy trạng thái Auto-Bid hiện tại từ server
+    Long bidderId = session.getCurrentUser().getId();
+    new Thread(() -> {
+      boolean isActive = serverService.checkAutoBidStatus(auction.getId(), bidderId);
+      Platform.runLater(() -> setAutoBidActive(isActive));
+    }).start();
   }
 
   /** Khởi động timer đếm ngược đến endTime của phiên. */
@@ -394,6 +403,31 @@ public class BiddingRoomController implements AuctionObserver {
         });
   }
 
+  @Override
+  public void onWalletEvent(String eventType, org.json.simple.JSONObject payload) {
+    Auction currentAuction = session.getSelectedAuction();
+    if (currentAuction == null) return;
+
+    Long auctionId;
+    if (payload.get("auctionId") instanceof Number) {
+      auctionId = ((Number) payload.get("auctionId")).longValue();
+    } else {
+      return;
+    }
+
+    if (!currentAuction.getId().equals(auctionId)) return;
+
+    Platform.runLater(() -> {
+      if ("AUTO_BID_CANCELLED".equals(eventType)) {
+        infoLabel.setText("");
+        NotificationUtils.showToast((Stage) bidChart.getScene().getWindow(), "Đã tắt chế độ Auto-Bid", false);
+        setAutoBidActive(false);
+      } else if ("AUTO_BID_ACTIVATED".equals(eventType)) {
+        setAutoBidActive(true);
+      }
+    });
+  }
+
   // ===== XỬ LÝ SỰ KIỆN NGƯỜI DÙNG =====
 
   /**
@@ -536,6 +570,69 @@ public class BiddingRoomController implements AuctionObserver {
     NotificationUtils.showSuccess((Stage) bidChart.getScene().getWindow(), "Auto-Bid đã được kích hoạt.");
     maxBidField.clear();
     incrementField.clear();
+  }
+
+  @FXML
+  private void handleCancelAutoBid(ActionEvent event) {
+    Auction auction = session.getSelectedAuction();
+    if (auction == null) return;
+
+    javafx.scene.control.Alert confirmAlert = new javafx.scene.control.Alert(javafx.scene.control.Alert.AlertType.CONFIRMATION);
+    NotificationUtils.styleAlert(confirmAlert);
+    confirmAlert.setGraphic(null);
+    confirmAlert.setTitle("Xác Nhận Tắt Auto-Bid");
+    confirmAlert.setHeaderText("Bạn có chắc chắn muốn tắt Auto-Bid?");
+    confirmAlert.setContentText("Bạn sẽ không tự động đặt giá nữa.");
+
+    java.util.Optional<javafx.scene.control.ButtonType> result = confirmAlert.showAndWait();
+    if (result.isEmpty() || result.get() != javafx.scene.control.ButtonType.OK) {
+        return;
+    }
+
+    Long bidderId = session.getCurrentUser().getId();
+    boolean sent = serverService.cancelAutoBid(auction.getId(), bidderId);
+    if (!sent) {
+      NotificationUtils.showError((Stage) bidChart.getScene().getWindow(), "Lỗi kết nối, không thể hủy Auto-Bid.");
+    } else {
+      infoLabel.setText("Đang tắt Auto-Bid...");
+      cancelAutoBidButton.setDisable(true);
+    }
+  }
+
+  private void setAutoBidActive(boolean active) {
+    if (active) {
+      autoBidStatusLabel.setText("Trạng thái: Đang hoạt động");
+      autoBidStatusLabel.setStyle("-fx-text-fill: #4CAF50; -fx-font-weight: bold;"); // Green
+      autoBidButton.setVisible(false);
+      autoBidButton.setManaged(false);
+      cancelAutoBidButton.setVisible(true);
+      cancelAutoBidButton.setManaged(true);
+      cancelAutoBidButton.setDisable(false);
+      maxBidField.setDisable(true);
+      incrementField.setDisable(true);
+      
+      // Khóa nút đặt giá thủ công
+      placeBidButton.setDisable(true);
+      bidAmountField.setDisable(true);
+      infoLabel.setText("Đang dùng Auto-Bid. Vui lòng tắt Auto-Bid để đặt giá thủ công.");
+    } else {
+      autoBidStatusLabel.setText("Trạng thái: Chưa kích hoạt");
+      autoBidStatusLabel.setStyle("-fx-text-fill: #9e9e9e; -fx-font-weight: normal;"); // Gray
+      autoBidButton.setVisible(true);
+      autoBidButton.setManaged(true);
+      cancelAutoBidButton.setVisible(false);
+      cancelAutoBidButton.setManaged(false);
+      maxBidField.setDisable(false);
+      incrementField.setDisable(false);
+      
+      // Mở lại nút đặt giá thủ công nếu phiên đấu giá đang chạy
+      Auction auction = session.getSelectedAuction();
+      if (auction != null && auction.isRunning()) {
+          placeBidButton.setDisable(false);
+          bidAmountField.setDisable(false);
+          infoLabel.setText("");
+      }
+    }
   }
 
   /**

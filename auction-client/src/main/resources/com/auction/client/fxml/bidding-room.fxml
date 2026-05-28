@@ -108,9 +108,11 @@
 
         <!-- Khu vực Auto Bid -->
         <Label text="Đấu Giá Tự Động (Auto-Bid)" styleClass="section-title"/>
+        <Label fx:id="autoBidStatusLabel" text="Trạng thái: Chưa kích hoạt" styleClass="info-label"/>
         <TextField fx:id="maxBidField" promptText="Giá tối đa (VNĐ)" styleClass="text-field"/>
         <TextField fx:id="incrementField" promptText="Bước giá (VNĐ)" styleClass="text-field"/>
         <Button fx:id="autoBidButton" text="🤖 Đăng Ký Auto-Bid" onAction="#handleAutoBid" styleClass="secondary-button" maxWidth="Infinity"/>
+        <Button fx:id="cancelAutoBidButton" text="❌ Tắt Auto-Bid" onAction="#handleCancelAutoBid" styleClass="danger-button" maxWidth="Infinity" visible="false" managed="false"/>
 
         <Separator/>
 
