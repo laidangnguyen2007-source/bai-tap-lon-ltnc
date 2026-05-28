@@ -81,7 +81,7 @@ public final class Server {
       for (Auction a : runningAuctions) {
         AuctionManager.getInstance().restoreRunningAuction(a);
         for (server.model.entity.AutoBid ab : autoBidDao.findActiveByAuction(a.getId())) {
-           AuctionManager.getInstance().registerAutoBid(a.getId(), ab.toStrategy());
+          AuctionManager.getInstance().registerAutoBid(a.getId(), ab.toStrategy());
         }
       }
       System.out.println("Loaded " + runningAuctions.size() + " running auctions into memory.");

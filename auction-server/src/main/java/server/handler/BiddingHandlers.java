@@ -168,7 +168,10 @@ public final class BiddingHandlers {
 
       Auction auction = AuctionManager.getInstance().findById(auctionId).orElse(null);
       if (auction != null && increment < auction.getMinBidStep()) {
-          throw new server.model.exception.AuctionException("Bước giá Auto-Bid phải lớn hơn hoặc bằng bước giá tối thiểu của phiên (" + auction.getMinBidStep() + ").");
+        throw new server.model.exception.AuctionException(
+            "Bước giá Auto-Bid phải lớn hơn hoặc bằng bước giá tối thiểu của phiên ("
+                + auction.getMinBidStep()
+                + ").");
       }
 
       List<AutoBidStrategy> strategies = AuctionManager.getInstance().getAutoBids(auctionId);
