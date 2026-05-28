@@ -57,6 +57,9 @@ public class AutoBidStrategy implements BidStrategy {
     if (nextBid <= auction.getCurrentPrice()) {
       throw new InvalidBidException("Bid must be higher than the current price!");
     }
+    if (nextBid < auction.getCurrentPrice() + auction.getMinBidStep()) {
+      throw new InvalidBidException("Bid does not meet the minimum bid step requirement!");
+    }
 
     if (auction.getCurrentPrice() >= maxBid) {
       throw new InvalidBidException("Auto-bid limit reached!");

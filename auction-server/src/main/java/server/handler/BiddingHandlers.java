@@ -166,7 +166,39 @@ public final class BiddingHandlers {
       long maxBid = req.getLong("maxBid");
       long increment = req.getLong("increment");
 
-      walletService.lockForAutoBid(bidderId, auctionId, maxBid);
+      Auction auction = AuctionManager.getInstance().findById(auctionId).orElse(null);
+      if (auction != null && increment < auction.getMinBidStep()) {
+          throw new server.model.exception.AuctionException("Bước giá Auto-Bid phải lớn hơn hoặc bằng bước giá tối thiểu của phiên (" + auction.getMinBidStep() + ").");
+      }
+
+      List<AutoBidStrategy> strategies = AuctionManager.getInstance().getAutoBids(auctionId);
+      AutoBidStrategy oldStrategy = null;
+      for (AutoBidStrategy s : strategies) {
+        if (s.getUserId().equals(bidderId)) {
+          oldStrategy = s;
+          break;
+        }
+      }
+
+      if (oldStrategy != null) {
+        long oldLockedAmount = oldStrategy.getMaxBid();
+        BidInfo currentWinner = AuctionManager.getInstance().getPreviousWinner(auctionId);
+        if (currentWinner != null && currentWinner.bidderId.equals(bidderId)) {
+          oldLockedAmount -= currentWinner.amount;
+        }
+        AuctionManager.getInstance().removeAutoBid(auctionId, bidderId);
+        walletService.releaseAutoBid(bidderId, auctionId, oldLockedAmount);
+      }
+
+      BidInfo prevWinner = AuctionManager.getInstance().getPreviousWinner(auctionId);
+      long additionalAmountToLock = maxBid;
+      if (prevWinner != null && prevWinner.bidderId.equals(bidderId)) {
+        additionalAmountToLock = maxBid - prevWinner.amount;
+      }
+
+      if (additionalAmountToLock > 0) {
+        walletService.lockForAutoBid(bidderId, auctionId, additionalAmountToLock);
+      }
 
       AutoBid autoBidEntity = new AutoBid();
       autoBidEntity.setAuctionId(auctionId);
@@ -214,7 +246,7 @@ public final class BiddingHandlers {
           }
         }
 
-        Auction auction = AuctionManager.getInstance().findById(auctionId).orElse(null);
+        auction = AuctionManager.getInstance().findById(auctionId).orElse(null);
         if (auction != null) {
           for (BidTransaction autoBid : autoBids) {
             bidTransactionDao.save(autoBid);

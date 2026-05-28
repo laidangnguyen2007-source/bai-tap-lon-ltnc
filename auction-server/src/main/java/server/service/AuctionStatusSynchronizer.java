@@ -47,6 +47,12 @@ public final class AuctionStatusSynchronizer {
           a.setStatus(AuctionStatus.RUNNING);
           auctionDao.update(a);
           AuctionManager.getInstance().restoreRunningAuction(a);
+          
+          server.dao.AutoBidDao autoBidDao = new server.dao.impl.JdbcAutoBidDao();
+          for (server.model.entity.AutoBid ab : autoBidDao.findActiveByAuction(a.getId())) {
+             AuctionManager.getInstance().registerAutoBid(a.getId(), ab.toStrategy());
+          }
+
           notifyStatusChange(a, AuctionStatus.RUNNING, broadcaster);
         }
       } else if (s == AuctionStatus.RUNNING) {

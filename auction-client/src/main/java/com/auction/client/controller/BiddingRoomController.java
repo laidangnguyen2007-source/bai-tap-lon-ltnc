@@ -501,9 +501,9 @@ public class BiddingRoomController implements AuctionObserver {
       NotificationUtils.showError((Stage) bidChart.getScene().getWindow(), "Giá tối đa phải lớn hơn giá hiện tại.");
       return;
     }
-    if (inc <= 0) {
+    if (inc < auction.getMinBidStep()) {
       infoLabel.setText("");
-      NotificationUtils.showError((Stage) bidChart.getScene().getWindow(), "Bước giá phải lớn hơn 0.");
+      NotificationUtils.showError((Stage) bidChart.getScene().getWindow(), "Bước giá Auto-Bid phải lớn hơn hoặc bằng bước giá tối thiểu (" + String.format("%,d", auction.getMinBidStep()) + " VNĐ).");
       return;
     }
 
