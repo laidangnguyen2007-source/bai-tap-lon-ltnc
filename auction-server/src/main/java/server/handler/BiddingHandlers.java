@@ -48,17 +48,18 @@ public final class BiddingHandlers {
     Long bidderId = req.getLong("bidderId");
     long amount = req.getLong("amount");
 
-      try {
-        AuctionStatusSynchronizer.syncWithClock(auctionDao, walletService, broadcaster);
+    try {
+      AuctionStatusSynchronizer.syncWithClock(auctionDao, walletService, broadcaster);
 
-        List<AutoBidStrategy> strategies = AuctionManager.getInstance().getAutoBids(auctionId);
-        for (AutoBidStrategy s : strategies) {
-          if (s.getUserId().equals(bidderId)) {
-            throw new Exception("Bạn đang bật chế độ Auto-Bid cho phiên này. Không thể đặt giá thủ công.");
-          }
+      List<AutoBidStrategy> strategies = AuctionManager.getInstance().getAutoBids(auctionId);
+      for (AutoBidStrategy s : strategies) {
+        if (s.getUserId().equals(bidderId)) {
+          throw new Exception(
+              "Bạn đang bật chế độ Auto-Bid cho phiên này. Không thể đặt giá thủ công.");
         }
+      }
 
-        BidInfo prevWinner = AuctionManager.getInstance().getPreviousWinner(auctionId);
+      BidInfo prevWinner = AuctionManager.getInstance().getPreviousWinner(auctionId);
 
       long additionalAmountToLock = amount;
       if (prevWinner != null && prevWinner.bidderId.equals(bidderId)) {
@@ -334,6 +335,7 @@ public final class BiddingHandlers {
       return JsonResponses.error(e.getMessage());
     }
   }
+
   public String checkAutoBidStatus(JSONObject req) throws Exception {
     try {
       Long auctionId = req.getLong("auctionId");
