@@ -70,6 +70,9 @@ public class AuctionListController implements com.auction.client.observer.Auctio
   private Button myWinsButton;
 
   @FXML
+  private Button myStoreButton;
+
+  @FXML
   private Button myBidsButton;
 
   @FXML
@@ -130,13 +133,20 @@ public class AuctionListController implements com.auction.client.observer.Auctio
       walletButton.setVisible(true);
       walletButton.setManaged(true);
     } else {
-      // [Tính năng 3] Hiển thị nút Lịch sử thắng cho Bidder/Seller
-      myWinsButton.setVisible(true);
-      myWinsButton.setManaged(true);
-      myBidsButton.setVisible(true);
-      myBidsButton.setManaged(true);
       walletButton.setVisible(true);
       walletButton.setManaged(true);
+
+      if (session.getCurrentUser().getRole() == server.model.enums.UserRole.SELLER) {
+          // Seller: chỉ hiện nút Cửa hàng, không hiện lịch sử đấu giá/thắng
+          myStoreButton.setVisible(true);
+          myStoreButton.setManaged(true);
+      } else {
+          // Bidder: hiện lịch sử đấu giá và lịch sử thắng
+          myWinsButton.setVisible(true);
+          myWinsButton.setManaged(true);
+          myBidsButton.setVisible(true);
+          myBidsButton.setManaged(true);
+      }
     }
 
     // Bỏ tự động resize của TableView
@@ -192,6 +202,17 @@ public class AuctionListController implements com.auction.client.observer.Auctio
     try {
       Stage stage = (Stage) myBidsButton.getScene().getWindow();
       FxmlLoader.navigateTo(stage, "my-bids.fxml", "Online Auction System — Lịch Sử Đấu Giá");
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+  }
+
+  @FXML
+  private void handleViewMyStore(ActionEvent event) {
+    try {
+      serverService.removeObserver(this);
+      Stage stage = (Stage) myStoreButton.getScene().getWindow();
+      FxmlLoader.navigateTo(stage, "seller-dashboard.fxml", "Online Auction System — Seller Dashboard");
     } catch (IOException e) {
       e.printStackTrace();
     }

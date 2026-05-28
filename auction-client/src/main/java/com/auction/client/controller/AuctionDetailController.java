@@ -105,7 +105,14 @@ public class AuctionDetailController {
      * Nút + “Thời gian còn lại” chỉ phụ thuộc Auction trong session — không cần chờ getItem/getUser.
      * Đặt trước các lệnh gọi mạng để tránh cảm giác “khựng” vài trăm ms khi vào chi tiết.
      */
-    applyJoinBiddingButtonState(auction);
+    // Seller không được phép tham gia đấu giá — ẩn hoàn toàn nút
+    if (session.isLoggedIn()
+        && session.getCurrentUser().getRole() == server.model.enums.UserRole.SELLER) {
+      joinBiddingButton.setVisible(false);
+      joinBiddingButton.setManaged(false);
+    } else {
+      applyJoinBiddingButtonState(auction);
+    }
     startCountdown(auction);
 
     // Lấy thông tin sản phẩm từ Server (gọi riêng vì AuctionItem không được nhúng trong Auction)

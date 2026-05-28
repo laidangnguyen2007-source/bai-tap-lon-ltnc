@@ -6,179 +6,142 @@
 <?import javafx.scene.control.DatePicker?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.Separator?>
-<?import javafx.scene.control.TableColumn?>
-<?import javafx.scene.control.TableView?>
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.GridPane?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.Region?>
 <?import javafx.scene.layout.VBox?>
+<?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.layout.FlowPane?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.control.TextArea?>
 
 <!--
-  View: Dashboard của Seller — Tạo phiên đấu giá và xem phiên đã tạo
+  View: Dashboard của Seller — Giao diện Cửa Hàng Của Tôi chuyên nghiệp
   Controller tương ứng: SellerDashboardController.java
 -->
-<BorderPane
+<StackPane
   xmlns="http://javafx.com/javafx/21"
   xmlns:fx="http://javafx.com/fxml/1"
   fx:controller="com.auction.client.controller.SellerDashboardController"
   styleClass="root-pane">
 
-  <!-- Header -->
-  <top>
-    <HBox styleClass="top-bar" alignment="CENTER_LEFT" spacing="12">
-      <padding><Insets top="14" right="20" bottom="14" left="20"/></padding>
-      <Label text="🏪 Seller Dashboard" styleClass="app-title"/>
-      <Region HBox.hgrow="ALWAYS"/>
-      <Label fx:id="sellerNameLabel" styleClass="welcome-label"/>
-      <Button fx:id="walletButton" text="💰 Ví" onAction="#handleOpenWallet" styleClass="secondary-button"/>
-      <Button fx:id="logoutButton" text="Đăng Xuất" onAction="#handleLogout" styleClass="danger-button"/>
-    </HBox>
-  </top>
+  <!-- Lớp chính: Giao diện quản lý -->
+  <BorderPane>
+    <!-- Header -->
+    <top>
+      <HBox styleClass="top-bar" alignment="CENTER_LEFT" spacing="12">
+        <padding><Insets top="14" right="20" bottom="14" left="20"/></padding>
+        <Label text="🏪 Seller Dashboard" styleClass="app-title"/>
+        <Region HBox.hgrow="ALWAYS"/>
+        
+        <Label fx:id="sellerNameLabel" styleClass="welcome-label"/>
+        <Button text="🌐 Chợ Đấu Giá" onAction="#goToMarketplace" styleClass="secondary-button"/>
+        <Button fx:id="walletButton" text="💰 Ví" onAction="#handleOpenWallet" styleClass="secondary-button"/>
+        <Button fx:id="logoutButton" text="Đăng Xuất" onAction="#handleLogout" styleClass="danger-button"/>
+      </HBox>
+    </top>
 
-  <!-- Nội dung chia 2 cột -->
-  <center>
-    <HBox spacing="20">
-      <padding><Insets top="20" right="24" bottom="20" left="24"/></padding>
+    <!-- Nội dung chính -->
+    <center>
+      <VBox spacing="15">
+        <padding><Insets top="20" right="24" bottom="20" left="24"/></padding>
 
-      <!-- Cột trái: Form tạo phiên đấu giá mới -->
-      <VBox styleClass="info-card" spacing="14" prefWidth="500" minWidth="480">
-        <padding><Insets top="20" right="20" bottom="20" left="20"/></padding>
+        <HBox alignment="CENTER_LEFT" spacing="15">
+          <Label text="Quản Lý Phiên Đấu Giá Của Tôi" styleClass="title-label"/>
+          <Region HBox.hgrow="ALWAYS"/>
+          <Button fx:id="refreshButton" text="🔄 Làm mới" onAction="#handleRefresh" styleClass="secondary-button"/>
+          <Button text="🚀 Tạo Phiên Đấu Giá Mới" onAction="#showCreateModal" styleClass="primary-button" style="-fx-font-size: 14px; -fx-padding: 8 16;"/>
+        </HBox>
 
-        <Label text="➕ Tạo Phiên Đấu Giá Mới" styleClass="section-title"/>
-        <Separator/>
+        <Separator style="-fx-background-color: #2d3148;"/>
 
-        <ScrollPane fitToWidth="true" hbarPolicy="NEVER" style="-fx-background: transparent; -fx-background-color: transparent; -fx-padding: 0;" VBox.vgrow="ALWAYS">
-          <content>
-            <GridPane hgap="12" vgap="12" style="-fx-padding: 0 15 0 0;">
-              <columnConstraints>
-                <javafx.scene.layout.ColumnConstraints minWidth="130" prefWidth="130" halignment="LEFT"/>
-                <javafx.scene.layout.ColumnConstraints hgrow="ALWAYS" minWidth="200"/>
-              </columnConstraints>
-              <!-- Hàng 0: Chọn loại sản phẩm từ dropdown (thay vì nhập mã ID thủ công) -->
-              <Label text="Loại sản phẩm:" styleClass="field-label"
-                 GridPane.columnIndex="0" GridPane.rowIndex="0"/>
-          <ComboBox fx:id="categoryCombo" promptText="Chọn loại sản phẩm..."
-                     styleClass="text-field" GridPane.columnIndex="1" GridPane.rowIndex="0"
-                     maxWidth="Infinity"/>
+        <ScrollPane fitToWidth="true" style="-fx-background-color: transparent; -fx-background: transparent;" VBox.vgrow="ALWAYS">
+           <content>
+               <FlowPane fx:id="myAuctionsGrid" hgap="20" vgap="20" alignment="TOP_LEFT">
+                  <padding>
+                      <Insets top="10" right="10" bottom="10" left="10"/>
+                  </padding>
+               </FlowPane>
+           </content>
+        </ScrollPane>
+      </VBox>
+    </center>
+  </BorderPane>
 
-          <!-- Hàng 1: Đặt tên sản phẩm (Seller tự đặt, thay vì dùng tên từ DB) -->
-          <Label text="Tên sản phẩm:" styleClass="field-label"
-                 GridPane.columnIndex="0" GridPane.rowIndex="1"/>
-          <TextField fx:id="itemNameField" promptText="Nhập tên sản phẩm..."
-                     styleClass="text-field" GridPane.columnIndex="1" GridPane.rowIndex="1"/>
+  <!-- Lớp phủ Modal: Form Tạo/Sửa Phiên Đấu Giá -->
+  <StackPane fx:id="modalOverlay" style="-fx-background-color: rgba(0,0,0,0.6);" visible="false">
+     <VBox styleClass="card" maxWidth="650" maxHeight="700" spacing="15" alignment="TOP_CENTER">
+        <padding><Insets top="20" right="30" bottom="20" left="30"/></padding>
+        
+        <Label fx:id="modalTitleLabel" text="Tạo Phiên Đấu Giá Mới" styleClass="title-label" style="-fx-font-size: 20px;"/>
+        <Separator style="-fx-background-color: #2d3148;"/>
 
-          <!-- Hàng 2: Giá khởi điểm -->
-          <Label text="Giá khởi điểm (VNĐ):" styleClass="field-label"
-                 GridPane.columnIndex="0" GridPane.rowIndex="2"/>
-          <TextField fx:id="startingPriceField" promptText="Ví dụ: 500000"
-                      styleClass="text-field" GridPane.columnIndex="1" GridPane.rowIndex="2"/>
+        <ScrollPane fitToWidth="true" hbarPolicy="NEVER" style="-fx-background-color: transparent; -fx-background: transparent;" VBox.vgrow="ALWAYS">
+           <content>
+              <GridPane hgap="15" vgap="12">
+                 <columnConstraints>
+                    <javafx.scene.layout.ColumnConstraints minWidth="150" prefWidth="150" halignment="LEFT"/>
+                    <javafx.scene.layout.ColumnConstraints hgrow="ALWAYS" minWidth="250"/>
+                 </columnConstraints>
+                 
+                 <Label text="Loại sản phẩm:" styleClass="field-label" GridPane.columnIndex="0" GridPane.rowIndex="0"/>
+                 <ComboBox fx:id="categoryCombo" promptText="Chọn loại sản phẩm..." styleClass="combo-box" GridPane.columnIndex="1" GridPane.rowIndex="0" maxWidth="Infinity"/>
 
-          <!-- Hàng mới: Bước giá tối thiểu -->
-          <Label text="Bước giá tối thiểu (VNĐ):" styleClass="field-label"
-                 GridPane.columnIndex="0" GridPane.rowIndex="3"/>
-          <TextField fx:id="minBidStepField" promptText="Mặc định: 1000"
-                     styleClass="text-field" GridPane.columnIndex="1" GridPane.rowIndex="3"/>
+                 <Label text="Tên sản phẩm:" styleClass="field-label" GridPane.columnIndex="0" GridPane.rowIndex="1"/>
+                 <TextField fx:id="itemNameField" promptText="Nhập tên sản phẩm..." styleClass="text-field" GridPane.columnIndex="1" GridPane.rowIndex="1"/>
 
-          <!-- Hàng 3: Ngày giờ bắt đầu -->
-          <Label text="Ngày bắt đầu:" styleClass="field-label"
-                 GridPane.columnIndex="0" GridPane.rowIndex="4"/>
-          <HBox spacing="5" GridPane.columnIndex="1" GridPane.rowIndex="4">
-              <DatePicker fx:id="startDatePicker" prefWidth="150" minWidth="140" styleClass="seller-date-picker"/>
-              <ComboBox fx:id="startHourCombo" prefWidth="65" minWidth="60" promptText="Giờ" styleClass="seller-time-combo"/>
-              <ComboBox fx:id="startMinuteCombo" prefWidth="65" minWidth="60" promptText="Phút" styleClass="seller-time-combo"/>
-          </HBox>
+                 <Label text="Giá khởi điểm (VNĐ):" styleClass="field-label" GridPane.columnIndex="0" GridPane.rowIndex="2"/>
+                 <TextField fx:id="startingPriceField" promptText="Ví dụ: 500000" styleClass="text-field" GridPane.columnIndex="1" GridPane.rowIndex="2"/>
 
-          <!-- Hàng 4: Ngày giờ kết thúc -->
-          <Label text="Ngày kết thúc:" styleClass="field-label"
-                 GridPane.columnIndex="0" GridPane.rowIndex="5"/>
-          <HBox spacing="5" GridPane.columnIndex="1" GridPane.rowIndex="5">
-              <DatePicker fx:id="endDatePicker" prefWidth="150" minWidth="140" styleClass="seller-date-picker"/>
-              <ComboBox fx:id="endHourCombo" prefWidth="65" minWidth="60" promptText="Giờ" styleClass="seller-time-combo"/>
-              <ComboBox fx:id="endMinuteCombo" prefWidth="65" minWidth="60" promptText="Phút" styleClass="seller-time-combo"/>
-          </HBox>
+                 <Label text="Bước giá tối thiểu (VNĐ):" styleClass="field-label" GridPane.columnIndex="0" GridPane.rowIndex="3"/>
+                 <TextField fx:id="minBidStepField" promptText="Mặc định: 1000" styleClass="text-field" GridPane.columnIndex="1" GridPane.rowIndex="3"/>
 
-          <!-- Hàng 5: Hình ảnh sản phẩm -->
-          <Label text="Hình ảnh:" styleClass="field-label" GridPane.columnIndex="0" GridPane.rowIndex="6" GridPane.valignment="TOP">
-             <GridPane.margin><javafx.geometry.Insets top="5"/></GridPane.margin>
-          </Label>
-          <VBox spacing="8" GridPane.columnIndex="1" GridPane.rowIndex="6">
-              <Button text="📷 Chọn ảnh..." onAction="#handleChooseImage" styleClass="secondary-button"/>
-              <javafx.scene.image.ImageView fx:id="itemImageView" fitWidth="120" fitHeight="120" preserveRatio="true"/>
-          </VBox>
+                 <Label text="Thời gian bắt đầu:" styleClass="field-label" GridPane.columnIndex="0" GridPane.rowIndex="4"/>
+                 <HBox spacing="8" GridPane.columnIndex="1" GridPane.rowIndex="4" alignment="CENTER_LEFT">
+                     <DatePicker fx:id="startDatePicker" prefWidth="150" styleClass="seller-date-picker"/>
+                     <ComboBox fx:id="startHourCombo" prefWidth="70" promptText="Giờ" styleClass="combo-box"/>
+                     <Label text=":" styleClass="field-label" style="-fx-font-weight: bold;"/>
+                     <ComboBox fx:id="startMinuteCombo" prefWidth="70" promptText="Phút" styleClass="combo-box"/>
+                 </HBox>
 
-          <!-- Hàng 6: Mô tả sản phẩm -->
-          <Label text="Mô tả:" styleClass="field-label" GridPane.columnIndex="0" GridPane.rowIndex="7" GridPane.valignment="TOP">
-             <GridPane.margin><javafx.geometry.Insets top="5"/></GridPane.margin>
-          </Label>
-          <javafx.scene.control.TextArea fx:id="itemDescriptionArea" promptText="Nhập mô tả chung sản phẩm..." 
-                                         wrapText="true" prefRowCount="3" styleClass="custom-text-area"
-                                         GridPane.columnIndex="1" GridPane.rowIndex="7"/>
+                 <Label text="Thời gian kết thúc:" styleClass="field-label" GridPane.columnIndex="0" GridPane.rowIndex="5"/>
+                 <HBox spacing="8" GridPane.columnIndex="1" GridPane.rowIndex="5" alignment="CENTER_LEFT">
+                     <DatePicker fx:id="endDatePicker" prefWidth="150" styleClass="seller-date-picker"/>
+                     <ComboBox fx:id="endHourCombo" prefWidth="70" promptText="Giờ" styleClass="combo-box"/>
+                     <Label text=":" styleClass="field-label" style="-fx-font-weight: bold;"/>
+                     <ComboBox fx:id="endMinuteCombo" prefWidth="70" promptText="Phút" styleClass="combo-box"/>
+                 </HBox>
 
-          <!-- Hàng 7: Thông số kỹ thuật (Item Specifics) -->
-          <Label text="Thông số kỹ thuật:" styleClass="field-label" GridPane.columnIndex="0" GridPane.rowIndex="8" GridPane.valignment="TOP">
-             <GridPane.margin><javafx.geometry.Insets top="5"/></GridPane.margin>
-          </Label>
-          <javafx.scene.control.TextArea fx:id="itemSpecificsArea" promptText="Ví dụ:&#10;Thương hiệu: Apple&#10;Tình trạng: Mới 100%" 
-                                         wrapText="true" prefRowCount="3" styleClass="custom-text-area"
-                                         GridPane.columnIndex="1" GridPane.rowIndex="8"/>
-            </GridPane>
-          </content>
+                 <Label text="Hình ảnh:" styleClass="field-label" GridPane.columnIndex="0" GridPane.rowIndex="6" GridPane.valignment="TOP">
+                    <GridPane.margin><Insets top="8"/></GridPane.margin>
+                 </Label>
+                 <VBox spacing="10" GridPane.columnIndex="1" GridPane.rowIndex="6">
+                     <Button text="📷 Chọn ảnh..." onAction="#handleChooseImage" styleClass="secondary-button"/>
+                     <ImageView fx:id="itemImageView" fitWidth="150" fitHeight="150" preserveRatio="true"/>
+                 </VBox>
+
+                 <Label text="Mô tả:" styleClass="field-label" GridPane.columnIndex="0" GridPane.rowIndex="7" GridPane.valignment="TOP">
+                    <GridPane.margin><Insets top="8"/></GridPane.margin>
+                 </Label>
+                 <TextArea fx:id="itemDescriptionArea" promptText="Nhập mô tả chung sản phẩm..." wrapText="true" prefRowCount="3" styleClass="custom-text-area" GridPane.columnIndex="1" GridPane.rowIndex="7"/>
+
+                 <Label text="Thông số kỹ thuật:" styleClass="field-label" GridPane.columnIndex="0" GridPane.rowIndex="8" GridPane.valignment="TOP">
+                    <GridPane.margin><Insets top="8"/></GridPane.margin>
+                 </Label>
+                 <TextArea fx:id="itemSpecificsArea" promptText="Ví dụ:&#10;Thương hiệu: Apple&#10;Tình trạng: Mới 100%" wrapText="true" prefRowCount="3" styleClass="custom-text-area" GridPane.columnIndex="1" GridPane.rowIndex="8"/>
+              </GridPane>
+           </content>
         </ScrollPane>
 
-        <!-- Thông báo kết quả tạo phiên -->
-        <Label fx:id="formResultLabel" text="" styleClass="info-label" wrapText="true"/>
-
-        <HBox spacing="10">
-          <Button
-            fx:id="createAuctionButton"
-            text="🚀 Tạo Phiên Đấu Giá"
-            onAction="#handleCreateAuction"
-            styleClass="primary-button"
-            HBox.hgrow="ALWAYS"
-            maxWidth="Infinity"/>
-          <Button
-            fx:id="cancelEditButton"
-            text="❌ Hủy Sửa"
-            onAction="#handleCancelEdit"
-            styleClass="secondary-button"
-            visible="false"
-            managed="false"/>
+        <Label fx:id="formResultLabel" text="" styleClass="error-label" visible="false" wrapText="true" maxWidth="Infinity" alignment="CENTER"/>
+        
+        <HBox spacing="15" alignment="CENTER_RIGHT">
+           <Button text="❌ Hủy bỏ" onAction="#hideCreateModal" styleClass="secondary-button" style="-fx-padding: 8 16;"/>
+           <Button fx:id="submitFormButton" text="🚀 Lưu Phiên Đấu Giá" onAction="#handleCreateOrUpdateAuction" styleClass="primary-button" style="-fx-padding: 8 16;"/>
         </HBox>
-      </VBox>
-
-      <!-- Cột phải: Danh sách phiên đấu giá của Seller -->
-      <VBox HBox.hgrow="ALWAYS" spacing="12">
-        <Label text="📋 Các Phiên Đấu Giá Của Tôi" styleClass="section-title"/>
-
-        <HBox spacing="10">
-          <Button fx:id="refreshButton" text="🔄 Làm mới" onAction="#handleRefresh" styleClass="secondary-button"/>
-        </HBox>
-
-        <TableView fx:id="myAuctionsTable" VBox.vgrow="ALWAYS" styleClass="data-table">
-          <columnResizePolicy>
-            <TableView fx:constant="CONSTRAINED_RESIZE_POLICY" />
-          </columnResizePolicy>
-          <columns>
-            <TableColumn fx:id="idCol" text="Mã phiên" prefWidth="70"/>
-            <TableColumn fx:id="itemNameCol" text="Tên sản phẩm" prefWidth="160"/>
-            <!-- Cột loại sản phẩm (mới) — hiển thị ELECTRONICS/ARTWORK/VEHICLE/OTHER -->
-            <TableColumn fx:id="categoryCol" text="Loại SP" prefWidth="100"/>
-            <TableColumn fx:id="priceCol" text="Giá hiện tại" prefWidth="130"/>
-            <TableColumn fx:id="statusCol" text="Trạng thái" prefWidth="110"/>
-            <TableColumn fx:id="startTimeCol" text="Bắt đầu" prefWidth="150"/>
-            <TableColumn fx:id="endTimeCol" text="Kết thúc" prefWidth="150"/>
-            <TableColumn fx:id="actionCol" text="Hành động" prefWidth="150"/>
-          </columns>
-          <placeholder>
-            <Label text="Bạn chưa tạo phiên đấu giá nào." styleClass="placeholder-label"/>
-          </placeholder>
-        </TableView>
-      </VBox>
-
-    </HBox>
-  </center>
-
-</BorderPane>
+     </VBox>
+  </StackPane>
+</StackPane>
