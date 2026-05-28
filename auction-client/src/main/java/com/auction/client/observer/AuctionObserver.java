@@ -1,6 +1,7 @@
 package com.auction.client.observer;
 
-import com.auction.server.model.entity.BidTransaction;
+import org.json.simple.JSONObject;
+import server.model.entity.BidTransaction;
 
 /**
  * Interface Observer dành cho phía Client.
@@ -28,4 +29,26 @@ public interface AuctionObserver {
    * @param newStatus chuỗi trạng thái mới (ví dụ: "FINISHED", "CANCELED")
    */
   void onAuctionStatusChanged(Long auctionId, String newStatus);
+
+  /**
+   * Được gọi khi có sự kiện liên quan đến ví (FUNDS_LOCKED, OUTBID, AUCTION_WON, v.v.).
+   * Default no-op để backward compatible với các observer cũ.
+   *
+   * @param eventType loại sự kiện (ví dụ: "FUNDS_LOCKED", "OUTBID_NOTIFICATION")
+   * @param payload dữ liệu JSON đi kèm sự kiện
+   */
+  default void onWalletEvent(String eventType, JSONObject payload) {
+    // Default no-op — override trong controller cần xử lý
+  }
+
+  /**
+   * Được gọi khi thời gian kết thúc phiên đấu giá được gia hạn (ví dụ: do Anti-sniping).
+   *
+   * @param auctionId ID của phiên bị thay đổi
+   * @param newEndTime thời gian kết thúc mới (định dạng ISO 8601 chuỗi)
+   */
+  default void onAuctionTimeExtended(Long auctionId, String newEndTime) {
+    // Default no-op
+  }
 }
+

@@ -14,8 +14,10 @@
         <maven.compiler.target>21</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
+
     <build>
         <plugins>
+            <!-- Spotless: tự động format code theo Google Java Style -->
             <plugin>
                 <groupId>com.diffplug.spotless</groupId>
                 <artifactId>spotless-maven-plugin</artifactId>
@@ -23,24 +25,45 @@
                 <configuration>
                     <java>
                         <googleJavaFormat>
-                          <version>1.24.0</version>
-                          <style>GOOGLE</style>
+                            <version>1.24.0</version>
+                            <style>GOOGLE</style>
                         </googleJavaFormat>
                     </java>
                 </configuration>
+            </plugin>
+
+            <!--
+                Exec Plugin: cho phép chạy Server bằng lệnh:
+                    mvn exec:java
+                Thêm vào sau khi build xong (mvn clean install).
+            -->
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <version>3.1.0</version>
+                <configuration>
+                    <mainClass>server.Server</mainClass>
+                </configuration>
+            </plugin>
+
+            <!-- Maven Surefire: chạy JUnit 5 tests -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>3.1.2</version>
             </plugin>
         </plugins>
     </build>
 
     <dependencies>
-        <!-- MySQL Connector: Driver kết nối Java với MySQL Server -->
+        <!-- MySQL Connector: driver kết nối Java với MySQL -->
         <dependency>
             <groupId>com.mysql</groupId>
             <artifactId>mysql-connector-j</artifactId>
             <version>9.0.0</version>
         </dependency>
 
-        <!-- JUnit 5: Framework viết Unit Test -->
+        <!-- JUnit 5: framework viết Unit Test -->
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter</artifactId>
@@ -48,12 +71,14 @@
             <scope>test</scope>
         </dependency>
 
-            <!-- JSON-->
+        <!--
+            org.json: thư viện JSON dùng trong Server.java để serialize/deserialize
+            request-response. Client dùng json-simple (dependency riêng trong client pom).
+        -->
         <dependency>
             <groupId>org.json</groupId>
             <artifactId>json</artifactId>
             <version>20240303</version>
         </dependency>
-        
     </dependencies>
 </project>

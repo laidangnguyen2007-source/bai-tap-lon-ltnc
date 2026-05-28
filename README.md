@@ -1,6 +1,6 @@
 # 🛒 HỆ THỐNG ĐẤU GIÁ TRỰC TUYẾN (ONLINE AUCTION SYSTEM)
 
-Bài Tập Lớn môn Lập trình Nâng Cao (LTNC) - Xây dựng hệ thống phòng đấu giá thời gian thực với kiến trúc Client-Server. Thực hiện bởi **Nhóm 11** (4 thành viên).
+Bài Tập Lớn môn Lập trình Nâng Cao (LTNC) - Xây dựng hệ thống phòng đấu giá thời gian thực với kiến trúc Client-Server. Thực hiện bởi **Nhóm 39** (4 thành viên).
 
 ## 🌟 TÍNH NĂNG NỔI BẬT
 - **Thời gian thực (Real-time):** Cập nhật giá thầu siêu tốc bằng công nghệ TCP Socket.
@@ -16,7 +16,7 @@ Dự án này sử dụng CSDL **MySQL (Client-Server)** để demo chức năng
 
 1. **Java JDK:** Phiên bản 21 trở lên.
 2. **Apache Maven:** Tích hợp sẵn trong IDE hoặc cài rời.
-3. **XAMPP / MySQL Server:** Khởi chạy MySQL ở cổng mặc định `3306`, tài khoản `root` và mật khẩu để trống. 
+3. **XAMPP / MySQL Server:** Khởi chạy MySQL ở cổng mặc định `3306`, tài khoản `root` và mật khẩu **`1234`** (trùng với cấu hình trong `DatabaseConfig.java`). 
 
 ---
 
@@ -31,7 +31,8 @@ Dự án này sử dụng CSDL **MySQL (Client-Server)** để demo chức năng
 Mở Terminal tại thư mục gốc của bài tập, di chuyển vào phần Server và đóng gói thư viện:
 ```bash
 cd auction-server
-mvn clean install
+mvn clean install -DskipTests
+mvn exec:java
 ```
 *(Ngay lần bật Server đầu tiên, mã nguồn Java sẽ tự động dò tìm cấu hình, tạo một Database tên là `auction_db` và xây dựng cấu trúc các Bảng).*
 
@@ -45,4 +46,4 @@ mvn javafx:run
 Lúc này, cửa sổ ứng dụng Desktop sẽ hiện lên. Thầy/Cô có thể tiến hành Đăng ký tài khoản và trải nghiệm luồng Đấu giá.
 
 ---
-*Bài Tập Lớn Lập trình Nâng Cao - Thực hiện bởi Nhóm 11.*
+*Bài Tập Lớn Lập trình Nâng Cao - Thực hiện bởi Nhóm 39.*

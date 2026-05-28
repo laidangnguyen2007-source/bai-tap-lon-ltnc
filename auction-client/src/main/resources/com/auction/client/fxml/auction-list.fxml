@@ -6,6 +6,7 @@
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.TableColumn?>
 <?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.TextField?>
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.Priority?>
@@ -30,6 +31,10 @@
       <Label text="🔨 Online Auction" styleClass="app-title"/>
       <Region HBox.hgrow="ALWAYS"/>
       <Label fx:id="welcomeLabel" styleClass="welcome-label"/>
+      <Button fx:id="myBidsButton" text="🕒 Lịch sử đấu giá" onAction="#handleViewMyBids" styleClass="secondary-button" visible="false" managed="false"/>
+      <Button fx:id="myWinsButton" text="🏆 Lịch sử thắng" onAction="#handleViewMyWins" styleClass="secondary-button" visible="false" managed="false"/>
+      <Button fx:id="walletButton" text="💰 Ví" onAction="#handleOpenWallet" styleClass="secondary-button" visible="false" managed="false"/>
+      <Button fx:id="adminWalletButton" text="🔧 Quản lý ví" onAction="#handleOpenAdminWallet" styleClass="secondary-button" visible="false" managed="false"/>
       <Button
         fx:id="logoutButton"
         text="Đăng Xuất"
@@ -43,39 +48,52 @@
     <VBox spacing="12">
       <padding><Insets top="20" right="24" bottom="20" left="24"/></padding>
 
+      <!-- [Tính năng 2] Bảng thống kê dành riêng cho Admin -->
+      <HBox fx:id="adminStatsPane" spacing="20" styleClass="stats-container" visible="false" managed="false">
+        <VBox styleClass="stat-card" HBox.hgrow="ALWAYS">
+           <Label text="Tổng số phiên" styleClass="stat-label"/>
+           <Label fx:id="totalAuctionsLabel" text="0" styleClass="stat-value" style="-fx-text-fill: #3498db;"/>
+        </VBox>
+        <VBox styleClass="stat-card" HBox.hgrow="ALWAYS">
+           <Label text="Đang diễn ra" styleClass="stat-label"/>
+           <Label fx:id="runningAuctionsLabel" text="0" styleClass="stat-value" style="-fx-text-fill: #2ecc71;"/>
+        </VBox>
+        <VBox styleClass="stat-card" HBox.hgrow="ALWAYS">
+           <Label text="Tổng giá trị (VNĐ)" styleClass="stat-label"/>
+           <Label fx:id="totalValueLabel" text="0" styleClass="stat-value" style="-fx-text-fill: #f1c40f;"/>
+        </VBox>
+      </HBox>
+
       <Label text="Danh Sách Phiên Đấu Giá" styleClass="section-title"/>
 
-      <!-- Thanh lọc và refresh -->
+      <!-- Thanh lọc, tìm kiếm và refresh -->
       <HBox spacing="10" alignment="CENTER_LEFT">
         <Label text="Lọc theo trạng thái:" styleClass="field-label"/>
-        <ComboBox fx:id="statusFilterCombo" prefWidth="220" styleClass="combo-box"/>
+        <ComboBox fx:id="statusFilterCombo" prefWidth="180" styleClass="combo-box"/>
+        
+        <Label text="Danh mục:" styleClass="field-label"/>
+        <ComboBox fx:id="categoryFilterCombo" prefWidth="150" styleClass="combo-box"/>
+
         <Button
           fx:id="refreshButton"
           text="🔄 Làm mới"
           onAction="#handleRefresh"
           styleClass="secondary-button"/>
         <Region HBox.hgrow="ALWAYS"/>
-        <Button
-          fx:id="viewDetailButton"
-          text="Xem Chi Tiết →"
-          onAction="#handleViewDetail"
-          styleClass="primary-button"/>
+        <TextField fx:id="searchField" promptText="🔍 Tìm theo tên sản phẩm..." prefWidth="250" styleClass="text-field"/>
       </HBox>
 
-      <!-- Bảng danh sách phiên đấu giá -->
-      <TableView fx:id="auctionTable" VBox.vgrow="ALWAYS" styleClass="data-table">
-        <columns>
-          <TableColumn fx:id="idColumn" text="Mã phiên" prefWidth="90"/>
-          <TableColumn fx:id="statusColumn" text="Trạng thái" prefWidth="160"/>
-          <TableColumn fx:id="currentPriceColumn" text="Giá hiện tại (VNĐ)" prefWidth="180"/>
-          <TableColumn fx:id="startTimeColumn" text="Bắt đầu" prefWidth="160"/>
-          <TableColumn fx:id="endTimeColumn" text="Kết thúc" prefWidth="160"/>
-        </columns>
-        <!-- Thông báo khi bảng rỗng -->
-        <placeholder>
-          <Label text="Không có phiên đấu giá nào. Nhấn 'Làm mới' để tải lại." styleClass="placeholder-label"/>
-        </placeholder>
-      </TableView>
+      <!-- Lưới thẻ phiên đấu giá (Card Grid) -->
+      <javafx.scene.control.ScrollPane fitToWidth="true" VBox.vgrow="ALWAYS" style="-fx-background-color: transparent; -fx-background: transparent;">
+        <content>
+          <javafx.scene.layout.FlowPane fx:id="auctionGridPane" hgap="20" vgap="20" alignment="TOP_LEFT">
+             <!-- Các thẻ sản phẩm sẽ được tạo động tại đây -->
+             <padding>
+                 <Insets top="10" right="10" bottom="10" left="10"/>
+             </padding>
+          </javafx.scene.layout.FlowPane>
+        </content>
+      </javafx.scene.control.ScrollPane>
 
     </VBox>
   </center>

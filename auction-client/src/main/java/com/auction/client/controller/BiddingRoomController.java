@@ -4,11 +4,14 @@ import com.auction.client.model.AuctionSessionState;
 import com.auction.client.observer.AuctionObserver;
 import com.auction.client.service.ServerService;
 import com.auction.client.util.FxmlLoader;
-import com.auction.server.model.entity.Auction;
-import com.auction.server.model.entity.BidTransaction;
+import com.auction.client.util.NotificationUtils;
 import java.io.IOException;
+import java.time.Duration;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -22,6 +25,8 @@ import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
 import javafx.scene.control.TextField;
 import javafx.stage.Stage;
+import server.model.entity.Auction;
+import server.model.entity.BidTransaction;
 
 /**
  * Controller cho màn hình Phòng Đấu Giá Trực Tiếp (bidding-room.fxml).
@@ -44,7 +49,7 @@ public class BiddingRoomController implements AuctionObserver {
   // Biểu đồ đường giá theo thời gian thực (mục 3.2.5)
   @FXML private LineChart<Number, Number> bidChart;
 
-  @FXML private NumberAxis xAxis; // Trục X: thứ tự lượt bid (tự động cập nhật)
+  @FXML private NumberAxis xAxis; // Trục X: thời gian
 
   @FXML private NumberAxis yAxis; // Trục Y: giá tiền (VNĐ)
 
@@ -56,6 +61,7 @@ public class BiddingRoomController implements AuctionObserver {
   @FXML private Label timeRemainingLabel;
 
   @FXML private Label statusLabel;
+  @FXML private Label minBidStepLabel; // Bước giá tối thiểu
 
   @FXML private Label infoLabel; // Thông báo kết quả bid (thành công/thất bại)
 
@@ -63,6 +69,11 @@ public class BiddingRoomController implements AuctionObserver {
   @FXML private TextField bidAmountField;
 
   @FXML private Button placeBidButton;
+  
+  // AutoBid
+  @FXML private TextField maxBidField;
+  @FXML private TextField incrementField;
+  @FXML private Button autoBidButton;
 
   // Lịch sử bid gần đây dạng danh sách
   @FXML private ListView<String> bidHistoryList;
@@ -83,8 +94,11 @@ public class BiddingRoomController implements AuctionObserver {
   // Đếm số lượt bid để làm trục X (thứ tự lần đặt giá: 1, 2, 3, ...)
   private int bidCount = 0;
 
-  private static final DateTimeFormatter TIME_FORMAT = DateTimeFormatter.ofPattern("HH:mm:ss");
+  private Timer countdownTimer;
+  private volatile long pendingBidAmount = -1;
 
+  private static final DateTimeFormatter LIST_TIME_FORMAT = DateTimeFormatter.ofPattern("dd/MM HH:mm:ss");
+  private static final DateTimeFormatter CHART_TIME_FORMAT = DateTimeFormatter.ofPattern("dd/MM\nHH:mm:ss");
   /**
    * Được JavaFX gọi tự động sau khi load FXML. Khởi tạo biểu đồ, đăng ký Observer, và load lịch sử
    * bid ban đầu.
@@ -100,8 +114,24 @@ public class BiddingRoomController implements AuctionObserver {
 
     // Thiết lập thông tin tiêu đề phiên
     auctionTitleLabel.setText("Phiên Đấu Giá #" + auction.getId());
+
+
+    // Thêm giá khởi điểm vào Chart
+    if (bidSeries.getData().isEmpty()) {
+      long millis;
+      if (auction.getStartTime() != null) {
+        millis = auction.getStartTime().atZone(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli();
+      } else {
+        millis = LocalDateTime.now().atZone(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli();
+      }
+      XYChart.Data<Number, Number> dataPoint = new XYChart.Data<>(millis, auction.getStartingPrice());
+      bidSeries.getData().add(dataPoint);
+    }
+
+
     currentPriceLabel.setText(String.format("%,d VNĐ", auction.getCurrentPrice()));
     statusLabel.setText(auction.getStatus().name());
+    minBidStepLabel.setText(String.format("Bước giá tối thiểu: %,d VNĐ", auction.getMinBidStep()));
 
     // Thiết lập biểu đồ đường
     setupBidChart();
@@ -115,12 +145,51 @@ public class BiddingRoomController implements AuctionObserver {
     // Gắn dữ liệu ListView
     bidHistoryList.setItems(bidHistoryItems);
 
-    // Disable nút đặt giá nếu phiên không ở trạng thái RUNNING
+    // Disable nút đặt giá nếu phiên không RUNNING — phân biệt OPEN (chưa mở) với đã đóng
     if (!auction.isRunning()) {
       placeBidButton.setDisable(true);
       bidAmountField.setDisable(true);
-      infoLabel.setText("Phiên đấu giá này không còn nhận giá mới.");
+      autoBidButton.setDisable(true);
+      maxBidField.setDisable(true);
+      incrementField.setDisable(true);
+      infoLabel.setText(
+          switch (auction.getStatus()) {
+            case OPEN -> "Phiên chưa bắt đầu — chưa thể đặt giá.";
+            case FINISHED -> "Phiên đã kết thúc — không còn nhận giá mới.";
+            case PAID -> "Phiên đã thanh toán.";
+            case CANCELED -> "Phiên đã hủy.";
+            default -> "Phiên đấu giá này không còn nhận giá mới.";
+          });
     }
+
+    // Bắt đầu đếm ngược thời gian còn lại
+    startCountdownTimer(auction);
+  }
+
+  /** Khởi động timer đếm ngược đến endTime của phiên. */
+  private void startCountdownTimer(Auction auction) {
+    if (auction.getEndTime() == null) return;
+    countdownTimer = new Timer(true);
+    countdownTimer.scheduleAtFixedRate(new TimerTask() {
+      @Override
+      public void run() {
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime end = auction.getEndTime();
+        if (now.isAfter(end)) {
+          Platform.runLater(() -> timeRemainingLabel.setText("Đã kết thúc"));
+          countdownTimer.cancel();
+          return;
+        }
+        Duration remaining = Duration.between(now, end);
+        long hours = remaining.toHours();
+        long minutes = remaining.toMinutesPart();
+        long seconds = remaining.toSecondsPart();
+        String text = hours > 0
+            ? String.format("%02d:%02d:%02d", hours, minutes, seconds)
+            : String.format("%02d:%02d", minutes, seconds);
+        Platform.runLater(() -> timeRemainingLabel.setText(text));
+      }
+    }, 0, 1000);
   }
 
   // ===== MỤC 3.2.5: BID HISTORY VISUALIZATION =====
@@ -133,15 +202,36 @@ public class BiddingRoomController implements AuctionObserver {
     bidSeries.setName("Đường giá đấu");
 
     // Thiết lập label cho 2 trục
-    xAxis.setLabel("Lượt đặt giá (thứ tự)");
+    xAxis.setLabel("Thời gian");
     yAxis.setLabel("Giá (VNĐ)");
 
     // Không tự động giới hạn khoảng trục Y — để chart tự mở rộng theo dữ liệu
     yAxis.setAutoRanging(true);
     xAxis.setAutoRanging(true);
+    
+    // RẤT QUAN TRỌNG: Phải tắt bắt đầu từ 0 vì Epoch Time là số cực lớn, nếu không chart sẽ dồn thành 1 cục
+    xAxis.setForceZeroInRange(false);
+    yAxis.setForceZeroInRange(false); // Giúp giá bám sát hơn
+
+    // Định dạng số của trục X thành chuỗi Ngày/Giờ
+    xAxis.setTickLabelFormatter(new javafx.util.StringConverter<Number>() {
+        @Override
+        public String toString(Number object) {
+            java.time.LocalDateTime time = java.time.Instant.ofEpochMilli(object.longValue())
+                .atZone(java.time.ZoneId.systemDefault())
+                .toLocalDateTime();
+            return time.format(CHART_TIME_FORMAT);
+        }
+
+        @Override
+        public Number fromString(String string) {
+            return 0; // Chiều ngược lại không cần dùng
+        }
+    });
 
     // Tắt animation mỗi khi thêm điểm mới (animation chậm sẽ gây lag khi cập nhật liên tục)
     bidChart.setAnimated(false);
+    xAxis.setAnimated(false);
 
     // Tắt hiển thị symbols (chấm tròn) trên mỗi điểm để chart gọn hơn khi có nhiều điểm
     bidChart.setCreateSymbols(true);
@@ -175,8 +265,15 @@ public class BiddingRoomController implements AuctionObserver {
    */
   private void addBidToChart(BidTransaction bid) {
     bidCount++;
-    // Tạo điểm mới (x = thứ tự bid, y = số tiền) và thêm vào series
-    XYChart.Data<Number, Number> dataPoint = new XYChart.Data<>(bidCount, bid.getAmount());
+    long millis;
+    if (bid.getTimestamp() != null) {
+      millis = bid.getTimestamp().atZone(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli();
+    } else {
+      millis = LocalDateTime.now().atZone(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli();
+    }
+
+    // Tạo điểm mới (x = thời gian hệ timestamp, y = số tiền) và thêm vào series
+    XYChart.Data<Number, Number> dataPoint = new XYChart.Data<>(millis, bid.getAmount());
     bidSeries.getData().add(dataPoint);
   }
 
@@ -187,7 +284,7 @@ public class BiddingRoomController implements AuctionObserver {
    * @param bid giao dịch đặt giá cần hiển thị
    */
   private void addBidToHistoryList(BidTransaction bid) {
-    String timeStr = bid.getTimestamp() != null ? bid.getTimestamp().format(TIME_FORMAT) : "--:--";
+    String timeStr = bid.getTimestamp() != null ? bid.getTimestamp().format(LIST_TIME_FORMAT) : "--:--";
     String entry =
         String.format(
             "[%s] Bidder #%d đặt giá: %,d VNĐ", timeStr, bid.getBidderId(), bid.getAmount());
@@ -209,7 +306,6 @@ public class BiddingRoomController implements AuctionObserver {
    */
   @Override
   public void onBidUpdated(BidTransaction bid) {
-    // Lập trình phòng thủ: bỏ qua nếu bid không thuộc phiên đang xem
     Auction currentAuction = session.getSelectedAuction();
     if (currentAuction == null || !currentAuction.getId().equals(bid.getAuctionId())) {
       return;
@@ -230,6 +326,17 @@ public class BiddingRoomController implements AuctionObserver {
           // Cập nhật giá hiện tại trong session model
           currentAuction.setCurrentPrice(bid.getAmount());
           currentAuction.setCurrentWinnerId(bid.getBidderId());
+
+          // Nếu bid này là của chính mình, hiện thông báo thành công và MỞ KHÓA nút ngay
+          if (pendingBidAmount > 0 && bid.getAmount() == pendingBidAmount) {
+            infoLabel.setText("");
+            NotificationUtils.showSuccess((Stage) bidChart.getScene().getWindow(), "Bạn đã dẫn đầu với giá " + String.format("%,d", bid.getAmount()) + " VNĐ");
+            pendingBidAmount = -1;
+            placeBidButton.setDisable(false); // Mở khóa nút để đặt giá tiếp
+          } else {
+            // [Tính năng 4] Thông báo khi có người khác đặt giá
+            NotificationUtils.showToast((Stage) bidChart.getScene().getWindow(), "📣 Có người vừa đặt giá mới: " + String.format("%,d", bid.getAmount()) + " VNĐ", false);
+          }
         });
   }
 
@@ -250,6 +357,8 @@ public class BiddingRoomController implements AuctionObserver {
     Platform.runLater(
         () -> {
           statusLabel.setText(newStatus);
+          // [Tính năng 4] Hiện thông báo trạng thái
+          NotificationUtils.showToast((Stage) bidChart.getScene().getWindow(), "🔔 Phiên #" + auctionId + ": " + newStatus, newStatus.equals("CANCELED"));
 
           // Nếu phiên kết thúc, vô hiệu hóa các control đặt giá
           if ("FINISHED".equals(newStatus)
@@ -257,7 +366,30 @@ public class BiddingRoomController implements AuctionObserver {
               || "PAID".equals(newStatus)) {
             placeBidButton.setDisable(true);
             bidAmountField.setDisable(true);
+            autoBidButton.setDisable(true);
+            maxBidField.setDisable(true);
+            incrementField.setDisable(true);
             infoLabel.setText("Phiên đấu giá đã kết thúc. Không thể đặt thêm giá.");
+          }
+        });
+  }
+
+  @Override
+  public void onAuctionTimeExtended(Long auctionId, String newEndTimeStr) {
+    Auction currentAuction = session.getSelectedAuction();
+    if (currentAuction == null || !currentAuction.getId().equals(auctionId)) {
+      return;
+    }
+
+    Platform.runLater(
+        () -> {
+          try {
+            LocalDateTime newEndTime = LocalDateTime.parse(newEndTimeStr);
+            currentAuction.setEndTime(newEndTime);
+            // Cập nhật lại UI thông báo thời gian đã được gia hạn
+            NotificationUtils.showToast((Stage) bidChart.getScene().getWindow(), "⏰ Phiên đấu giá được gia hạn do có người đặt giá ở phút cuối!", false);
+          } catch (Exception e) {
+            e.printStackTrace();
           }
         });
   }
@@ -277,7 +409,8 @@ public class BiddingRoomController implements AuctionObserver {
 
     // Validate: trường không được rỗng
     if (amountText.isEmpty()) {
-      infoLabel.setText("Vui lòng nhập số tiền muốn đặt giá.");
+      infoLabel.setText("");
+      NotificationUtils.showError((Stage) bidChart.getScene().getWindow(), "Vui lòng nhập số tiền muốn đặt giá.");
       return;
     }
 
@@ -286,33 +419,123 @@ public class BiddingRoomController implements AuctionObserver {
       // Validate: phải là số hợp lệ
       amount = Long.parseLong(amountText.replace(",", ""));
     } catch (NumberFormatException e) {
-      infoLabel.setText("Số tiền không hợp lệ. Chỉ nhập số.");
+      infoLabel.setText("");
+      NotificationUtils.showError((Stage) bidChart.getScene().getWindow(), "Số tiền không hợp lệ. Chỉ nhập số.");
       return;
     }
 
-    // Validate: phải dương và lớn hơn giá hiện tại
+    // Validate: kiểm tra bước giá tối thiểu (áp dụng cho mọi lượt bid)
     Auction auction = session.getSelectedAuction();
-    if (amount <= 0) {
-      infoLabel.setText("Số tiền phải lớn hơn 0.");
-      return;
-    }
-    if (amount <= auction.getCurrentPrice()) {
-      infoLabel.setText(
+    long minRequired = auction.getCurrentPrice() + auction.getMinBidStep();
+
+    if (amount < minRequired) {
+      infoLabel.setText("");
+      NotificationUtils.showError((Stage) bidChart.getScene().getWindow(),
           String.format(
-              "Giá đặt phải cao hơn giá hiện tại (%,d VNĐ).", auction.getCurrentPrice()));
+              "Giá đặt chưa đạt mức tối thiểu. Bạn cần đặt ít nhất %,d VNĐ.", minRequired));
       return;
     }
 
     Long bidderId = session.getCurrentUser().getId();
-    boolean accepted = serverService.placeBid(auction.getId(), bidderId, amount);
+    final long finalAmount = amount;
 
-    if (accepted) {
-      // Server chấp nhận: UI sẽ tự cập nhật qua onBidUpdated() — không cần làm gì thêm ở đây
-      infoLabel.setText("Đặt giá thành công! Chờ cập nhật...");
-      bidAmountField.clear();
-    } else {
-      infoLabel.setText("Đặt giá thất bại. Giá có thể đã bị vượt qua hoặc phiên đã đóng.");
+    // [Thêm bước xác nhận] Hỏi bạn trước khi đặt giá (tránh ấn nhầm)
+    javafx.scene.control.Alert confirmAlert = new javafx.scene.control.Alert(javafx.scene.control.Alert.AlertType.CONFIRMATION);
+    NotificationUtils.styleAlert(confirmAlert);
+    confirmAlert.setGraphic(null); // Bỏ dấu "?" phèn phèn
+    confirmAlert.setTitle("Xác Nhận Đặt Giá");
+    confirmAlert.setHeaderText("Bạn có chắc chắn muốn đặt giá cho phiên này?");
+    confirmAlert.setContentText("Số tiền đặt: " + String.format("%,d", finalAmount) + " VNĐ\nLưu ý: Hành động này không thể hoàn tác!");
+
+    java.util.Optional<javafx.scene.control.ButtonType> result = confirmAlert.showAndWait();
+    if (result.isEmpty() || result.get() != javafx.scene.control.ButtonType.OK) {
+        infoLabel.setText("Đã hủy lệnh đặt giá.");
+        return;
     }
+
+    // Lưu lại để nhận diện khi BID_UPDATE về
+    pendingBidAmount = finalAmount;
+    infoLabel.setText("Đang gửi giá " + String.format("%,d", finalAmount) + " VNĐ...");
+    placeBidButton.setDisable(true);
+    bidAmountField.clear();
+
+    // Gửi đi, kết quả phản hồi ngay lập tức qua sendRequest
+    String errorMsg = serverService.placeBid(auction.getId(), bidderId, finalAmount);
+    if (errorMsg != null) {
+      // Có lỗi từ server (ví dụ: số dư không đủ)
+      infoLabel.setText("");
+      NotificationUtils.showError((Stage) bidChart.getScene().getWindow(), "Đặt giá thất bại: " + errorMsg);
+      placeBidButton.setDisable(false);
+      pendingBidAmount = -1;
+      return;
+    }
+
+    // Nếu errorMsg == null (thành công), UI sẽ được cập nhật tự động và mở khóa nút
+    // qua cơ chế Push (onBidUpdated) từ server.
+  }
+
+  @FXML
+  private void handleAutoBid(ActionEvent event) {
+    String maxBidText = maxBidField.getText().trim();
+    String incText = incrementField.getText().trim();
+
+    if (maxBidText.isEmpty() || incText.isEmpty()) {
+      infoLabel.setText("");
+      NotificationUtils.showError((Stage) bidChart.getScene().getWindow(), "Vui lòng nhập giá tối đa và bước giá.");
+      return;
+    }
+
+    long maxBid, inc;
+    try {
+      maxBid = Long.parseLong(maxBidText.replace(",", ""));
+      inc = Long.parseLong(incText.replace(",", ""));
+    } catch (NumberFormatException e) {
+      infoLabel.setText("");
+      NotificationUtils.showError((Stage) bidChart.getScene().getWindow(), "Số tiền không hợp lệ.");
+      return;
+    }
+
+    Auction auction = session.getSelectedAuction();
+    if (maxBid <= auction.getCurrentPrice()) {
+      infoLabel.setText("");
+      NotificationUtils.showError((Stage) bidChart.getScene().getWindow(), "Giá tối đa phải lớn hơn giá hiện tại.");
+      return;
+    }
+    if (inc <= 0) {
+      infoLabel.setText("");
+      NotificationUtils.showError((Stage) bidChart.getScene().getWindow(), "Bước giá phải lớn hơn 0.");
+      return;
+    }
+
+    Long bidderId = session.getCurrentUser().getId();
+
+    javafx.scene.control.Alert confirmAlert = new javafx.scene.control.Alert(javafx.scene.control.Alert.AlertType.CONFIRMATION);
+    NotificationUtils.styleAlert(confirmAlert);
+    confirmAlert.setGraphic(null);
+    confirmAlert.setTitle("Xác Nhận Đăng Ký Auto-Bid");
+    confirmAlert.setHeaderText("Bạn có chắc chắn muốn bật Auto-Bid?");
+    confirmAlert.setContentText("Giá tối đa: " + String.format("%,d", maxBid) + " VNĐ\nBước giá: " + String.format("%,d", inc) + " VNĐ");
+
+    java.util.Optional<javafx.scene.control.ButtonType> result = confirmAlert.showAndWait();
+    if (result.isEmpty() || result.get() != javafx.scene.control.ButtonType.OK) {
+        return;
+    }
+
+    infoLabel.setText("Đang đăng ký Auto-Bid...");
+    autoBidButton.setDisable(true);
+
+    boolean sent = serverService.registerAutoBid(auction.getId(), bidderId, maxBid, inc);
+    if (!sent) {
+      infoLabel.setText("");
+      NotificationUtils.showError((Stage) bidChart.getScene().getWindow(), "Lỗi kết nối, không thể đăng ký Auto-Bid.");
+      autoBidButton.setDisable(false);
+      return;
+    }
+
+    infoLabel.setText("");
+    NotificationUtils.showSuccess((Stage) bidChart.getScene().getWindow(), "Auto-Bid đã được kích hoạt.");
+    maxBidField.clear();
+    incrementField.clear();
   }
 
   /**
@@ -325,6 +548,7 @@ public class BiddingRoomController implements AuctionObserver {
   private void handleBack(ActionEvent event) {
     // Quan trọng: hủy đăng ký Observer khi rời màn hình để tránh memory leak
     serverService.removeObserver(this);
+    if (countdownTimer != null) countdownTimer.cancel();
 
     try {
       Stage stage = (Stage) backButton.getScene().getWindow();

@@ -1,7 +1,0 @@
-{
-  "java.configuration.updateBuildConfiguration": "automatic",
-  "editor.formatOnSave": true,
-  "java.format.settings.url": "https://raw.githubusercontent.com/google/styleguide/gh-pages/eclipse-java-google-style.xml",
-  "java.format.settings.profile": "GoogleStyle",
-  "editor.tabSize": 2
-}

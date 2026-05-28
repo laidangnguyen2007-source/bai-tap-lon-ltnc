@@ -1,9 +1,9 @@
 import static org.junit.jupiter.api.Assertions.*;
 
-import com.auction.server.model.entity.Auction;
-import com.auction.server.model.exception.InvalidBidException;
 import java.time.LocalDateTime;
 import org.junit.jupiter.api.Test;
+import server.model.entity.Auction;
+import server.model.exception.InvalidBidException;
 
 public class TestAuctionException {
 

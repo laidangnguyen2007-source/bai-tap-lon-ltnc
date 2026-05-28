@@ -1,190 +1,180 @@
 package com.auction.client.service;
 
-import com.auction.client.network.AuctionController;
-import com.auction.client.network.BidController;
-import com.auction.client.network.ItemController;
-import com.auction.client.network.UserController;
+import com.auction.client.network.*;
 import com.auction.client.observer.AuctionObserver;
-import com.auction.server.model.entity.Auction;
-import com.auction.server.model.entity.BidTransaction;
-import com.auction.server.model.entity.item.Item;
-import com.auction.server.model.entity.user.User;
-import java.io.IOException;
-import java.net.UnknownHostException;
+import com.auction.client.util.JsonMapper;
+import server.model.entity.Auction;
+import server.model.entity.BidTransaction;
+import server.model.entity.item.Item;
+import server.model.entity.user.User;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Consumer;
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
 
 /**
- * Lớp Stub (giả lập) cho tầng kết nối với Server.
- *
- * <p><b>Mục đích:</b> Cho phép Thành viên 4 phát triển và kiểm thử GUI hoàn toàn độc lập, không
- * phụ thuộc vào tiến độ của Thành viên 3 (NetworkLayer thực). Khi Thành viên 3 hoàn thiện tầng
- * network, chỉ cần thay thế phần thân của từng phương thức bằng lời gọi socket thực sự — giao
- * diện (method signature) không đổi.
- *
- * <p><b>Quy ước tích hợp với TV3:</b> TV3 chỉ cần giữ nguyên tên lớp và package này, sau đó điền
- * logic socket/TCP vào bên trong từng phương thức.
+ * Facade Service — Cổng kết nối duy nhất của ứng dụng Client. Tuân thủ SRP: Lớp này chỉ điều phối
+ * (delegate) yêu cầu tới các Handler chuyên biệt.
  */
 public class ServerService {
-  private final UserController userController;
-  private final AuctionController auctionController;
-  private final BidController bidController;
-  private final ItemController itemController;
-  public ServerService() {
-    try {
-      this.userController = new UserController();
-      this.auctionController = new AuctionController();
-      this.bidController = new BidController(this);
-      this.itemController = new ItemController();
-    } catch (Exception e) {
-      e.printStackTrace();
-      throw new RuntimeException("Unable to connect to the server: " + e.getMessage());
+    private final UserNetworkHandler userHandler;
+    private final AuctionNetworkHandler auctionHandler;
+    private final BidNetworkHandler bidHandler;
+    private final ItemNetworkHandler itemHandler;
+    private final WalletNetworkHandler walletHandler;
+
+    private final List<AuctionObserver> observers = new ArrayList<>();
+    private final Consumer<String> pushHandler;
+
+    public ServerService() {
+        try {
+            SocketConnection connection = SocketConnection.getInstance();
+            this.userHandler = new UserNetworkHandler(connection);
+            this.auctionHandler = new AuctionNetworkHandler(connection);
+            this.bidHandler = new BidNetworkHandler(connection);
+            this.itemHandler = new ItemNetworkHandler(connection);
+            this.walletHandler = new WalletNetworkHandler(connection);
+
+            this.pushHandler = this::handlePushMessage;
+            connection.addPushListener(this.pushHandler);
+        } catch (Exception e) {
+            throw new RuntimeException("Lỗi khởi tạo ServerService: " + e.getMessage());
+        }
     }
-  }
-  // Danh sách các observer đang lắng nghe cập nhật realtime từ server.
-  // Trong kiến trúc này, BiddingRoomController sẽ đăng ký vào danh sách này.
-  private final List<AuctionObserver> observers = new ArrayList<>();
 
-  // -- Quản lý Observer --
+    // -- REALTIME OBSERVER --
 
-  /**
-   * Đăng ký một observer để nhận thông báo cập nhật realtime.
-   *
-   * @param observer đối tượng cần nhận thông báo (thường là BiddingRoomController)
-   */
-  public void addObserver(AuctionObserver observer) {
-    if (observer != null && !observers.contains(observer)) {
-      observers.add(observer);
+    public void addObserver(AuctionObserver o) {
+        if (o != null)
+            observers.add(o);
     }
-  }
 
-  /**
-   * Hủy đăng ký observer (gọi khi người dùng rời phòng đấu giá).
-   *
-   * @param observer đối tượng cần hủy đăng ký
-   */
-  public void removeObserver(AuctionObserver observer) {
-    observers.remove(observer);
-  }
-
-  /**
-   * TV3 gọi phương thức này khi nhận được thông báo đặt giá mới từ Server socket. Phương thức này
-   * sẽ notify toàn bộ observer đang đăng ký.
-   *
-   * @param bid giao dịch đặt giá vừa được xác nhận
-   */
-  public void notifyBidUpdated(BidTransaction bid) {
-    for (AuctionObserver observer : observers) {
-      observer.onBidUpdated(bid);
+    public void removeObserver(AuctionObserver o) {
+        observers.remove(o);
     }
-  }
 
-  /**
-   * TV3 gọi phương thức này khi nhận được thông báo thay đổi trạng thái phiên từ Server.
-   *
-   * @param auctionId ID phiên bị thay đổi
-   * @param newStatus trạng thái mới (chuỗi tên của AuctionStatus enum)
-   */
-  public void notifyAuctionStatusChanged(Long auctionId, String newStatus) {
-    for (AuctionObserver observer : observers) {
-      observer.onAuctionStatusChanged(auctionId, newStatus);
+    private void handlePushMessage(String line) {
+        try {
+            JSONObject push = (JSONObject) new JSONParser().parse(line);
+            String type = (String) push.get("type");
+            if ("BID_UPDATE".equals(type)) {
+                BidTransaction bid = JsonMapper.mapToBid((JSONObject) push.get("bid"));
+                observers.forEach(o -> o.onBidUpdated(bid));
+            } else if ("AUCTION_STATUS_CHANGED".equals(type)) {
+                Long id = ((Number) push.get("auctionId")).longValue();
+                String status = (String) push.get("newStatus");
+                observers.forEach(o -> o.onAuctionStatusChanged(id, status));
+            } else if ("AUCTION_TIME_EXTENDED".equals(type)) {
+                Long id = ((Number) push.get("auctionId")).longValue();
+                String newEndTime = (String) push.get("newEndTime");
+                observers.forEach(o -> o.onAuctionTimeExtended(id, newEndTime));
+            } else if ("FUNDS_LOCKED".equals(type) || "FUNDS_RELEASED".equals(type)
+                    || "OUTBID".equals(type) || "OUTBID_NOTIFICATION".equals(type)
+                    || "AUCTION_WON".equals(type) || "AUCTION_LOST".equals(type)
+                    || "SELLER_PAYOUT".equals(type) || "ADMIN_BALANCE_ADJUSTED".equals(type)
+                    || "AUTO_BID_CANCELLED".equals(type) || "USER_TOP_UP".equals(type)) {
+                observers.forEach(o -> o.onWalletEvent(type, push));
+            }
+        } catch (Exception ignored) {
+        }
     }
-  }
 
-  // -- Tầng nghiệp vụ (stub — TV3 sẽ thay bằng gọi socket thực) --
+    // -- DELEGATION METHODS --
 
-  /**
-   * Đăng nhập vào hệ thống.
-   *
-   * @param username tên đăng nhập
-   * @param password mật khẩu chưa hash (server sẽ hash phía sau)
-   * @return đối tượng User (Bidder hoặc Seller) nếu thành công, null nếu sai thông tin
-   */
-  public User login(String username, String password) {
-    // STUB: TV3 thay bằng gửi request LOGIN qua socket và nhận response
-    return userController.login(username, password);
-  }
+    public User login(String u, String p) {
+        return userHandler.login(u, p);
+    }
 
-  /**
-   * Đăng ký tài khoản mới.
-   *
-   * @param username tên đăng nhập
-   * @param password mật khẩu
-   * @param email email
-   * @param role "BIDDER" hoặc "SELLER"
-   * @param shopName tên shop (chỉ dùng nếu role = SELLER, ngược lại truyền null)
-   * @return true nếu đăng ký thành công
-   */
-  public boolean register(
-      String username, String password, String email, String role, String shopName) {
-    // STUB: TV3 thay bằng gửi request REGISTER qua socket
-    return register(username, password, email, role, shopName);
-  }
+    public boolean register(String u, String p, String e, String r, String s) {
+        return userHandler.register(u, p, e, r, s);
+    }
 
-  /**
-   * Lấy danh sách tất cả các phiên đấu giá từ server.
-   *
-   * @return danh sách Auction (rỗng nếu chưa kết nối)
-   */
-  public List<Auction> getAllAuctions() {
-    // STUB: TV3 thay bằng gửi request GET_AUCTIONS qua socket
-    return new ArrayList<>();
-  }
+    public User getUserById(Long id) {
+        return userHandler.getUserById(id);
+    }
 
-  /**
-   * Lấy chi tiết item của một phiên đấu giá.
-   *
-   * @param itemId ID của sản phẩm
-   * @return AuctionItem hoặc null nếu không tìm thấy
-   */
-  public Item getItemById(Long itemId) {
-    // STUB: TV3 thay bằng gửi request GET_ITEM qua socket
-    return itemController.getItemById(itemId);
-  }
+    public List<Auction> getAllAuctions() {
+        return auctionHandler.getAllAuctions();
+    }
 
-  /**
-   * Lấy lịch sử đặt giá của một phiên đấu giá (dùng để vẽ biểu đồ ban đầu khi load màn hình).
-   *
-   * @param auctionId ID phiên đấu giá
-   * @return danh sách BidTransaction đã sắp xếp theo thời gian tăng dần
-   */
-  public List<BidTransaction> getBidHistory(Long auctionId) {
-    // STUB: TV3 thay bằng gửi request GET_BID_HISTORY qua socket
-    return bidController.getBidHistory(auctionId);
-  }
+    public List<Auction> getAuctionsBySeller(Long id) {
+        return auctionHandler.getAuctionsBySeller(id);
+    }
 
-  /**
-   * Gửi một lượt đặt giá lên server.
-   *
-   * @param auctionId ID phiên đấu giá
-   * @param bidderId ID người đặt giá
-   * @param amount số tiền muốn đặt (phải > giá hiện tại)
-   * @return true nếu server chấp nhận, false nếu bị từ chối
-   */
-  public boolean placeBid(Long auctionId, Long bidderId, long amount) {
-    // STUB: TV3 thay bằng gửi request PLACE_BID qua socket và chờ response
-    return bidController.placeBid(auctionId, bidderId, amount);
-  }
+    public Long createAuction(Auction a) {
+        return auctionHandler.createAuction(a);
+    }
 
-  /**
-   * Tạo phiên đấu giá mới (chỉ dành cho Seller).
-   *
-   * @param auction thông tin phiên đấu giá mới
-   * @return ID của phiên vừa tạo, -1 nếu thất bại
-   */
-  public Long createAuction(Auction auction) {
-    // STUB: TV3 thay bằng gửi request CREATE_AUCTION qua socket
-    return auctionController.createAuction(auction);
-  }
+    public boolean deleteAuction(Long id) {
+        return auctionHandler.deleteAuction(id);
+    }
 
-  /**
-   * Lấy danh sách các phiên đấu giá do một Seller tạo ra.
-   *
-   * @param sellerId ID của Seller
-   * @return danh sách Auction của seller đó
-   */
-  public List<Auction> getAuctionsBySeller(Long sellerId) {
-    // STUB: TV3 thay bằng gửi request GET_SELLER_AUCTIONS qua socket
-    return auctionController.getAuctionsBySeller(sellerId);
-  }
+    public boolean resetAuction(Long id) {
+        return auctionHandler.resetAuction(id);
+    }
+
+    public boolean updateAuctionAdmin(Long id, long p, String s, String st, String et, String c) {
+        return auctionHandler.updateAuctionAdmin(id, p, s, st, et, c);
+    }
+
+    public Item getItemById(Long id) {
+        return itemHandler.getItemById(id);
+    }
+
+    public String placeBid(Long aId, Long bId, long amt) {
+        return bidHandler.placeBid(aId, bId, amt);
+    }
+
+    public boolean registerAutoBid(Long aId, Long bId, long maxBid, long increment) {
+        return bidHandler.registerAutoBid(aId, bId, maxBid, increment);
+    }
+
+    public List<BidTransaction> getBidHistory(Long id) {
+        return bidHandler.getBidHistory(id);
+    }
+
+    public List<BidTransaction> getUserBids(Long userId) {
+        return bidHandler.getUserBids(userId);
+    }
+
+    public boolean updateAuctionSeller(Long auctionId, Long sellerId, String itemName,
+            String category, long startingPrice, java.time.LocalDateTime startTime,
+            java.time.LocalDateTime endTime, String itemDescription, String itemSpecifics, String imageBase64,
+            long minBidStep) {
+        return auctionHandler.updateAuctionSeller(auctionId, sellerId, itemName, category,
+                startingPrice, startTime.toString(), endTime.toString(), itemDescription, itemSpecifics,
+                imageBase64, minBidStep);
+    }
+
+    public boolean deleteAuctionSeller(Long auctionId, Long sellerId) {
+        return auctionHandler.deleteAuctionSeller(auctionId, sellerId);
+    }
+
+    // -- WALLET DELEGATION --
+
+    public JSONObject getWallet(Long userId) {
+        return walletHandler.getWallet(userId);
+    }
+
+    public List<JSONObject> getWalletTransactions(Long userId) {
+        return walletHandler.getTransactions(userId);
+    }
+
+    public boolean adminAdjustBalance(Long userId, long amount, Long adminId, String role, String desc) {
+        return walletHandler.adminAdjustBalance(userId, amount, adminId, role, desc);
+    }
+
+    public List<JSONObject> adminGetAllWallets(String role) {
+        return walletHandler.adminGetAllWallets(role);
+    }
+
+    public boolean cancelAutoBid(Long auctionId, Long bidderId) {
+        return walletHandler.cancelAutoBid(auctionId, bidderId);
+    }
+
+    public boolean userTopUp(Long userId, long amount) {
+        return walletHandler.userTopUp(userId, amount);
+    }
 }
+

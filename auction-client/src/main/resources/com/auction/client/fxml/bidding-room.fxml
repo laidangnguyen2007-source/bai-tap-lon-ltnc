@@ -19,12 +19,12 @@
 
   Bố cục tổng thể:
   ┌─────────────────────────────────────────────────┐
-  │                    Header                        │
+  │                    Header                       │
   ├───────────────────────────┬─────────────────────┤
   │                           │   Bảng điều khiển   │
-  │   LineChart (biểu đồ     │   - Giá hiện tại     │
-  │   đường giá theo thời    │   - Nhập giá         │
-  │   gian thực)             │   - Lịch sử bid      │
+  │   LineChart (biểu đồ      │  - Giá hiện tại     │
+  │   đường giá theo thời     │  - Nhập giá         │
+  │   gian thực)              │  - Lịch sử bid      │
   │                           │                     │
   └───────────────────────────┴─────────────────────┘
 -->
@@ -64,7 +64,7 @@
         -->
         <LineChart fx:id="bidChart" VBox.vgrow="ALWAYS" styleClass="bid-chart">
           <xAxis>
-            <NumberAxis fx:id="xAxis" label="Thứ tự lượt đặt giá"/>
+            <NumberAxis fx:id="xAxis" label="Thời gian đặt giá"/>
           </xAxis>
           <yAxis>
             <NumberAxis fx:id="yAxis" label="Giá đặt (VNĐ)"/>
@@ -86,6 +86,7 @@
           <Label text="💰 Giá Cao Nhất Hiện Tại" styleClass="field-label"/>
           <Label fx:id="currentPriceLabel" text="0 VNĐ" styleClass="price-label-large"/>
           <Label fx:id="timeRemainingLabel" text="Thời gian còn lại: --:--" styleClass="subtitle-label"/>
+          <Label fx:id="minBidStepLabel" text="Bước giá tối thiểu: 0 VNĐ" styleClass="min-step-label"/>
         </VBox>
 
         <Separator/>
@@ -102,6 +103,14 @@
           onAction="#handlePlaceBid"
           styleClass="primary-button"
           maxWidth="Infinity"/>
+
+        <Separator/>
+
+        <!-- Khu vực Auto Bid -->
+        <Label text="Đấu Giá Tự Động (Auto-Bid)" styleClass="section-title"/>
+        <TextField fx:id="maxBidField" promptText="Giá tối đa (VNĐ)" styleClass="text-field"/>
+        <TextField fx:id="incrementField" promptText="Bước giá (VNĐ)" styleClass="text-field"/>
+        <Button fx:id="autoBidButton" text="🤖 Đăng Ký Auto-Bid" onAction="#handleAutoBid" styleClass="secondary-button" maxWidth="Infinity"/>
 
         <Separator/>
 
