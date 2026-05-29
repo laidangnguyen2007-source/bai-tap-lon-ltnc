@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <?import javafx.geometry.Insets?>
+<?import javafx.scene.chart.CategoryAxis?>
 <?import javafx.scene.chart.LineChart?>
 <?import javafx.scene.chart.NumberAxis?>
 <?import javafx.scene.control.Button?>
@@ -57,14 +58,14 @@
 
         <!--
           LineChart: thành phần trực quan hóa giá đấu (Bid History Visualization)
-          - Trục X (fx:id="xAxis"): thứ tự lượt bid (Number)
+          - Trục X (fx:id="xAxis"): nhãn thời gian đặt giá (Category, cách đều)
           - Trục Y (fx:id="yAxis"): giá tiền (Number, VNĐ)
           - Dữ liệu series được thêm động trong BiddingRoomController
           - Mỗi khi Observer nhận bid mới → thêm 1 điểm vào series → chart tự vẽ
         -->
         <LineChart fx:id="bidChart" VBox.vgrow="ALWAYS" styleClass="bid-chart">
           <xAxis>
-            <NumberAxis fx:id="xAxis" label="Thời gian đặt giá"/>
+            <CategoryAxis fx:id="xAxis" label="Thời gian đặt giá"/>
           </xAxis>
           <yAxis>
             <NumberAxis fx:id="yAxis" label="Giá đặt (VNĐ)"/>
