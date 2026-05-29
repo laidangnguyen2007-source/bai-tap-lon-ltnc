@@ -78,6 +78,7 @@ public final class RequestRouter {
     map.put("SELLER_UPDATE_AUCTION", commands::sellerUpdateAuction);
     map.put("SELLER_DELETE_AUCTION", commands::sellerDeleteAuction);
     map.put("CANCEL_AUTOBID", bidding::cancelAutoBid);
+    map.put("CHECK_AUTO_BID_STATUS", bidding::checkAutoBidStatus);
 
     // Wallet routes
     map.put("GET_WALLET", wallet::getWallet);

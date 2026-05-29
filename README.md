@@ -1,49 +1,92 @@
 # 🛒 HỆ THỐNG ĐẤU GIÁ TRỰC TUYẾN (ONLINE AUCTION SYSTEM)
 
-Bài Tập Lớn môn Lập trình Nâng Cao (LTNC) - Xây dựng hệ thống phòng đấu giá thời gian thực với kiến trúc Client-Server. Thực hiện bởi **Nhóm 39** (4 thành viên).
+Bài Tập Lớn môn Lập trình Nâng Cao (LTNC) - Thực hiện bởi **Nhóm 11**.
 
-## 🌟 TÍNH NĂNG NỔI BẬT
-- **Thời gian thực (Real-time):** Cập nhật giá thầu siêu tốc bằng công nghệ TCP Socket.
-- **An toàn đồng thời (Concurrency):** Chống nứt gãy dữ liệu (Race Condition) bằng `Pessimistic Locking` (FOR UPDATE) của MySQL.
-- **Giao diện trực quan:** Ứng dụng Desktop JavaFX theo chuẩn mô hình MVC.
-- **Kiến trúc dữ liệu:** Sử dụng `Single Table Inheritance` tối ưu hóa lưu trữ đa hình (Bidder, Seller, Admin) và (Artwork, Electronics, Vehicle).
+## 1. MÔ TẢ BÀI TOÁN VÀ PHẠM VI HỆ THỐNG
+**Bài toán:** Xây dựng một nền tảng đấu giá trực tuyến thời gian thực, nơi người dùng có thể đóng vai trò là Người bán (Seller) để đăng bán sản phẩm hoặc Người mua (Bidder) để tham gia đấu giá.
+**Phạm vi hệ thống:**
+- Hệ thống hỗ trợ đa dạng loại sản phẩm (Tác phẩm nghệ thuật, Đồ điện tử, Phương tiện...).
+- Xử lý đấu giá thời gian thực (Real-time) và đảm bảo tính toàn vẹn dữ liệu khi có nhiều người cùng trả giá đồng thời (Concurrency).
+- Có tính năng Auto-Bidding (Đấu giá tự động) và các cơ chế chống Snipe (Anti-sniping).
 
----
+## 2. CÔNG NGHỆ SỬ DỤNG VÀ YÊU CẦU CÀI ĐẶT
+**Công nghệ sử dụng:**
+- **Ngôn ngữ:** Java (JDK 21+)
+- **Kiến trúc:** Client - Server qua TCP Socket.
+- **Giao diện (Client):** JavaFX (MVC Pattern với FXML).
+- **Cơ sở dữ liệu:** MySQL (sử dụng Row-level Locking với `Pessimistic Locking`).
+- **Quản lý dự án:** Apache Maven.
 
-## ⚠️ YÊU CẦU MÔI TRƯỜNG BẮT BUỘC (CRITICAL)
-
-Dự án này sử dụng CSDL **MySQL (Client-Server)** để demo chức năng **Row-level Locking** nâng cao (Khóa theo dòng), do đó hệ thống **KHÔNG PHẢI LÀ IN-MEMORY**. Thầy/Cô vui lòng bật MySQL Server trước khi chạy code.
-
+**Yêu cầu cài đặt & Môi trường chạy:**
 1. **Java JDK:** Phiên bản 21 trở lên.
-2. **Apache Maven:** Tích hợp sẵn trong IDE hoặc cài rời.
-3. **XAMPP / MySQL Server:** Khởi chạy MySQL ở cổng mặc định `3306`, tài khoản `root` và mật khẩu **`1234`** (trùng với cấu hình trong `DatabaseConfig.java`). 
+2. **Apache Maven:** Đã được cài đặt và thêm vào biến môi trường (hoặc dùng Maven tích hợp trong IDE).
+3. **Cơ sở dữ liệu MySQL:**
+   - Sử dụng XAMPP hoặc cài MySQL Server độc lập.
+   - Chạy ở cổng mặc định `3306`.
+   - Cấu hình tài khoản: username = `root`, password = `1234`.
+   *(Lưu ý: Không cần tạo database trước, hệ thống sẽ tự động khởi tạo khi Server chạy lần đầu).*
 
----
+## 3. CẤU TRÚC THƯ MỤC VÀ MODULE CHÍNH
+Dự án được chia thành các module chính:
+- `auction-server`: Chứa mã nguồn phía Server (xử lý logic nghiệp vụ chính, kết nối CSDL, quản lý các kết nối Socket của Client, đồng bộ hóa đấu giá).
+- `auction-client`: Chứa mã nguồn phía Client (giao diện người dùng JavaFX, nhận và gửi request tới Server, hiển thị dữ liệu real-time).
+- `demo`: Thư mục chứa mã nguồn demo.
+- `.github`: Cấu hình CI/CD GitHub Actions.
 
-## 🚀 HƯỚNG DẪN KHỞI CHẠY DÀNH CHO GIẢNG VIÊN
+## 4. VỊ TRÍ CÁC FILE `.jar`
+Sau khi tiến hành đóng gói (Build) bằng Maven, các file `.jar` sẽ được sinh ra ở các vị trí sau:
+- **Server:** `auction-server/target/auction-server-1.0-SNAPSHOT.jar`
+- **Client:** `auction-client/target/auction-client-1.0-SNAPSHOT.jar`
+- *(Lưu ý: Bạn có thể tìm thấy một bản build mẫu trong thư mục `demo/target/demo-1.0-SNAPSHOT.jar`)*
 
-### Bước 1: Khởi động Động cơ CSDL (MySQL)
-1. Mở phần mềm **XAMPP Control Panel**.
-2. Nhấn nút **Start** ở dòng **MySQL** (Đảm bảo đang chạy ở Port 3306).
-3. *(Lưu ý: Không cần tạo database bằng tay. Nhóm đã tự động hóa bước này).*
+## 5. HƯỚNG DẪN CHẠY HỆ THỐNG
+*Thứ tự khởi chạy bắt buộc: Bật MySQL -> Chạy Server -> Chạy Client.*
 
-### Bước 2: Đóng gói và Khởi chạy Server Backend
-Mở Terminal tại thư mục gốc của bài tập, di chuyển vào phần Server và đóng gói thư viện:
+**Cách 1: Sử dụng Script tự động (Windows)**
+- Click đúp vào file `run.bat` ở thư mục gốc. Script sẽ tự động build, khởi chạy Server, đợi 10 giây rồi khởi chạy Client.
+
+**Cách 2: Chạy thủ công qua Terminal**
+**Bước 1: Khởi động CSDL MySQL**
+- Mở XAMPP và Start dịch vụ MySQL (cổng 3306).
+
+**Bước 2: Chạy Server**
+Mở Terminal tại thư mục gốc của dự án:
 ```bash
 cd auction-server
 mvn clean install -DskipTests
 mvn exec:java
 ```
-*(Ngay lần bật Server đầu tiên, mã nguồn Java sẽ tự động dò tìm cấu hình, tạo một Database tên là `auction_db` và xây dựng cấu trúc các Bảng).*
 
-### Bước 3: Khởi chạy Giao diện Người dùng (Client)
-Di chuyển sang thư mục Client và kích hoạt JavaFX:
+**Bước 3: Chạy Client**
+Mở thêm một Terminal mới tại thư mục gốc:
 ```bash
-cd ../auction-client
+cd auction-client
 mvn javafx:run
 ```
 
-Lúc này, cửa sổ ứng dụng Desktop sẽ hiện lên. Thầy/Cô có thể tiến hành Đăng ký tài khoản và trải nghiệm luồng Đấu giá.
+## 6. DANH SÁCH CHỨC NĂNG ĐÃ HOÀN THÀNH
 
----
-*Bài Tập Lớn Lập trình Nâng Cao - Thực hiện bởi Nhóm 39.*
+Dưới đây là bảng tổng hợp các chức năng đã hoàn thành theo yêu cầu đồ án:
+
+| Nội dung | Điểm | Mức độ | Trạng thái |
+| :--- | :---: | :---: | :---: |
+| Thiết kế lớp và cây kế thừa | 0.5 | Bắt buộc | ✅ Hoàn thành |
+| Áp dụng OOP (Encapsulation, Inheritance, Polymorphism, Abstraction) | 1.0 | Bắt buộc | ✅ Hoàn thành |
+| Design Patterns phù hợp | 1.0 | Bắt buộc | ✅ Hoàn thành |
+| Quản lý người dùng, sản phẩm | 1.0 | Bắt buộc | ✅ Hoàn thành |
+| Chức năng đấu giá | 1.0 | Bắt buộc | ✅ Hoàn thành |
+| Xử lý lỗi & ngoại lệ | 1.0 | Bắt buộc | ✅ Hoàn thành |
+| Xử lý đấu giá đồng thời (concurrency) | 1.0 | Bắt buộc | ✅ Hoàn thành |
+| Realtime update (Observer/Socket) | 0.5 | Bắt buộc | ✅ Hoàn thành |
+| Kiến trúc Client-Server | 0.5 | Bắt buộc | ✅ Hoàn thành |
+| MVC (JavaFX + FXML, Controller-Model-DAO) | 0.5 | Bắt buộc | ✅ Hoàn thành |
+| Maven/Gradle, coding convention | 0.5 | Bắt buộc | ✅ Hoàn thành |
+| Unit Test (JUnit) | 0.5 | Bắt buộc | ✅ Hoàn thành |
+| CI/CD (GitHub Actions) | 0.5 | Bắt buộc | ✅ Hoàn thành |
+| Auto-Bidding | 0.5 | Tuỳ chọn | ✅ Hoàn thành |
+| Anti-sniping | 0.5 | Tuỳ chọn | ✅ Hoàn thành |
+| Bid History Visualization | 0.5 | Tuỳ chọn | ✅ Hoàn thành |
+
+## 7. LIÊN KẾT TÀI LIỆU (BÁO CÁO & VIDEO DEMO)
+- **Báo cáo PDF:** [Chèn Link Báo Cáo PDF Vào Đây](#)
+- **Video Demo:** [Chèn Link Video Demo Vào Đây](#)

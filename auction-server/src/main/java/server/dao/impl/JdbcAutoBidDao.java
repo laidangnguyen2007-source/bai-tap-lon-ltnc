@@ -22,7 +22,8 @@ public class JdbcAutoBidDao implements AutoBidDao {
     String sql =
         "INSERT INTO auto_bids "
             + "(auction_id, bidder_id, max_bid, increment, is_active, created_at) "
-            + "VALUES (?, ?, ?, ?, ?, ?)";
+            + "VALUES (?, ?, ?, ?, ?, ?) "
+            + "ON DUPLICATE KEY UPDATE max_bid = VALUES(max_bid), increment = VALUES(increment), is_active = VALUES(is_active), created_at = VALUES(created_at)";
 
     try (PreparedStatement ps =
         DatabaseConfig.getInstance()
