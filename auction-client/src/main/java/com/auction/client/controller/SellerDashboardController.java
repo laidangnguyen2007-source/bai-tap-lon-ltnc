@@ -12,6 +12,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import javafx.util.StringConverter;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -105,15 +106,43 @@ public class SellerDashboardController implements com.auction.client.observer.Au
     ObservableList<Integer> minutes = FXCollections.observableArrayList();
     for (int i = 0; i < 60; i++) minutes.add(i);
 
+    // StringConverter hiển thị số có 2 chữ số (00, 01, ..., 09, 10, ...)
+    StringConverter<Integer> twoDigitConverter = new StringConverter<>() {
+      @Override
+      public String toString(Integer value) {
+        return value == null ? "" : String.format("%02d", value);
+      }
+
+      @Override
+      public Integer fromString(String text) {
+        if (text == null || text.isBlank()) return null;
+        try {
+          return Integer.parseInt(text.trim());
+        } catch (NumberFormatException e) {
+          return null;
+        }
+      }
+    };
+
     startHourCombo.setItems(hours);
     startMinuteCombo.setItems(minutes);
     endHourCombo.setItems(hours);
     endMinuteCombo.setItems(minutes);
 
-    startHourCombo.setValue(LocalDateTime.now().getHour());
-    startMinuteCombo.setValue(LocalDateTime.now().getMinute());
-    endHourCombo.setValue(23);
-    endMinuteCombo.setValue(59);
+    startHourCombo.setConverter(twoDigitConverter);
+    startMinuteCombo.setConverter(twoDigitConverter);
+    endHourCombo.setConverter(twoDigitConverter);
+    endMinuteCombo.setConverter(twoDigitConverter);
+
+    // Mặc định: bắt đầu = hiện tại, kết thúc = hiện tại + 10 phút
+    LocalDateTime now = LocalDateTime.now();
+    LocalDateTime end = now.plusMinutes(10);
+    startDatePicker.setValue(now.toLocalDate());
+    startHourCombo.setValue(now.getHour());
+    startMinuteCombo.setValue(now.getMinute());
+    endDatePicker.setValue(end.toLocalDate());
+    endHourCombo.setValue(end.getHour());
+    endMinuteCombo.setValue(end.getMinute());
 
     ComboBoxPopupWidthSync.install(startHourCombo);
     ComboBoxPopupWidthSync.install(startMinuteCombo);
@@ -705,11 +734,17 @@ public class SellerDashboardController implements com.auction.client.observer.Au
     itemNameField.clear();
     startingPriceField.clear();
     minBidStepField.clear();
-    startDatePicker.setValue(null);
-    endDatePicker.setValue(null);
     categoryCombo.setValue(CATEGORY_DISPLAY_NAMES[0]);
-    startHourCombo.setValue(LocalDateTime.now().getHour());
-    startMinuteCombo.setValue(LocalDateTime.now().getMinute());
+
+    // Đặt lại thời gian mặc định: bắt đầu = hiện tại, kết thúc = hiện tại + 10 phút
+    LocalDateTime now = LocalDateTime.now();
+    LocalDateTime end = now.plusMinutes(10);
+    startDatePicker.setValue(now.toLocalDate());
+    startHourCombo.setValue(now.getHour());
+    startMinuteCombo.setValue(now.getMinute());
+    endDatePicker.setValue(end.toLocalDate());
+    endHourCombo.setValue(end.getHour());
+    endMinuteCombo.setValue(end.getMinute());
     itemDescriptionArea.clear();
     itemSpecificsArea.clear();
     itemImageView.setImage(null);

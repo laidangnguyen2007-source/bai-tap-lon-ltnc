@@ -102,17 +102,17 @@
                  <Label text="Thời gian bắt đầu:" styleClass="field-label" GridPane.columnIndex="0" GridPane.rowIndex="4"/>
                  <HBox spacing="8" GridPane.columnIndex="1" GridPane.rowIndex="4" alignment="CENTER_LEFT">
                      <DatePicker fx:id="startDatePicker" prefWidth="150" styleClass="seller-date-picker"/>
-                     <ComboBox fx:id="startHourCombo" prefWidth="70" promptText="Giờ" styleClass="combo-box"/>
+                     <ComboBox fx:id="startHourCombo" prefWidth="80" promptText="Giờ" styleClass="combo-box"/>
                      <Label text=":" styleClass="field-label" style="-fx-font-weight: bold;"/>
-                     <ComboBox fx:id="startMinuteCombo" prefWidth="70" promptText="Phút" styleClass="combo-box"/>
+                     <ComboBox fx:id="startMinuteCombo" prefWidth="80" promptText="Phút" styleClass="combo-box"/>
                  </HBox>
 
                  <Label text="Thời gian kết thúc:" styleClass="field-label" GridPane.columnIndex="0" GridPane.rowIndex="5"/>
                  <HBox spacing="8" GridPane.columnIndex="1" GridPane.rowIndex="5" alignment="CENTER_LEFT">
                      <DatePicker fx:id="endDatePicker" prefWidth="150" styleClass="seller-date-picker"/>
-                     <ComboBox fx:id="endHourCombo" prefWidth="70" promptText="Giờ" styleClass="combo-box"/>
+                     <ComboBox fx:id="endHourCombo" prefWidth="80" promptText="Giờ" styleClass="combo-box"/>
                      <Label text=":" styleClass="field-label" style="-fx-font-weight: bold;"/>
-                     <ComboBox fx:id="endMinuteCombo" prefWidth="70" promptText="Phút" styleClass="combo-box"/>
+                     <ComboBox fx:id="endMinuteCombo" prefWidth="80" promptText="Phút" styleClass="combo-box"/>
                  </HBox>
 
                  <Label text="Hình ảnh:" styleClass="field-label" GridPane.columnIndex="0" GridPane.rowIndex="6" GridPane.valignment="TOP">
