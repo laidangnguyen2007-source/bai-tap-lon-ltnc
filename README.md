@@ -1,92 +1,192 @@
-# 🛒 HỆ THỐNG ĐẤU GIÁ TRỰC TUYẾN (ONLINE AUCTION SYSTEM)
+# Hệ thống Đấu giá Trực tuyến (Online Auction System)
 
-Bài Tập Lớn môn Lập trình Nâng Cao (LTNC) - Thực hiện bởi **Nhóm 11**.
+**Bài Tập Lớn — Lập trình Nâng cao (LTNC)** · Nhóm 11
 
-## 1. MÔ TẢ BÀI TOÁN VÀ PHẠM VI HỆ THỐNG
-**Bài toán:** Xây dựng một nền tảng đấu giá trực tuyến thời gian thực, nơi người dùng có thể đóng vai trò là Người bán (Seller) để đăng bán sản phẩm hoặc Người mua (Bidder) để tham gia đấu giá.
+---
+
+## 1. Mô tả bài toán và phạm vi hệ thống
+
+**Bài toán:** Xây dựng nền tảng đấu giá trực tuyến thời gian thực, cho phép người dùng đăng ký/đăng nhập với vai trò **Người bán (Seller)**, **Người mua (Bidder)** hoặc **Quản trị viên (Admin)**, tham gia đấu giá sản phẩm qua giao diện JavaFX và đồng bộ trạng thái tức thì qua TCP Socket.
+
 **Phạm vi hệ thống:**
-- Hệ thống hỗ trợ đa dạng loại sản phẩm (Tác phẩm nghệ thuật, Đồ điện tử, Phương tiện...).
-- Xử lý đấu giá thời gian thực (Real-time) và đảm bảo tính toàn vẹn dữ liệu khi có nhiều người cùng trả giá đồng thời (Concurrency).
-- Có tính năng Auto-Bidding (Đấu giá tự động) và các cơ chế chống Snipe (Anti-sniping).
 
-## 2. CÔNG NGHỆ SỬ DỤNG VÀ YÊU CẦU CÀI ĐẶT
-**Công nghệ sử dụng:**
-- **Ngôn ngữ:** Java (JDK 21+)
-- **Kiến trúc:** Client - Server qua TCP Socket.
-- **Giao diện (Client):** JavaFX (MVC Pattern với FXML).
-- **Cơ sở dữ liệu:** MySQL (sử dụng Row-level Locking với `Pessimistic Locking`).
-- **Quản lý dự án:** Apache Maven.
+- Quản lý người dùng, sản phẩm đa loại (Điện tử, Tác phẩm nghệ thuật, Phương tiện) và phiên đấu giá.
+- Đấu giá thủ công và **Auto-Bidding** (maxBid, increment, ưu tiên theo thời gian đăng ký).
+- Cơ chế **Anti-sniping** (gia hạn phiên khi có bid trong cửa sổ cuối).
+- Ví điện tử: khóa/giải phóng tiền khi đặt giá, thanh toán khi thắng cuộc.
+- Cập nhật realtime qua Socket + Observer (giá, trạng thái phiên, biểu đồ lịch sử bid).
+- Kiến trúc Client–Server, nhiều client kết nối đồng thời tới một server.
 
-**Yêu cầu cài đặt & Môi trường chạy:**
-1. **Java JDK:** Phiên bản 21 trở lên.
-2. **Apache Maven:** Đã được cài đặt và thêm vào biến môi trường (hoặc dùng Maven tích hợp trong IDE).
-3. **Cơ sở dữ liệu MySQL:**
-   - Sử dụng XAMPP hoặc cài MySQL Server độc lập.
-   - Chạy ở cổng mặc định `3306`.
-   - Cấu hình tài khoản: username = `root`, password = `1234`.
-   *(Lưu ý: Không cần tạo database trước, hệ thống sẽ tự động khởi tạo khi Server chạy lần đầu).*
+---
 
-## 3. CẤU TRÚC THƯ MỤC VÀ MODULE CHÍNH
-Dự án được chia thành các module chính:
-- `auction-server`: Chứa mã nguồn phía Server (xử lý logic nghiệp vụ chính, kết nối CSDL, quản lý các kết nối Socket của Client, đồng bộ hóa đấu giá).
-- `auction-client`: Chứa mã nguồn phía Client (giao diện người dùng JavaFX, nhận và gửi request tới Server, hiển thị dữ liệu real-time).
-- `demo`: Thư mục chứa mã nguồn demo.
-- `.github`: Cấu hình CI/CD GitHub Actions.
+## 2. Công nghệ sử dụng, môi trường chạy, yêu cầu cài đặt
 
-## 4. VỊ TRÍ CÁC FILE `.jar`
-Sau khi tiến hành đóng gói (Build) bằng Maven, các file `.jar` sẽ được sinh ra ở các vị trí sau:
-- **Server:** `auction-server/target/auction-server-1.0-SNAPSHOT.jar`
-- **Client:** `auction-client/target/auction-client-1.0-SNAPSHOT.jar`
-- *(Lưu ý: Bạn có thể tìm thấy một bản build mẫu trong thư mục `demo/target/demo-1.0-SNAPSHOT.jar`)*
+| Hạng mục | Chi tiết |
+| :--- | :--- |
+| **Ngôn ngữ** | Java 21+ |
+| **Build tool** | Apache Maven 3.9+ |
+| **Giao diện Client** | JavaFX 21 + FXML (MVC) |
+| **Kiến trúc** | Client–Server qua TCP Socket (cổng `8888`) |
+| **Cơ sở dữ liệu** | MySQL 8 (JDBC, Pessimistic Locking `SELECT … FOR UPDATE`) |
+| **Thư viện JSON** | org.json (server), json-simple (client) |
+| **Kiểm thử** | JUnit 5 |
+| **CI/CD** | GitHub Actions (`.github/workflows/ci.yml`) |
 
-## 5. HƯỚNG DẪN CHẠY HỆ THỐNG
-*Thứ tự khởi chạy bắt buộc: Bật MySQL -> Chạy Server -> Chạy Client.*
+**Yêu cầu cài đặt:**
 
-**Cách 1: Sử dụng Script tự động (Windows)**
-- Click đúp vào file `run.bat` ở thư mục gốc. Script sẽ tự động build, khởi chạy Server, đợi 10 giây rồi khởi chạy Client.
+1. **JDK 21** trở lên (`java -version`).
+2. **Maven** đã cấu hình PATH (`mvn -version`).
+3. **MySQL** (XAMPP hoặc MySQL Server), cổng mặc định `3306`.
+   - Username: `root`
+   - Password: `1234`
+   - Database được tạo tự động khi server khởi động lần đầu (xem `auction-server/src/main/resources/schema.sql`).
 
-**Cách 2: Chạy thủ công qua Terminal**
-**Bước 1: Khởi động CSDL MySQL**
-- Mở XAMPP và Start dịch vụ MySQL (cổng 3306).
+---
 
-**Bước 2: Chạy Server**
-Mở Terminal tại thư mục gốc của dự án:
-```bash
-cd auction-server
-mvn clean install -DskipTests
-mvn exec:java
+## 3. Cấu trúc thư mục / module chính
+
+```
+bai-tap-lon-ltnc/
+├── auction-server/          # Server: logic nghiệp vụ, DAO, Socket, đồng bộ đấu giá
+│   ├── src/main/java/server/
+│   │   ├── model/           # Entity, enum, exception, strategy
+│   │   ├── dao/             # Interface + JDBC implementation
+│   │   ├── service/         # AuctionManager, WalletService, …
+│   │   ├── handler/         # Xử lý request từ client
+│   │   └── net/             # ClientSession, ClientBroadcaster
+│   ├── src/test/java/       # Unit test JUnit
+│   └── pom.xml
+├── auction-client/          # Client JavaFX
+│   ├── src/main/java/com/auction/client/
+│   │   ├── controller/      # FXML Controllers (MVC)
+│   │   ├── network/         # Socket handlers
+│   │   ├── observer/        # AuctionObserver
+│   │   └── service/         # ServerService (facade)
+│   ├── src/main/resources/com/auction/client/fxml/
+│   └── pom.xml
+├── release/                 # Fat JAR nộp/chạy cho GV (server.jar + client.jar)
+│   ├── server.jar
+│   └── client.jar
+├── build-jars.bat           # Nhóm build lại JAR sau khi sửa code (Windows)
+└── README.md
 ```
 
-**Bước 3: Chạy Client**
-Mở thêm một Terminal mới tại thư mục gốc:
+> **Lưu ý:** Thư mục `auction-server/target/` và `auction-client/target/` là artifact build tạm — không cần nộp, có thể xóa bất cứ lúc nào.
+
+---
+
+## 4. Vị trí file `.jar`
+
+Dự án dùng **maven-shade-plugin** tạo **fat JAR / uber JAR** chạy bằng `java -jar`.
+
+| File | Vị trí | Mô tả |
+| :--- | :--- | :--- |
+| **Server** | `release/server.jar` | Fat JAR server — **dùng để chạy / nộp bài** |
+| **Client** | `release/client.jar` | Fat JAR client — **dùng để chạy / nộp bài** |
+
+**Nhóm tự build lại** (sau khi sửa code):
 ```bash
-cd auction-client
-mvn javafx:run
+build-jars.bat
+# hoặc thủ công:
+cd auction-server && mvn clean install -DskipTests
+cd ../auction-client && mvn clean package -DskipTests
+copy auction-server\target\server.jar release\
+copy auction-client\target\client.jar release\
 ```
 
-## 6. DANH SÁCH CHỨC NĂNG ĐÃ HOÀN THÀNH
+> **Lưu ý OS:** Client JAR build kèm native JavaFX cho **Windows** (`javafx.platform=win` trong `auction-client/pom.xml`).
 
-Dưới đây là bảng tổng hợp các chức năng đã hoàn thành theo yêu cầu đồ án:
+---
 
-| Nội dung | Điểm | Mức độ | Trạng thái |
-| :--- | :---: | :---: | :---: |
-| Thiết kế lớp và cây kế thừa | 0.5 | Bắt buộc | ✅ Hoàn thành |
-| Áp dụng OOP (Encapsulation, Inheritance, Polymorphism, Abstraction) | 1.0 | Bắt buộc | ✅ Hoàn thành |
-| Design Patterns phù hợp | 1.0 | Bắt buộc | ✅ Hoàn thành |
-| Quản lý người dùng, sản phẩm | 1.0 | Bắt buộc | ✅ Hoàn thành |
-| Chức năng đấu giá | 1.0 | Bắt buộc | ✅ Hoàn thành |
-| Xử lý lỗi & ngoại lệ | 1.0 | Bắt buộc | ✅ Hoàn thành |
-| Xử lý đấu giá đồng thời (concurrency) | 1.0 | Bắt buộc | ✅ Hoàn thành |
-| Realtime update (Observer/Socket) | 0.5 | Bắt buộc | ✅ Hoàn thành |
-| Kiến trúc Client-Server | 0.5 | Bắt buộc | ✅ Hoàn thành |
-| MVC (JavaFX + FXML, Controller-Model-DAO) | 0.5 | Bắt buộc | ✅ Hoàn thành |
-| Maven/Gradle, coding convention | 0.5 | Bắt buộc | ✅ Hoàn thành |
-| Unit Test (JUnit) | 0.5 | Bắt buộc | ✅ Hoàn thành |
-| CI/CD (GitHub Actions) | 0.5 | Bắt buộc | ✅ Hoàn thành |
-| Auto-Bidding | 0.5 | Tuỳ chọn | ✅ Hoàn thành |
-| Anti-sniping | 0.5 | Tuỳ chọn | ✅ Hoàn thành |
-| Bid History Visualization | 0.5 | Tuỳ chọn | ✅ Hoàn thành |
+## 5. Hướng dẫn chạy Server → Client
 
-## 7. LIÊN KẾT TÀI LIỆU (BÁO CÁO & VIDEO DEMO)
-- **Báo cáo PDF:** [Chèn Link Báo Cáo PDF Vào Đây](#)
-- **Video Demo:** [Chèn Link Video Demo Vào Đây](#)
+**Thứ tự bắt buộc:** Bật MySQL → Chạy Server → Chạy Client.
+
+**Yêu cầu khi chạy:** JDK 21 + MySQL (username `root`, password `1234`, cổng `3306`). **Không cần Maven** nếu đã có file trong `release/`.
+
+### Cách chạy (fat JAR — đúng yêu cầu nộp bài)
+
+**Bước 1 — MySQL:** Start MySQL (XAMPP, cổng 3306).
+
+**Bước 2 — Server (Terminal 1):**
+```bash
+java -jar release/server.jar
+```
+
+**Bước 3 — Client (Terminal 2):**
+```bash
+java -jar release/client.jar
+```
+
+**Chạy nhiều Client:** Mở thêm terminal, lặp lại:
+```bash
+java -jar release/client.jar
+```
+
+### Build lại JAR (chỉ nhóm dev, sau khi sửa code)
+
+Chạy `build-jars.bat` (Windows) hoặc lệnh Maven ở mục 4.
+
+### Maven (chỉ khi phát triển / debug)
+
+```bash
+cd auction-server && mvn exec:java
+cd auction-client && mvn javafx:run
+```
+
+---
+
+## 6. Danh sách chức năng đã hoàn thành
+
+### Chức năng nghiệp vụ
+
+| Chức năng | Mô tả |
+| :--- | :--- |
+| Đăng ký / Đăng nhập | Bidder, Seller, Admin; mật khẩu hash |
+| Quản lý sản phẩm | Seller tạo/sửa/xóa item theo danh mục (Factory Pattern) |
+| Tạo & mở phiên đấu giá | Seller khởi tạo phiên, set giá khởi điểm, bước giá, thời gian |
+| Đặt giá thủ công | Bidder đặt giá trong phòng đấu giá |
+| Auto-Bidding | Đăng ký maxBid + increment; server tự đấu giá (Dùng PriorityQueue) |
+| Anti-sniping | Gia hạn phiên khi bid trong cửa sổ cuối |
+| Ví điện tử | Nạp tiền, khóa/giải phóng khi outbid, trừ tiền khi thắng |
+| Lịch sử bid | ListView + biểu đồ LineChart realtime |
+| Admin | Quản lý ví toàn hệ thống |
+| Realtime | Push bid/status/wallet qua Socket + Observer |
+
+### Đối chiếu barem điểm (rubric)
+
+| Tiêu chí | Điểm | Mức | Trạng thái | Bằng chứng ngắn |
+| :--- | :---: | :---: | :---: | :--- |
+| Thiết kế lớp & cây kế thừa | 0.5 | Bắt buộc | ✅ | `User`→`Bidder`/`Seller`/`Admin`; `Item`→`Electronics`/`Artwork`/`Vehicle`; `Auction`, `BidTransaction`, `Wallet` |
+| OOP (4 tính chất) | 1.0 | Bắt buộc | ✅ | Encapsulation (private fields); Inheritance; Polymorphism (`BidStrategy`); Abstraction (`User`, `Item`, DAO interfaces) |
+| Design Patterns | 1.0 | Bắt buộc | ✅ | Singleton (`AuctionManager`), Factory (`ItemFactory`), Strategy (`BidStrategy`), Observer (`AuctionObserver`), DAO |
+| Quản lý người dùng & sản phẩm | 1.0 | Bắt buộc | ✅ | `AuthHandlers`, `CatalogHandlers`, `SellerDashboardController` |
+| Chức năng đấu giá | 1.0 | Bắt buộc | ✅ | `BiddingHandlers`, `AuctionManager.placeBid()` |
+| Xử lý lỗi & ngoại lệ | 1.0 | Bắt buộc | ✅ | `AuctionException`, `InvalidBidException`, `AuthenticationException`; test `TestAuctionException` |
+| Concurrency (không mất cập nhật) | 1.0 | Bắt buộc | ✅ | `synchronized(auction)`, `ConcurrentHashMap`, `SELECT … FOR UPDATE` |
+| Realtime (Observer/Socket) | 0.5 | Bắt buộc | ✅ | `ClientBroadcaster`, `AuctionObserver`, push JSON |
+| Client–Server | 0.5 | Bắt buộc | ✅ | TCP Socket cổng 8888, `Server.java`, `SocketConnection` |
+| MVC | 0.5 | Bắt buộc | ✅ | FXML + Controller (client); Model + DAO (server) |
+| Maven, coding convention | 0.5 | Bắt buộc | ✅ | Maven multi-module, Spotless Google Java Style |
+| Unit Test JUnit | 0.5 | Bắt buộc | ✅ | 4 file test, 30+ test case trong `auction-server/src/test/java/` |
+| CI/CD GitHub Actions | 0.5 | Bắt buộc | ✅ | `.github/workflows/ci.yml` |
+| **Auto-Bidding** | 0.5 | Tuỳ chọn | ✅ | `AutoBidStrategy` + maxBid/increment hoạt động; **đã dùng `PriorityQueue`** (thay cho vòng lặp cũ) |
+| **Anti-sniping** | 0.5 | Tuỳ chọn | ✅ | `Auction.ANTI_SNIPE_WINDOW_SECONDS`, `extendEndTime()` |
+| **Bid History Visualization** | 0.5 | Tuỳ chọn | ✅ | `LineChart` trong `bidding-room.fxml`, cập nhật qua Observer |
+
+---
+
+## 7. Link báo cáo PDF và video demo
+
+- **Báo cáo PDF:** [Chèn link báo cáo PDF tại đây](#)
+- **Video demo:** [Chèn link video demo tại đây](#)
+
+> Nhóm cần cập nhật hai link trên trước khi nộp bài (deadline: **31/05/2026**).
+
+---
+
+## Ghi chú cho giảng viên / người chấm
+
+- Chạy bằng **`java -jar release/server.jar`** và **`java -jar release/client.jar`** — không cần Maven hay IDE.
+- File fat JAR nằm trong thư mục **`release/`** (đã gói đủ thư viện).
+- Mật khẩu MySQL mặc định `1234` — có thể sửa trong `DatabaseConfig.java` nếu môi trường khác.

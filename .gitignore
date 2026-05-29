@@ -4,6 +4,8 @@
 *.ctxt
 .mtj.tmp/
 *.jar
+!release/server.jar
+!release/client.jar
 *.war
 *.nar
 *.ear
@@ -34,3 +36,9 @@ desktop.ini
 # --- Crash Logs ---
 hs_err_pid*
 replay_pid*
+
+# --- Local notes (not for submission) ---
+change/
+MASTER_VAN_DAP.md
+SYLLABUS_BTL.md
+require.pdf
