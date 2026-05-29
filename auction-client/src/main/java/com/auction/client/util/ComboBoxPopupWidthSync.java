@@ -25,7 +25,8 @@ public final class ComboBoxPopupWidthSync {
     if (combo == null) {
       return;
     }
-    combo.showingProperty()
+    combo
+        .showingProperty()
         .addListener(
             (obs, wasShowing, showing) -> {
               if (Boolean.TRUE.equals(showing)) {

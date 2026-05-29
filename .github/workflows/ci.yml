@@ -42,10 +42,13 @@ jobs:
           commit_message: "style: auto-format code with Google Java Style"
           # Nếu spotless:apply sửa file nào, tự commit lại lên GitHub
 
-      - name: Kiểm tra chạy thử dự án (Build)
-        working-directory: auction-server
-        run: mvn clean package -DskipTests
-        # Kiểm tra xem code có bị lỗi cú pháp gạch đỏ không
+      - name: Kiểm tra chạy thử dự án (Build Server + Client JAR)
+        run: |
+          cd auction-server
+          mvn clean install -DskipTests
+          cd ../auction-client
+          mvn clean package -DskipTests
+        # Kiểm tra build fat JAR server.jar và client.jar
 
       - name: Chạy Unit Test (JUnit)
         working-directory: auction-server

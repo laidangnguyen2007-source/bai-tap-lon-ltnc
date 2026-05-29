@@ -40,10 +40,13 @@ public class RegisterController {
     shopNameField.setVisible(false);
     shopNameLabel.setVisible(false);
 
-    sellerRadio.selectedProperty().addListener((observable, wasSelected, isNowSelected) -> {
-      shopNameField.setVisible(isNowSelected);
-      shopNameLabel.setVisible(isNowSelected);
-    });
+    sellerRadio
+        .selectedProperty()
+        .addListener(
+            (observable, wasSelected, isNowSelected) -> {
+              shopNameField.setVisible(isNowSelected);
+              shopNameLabel.setVisible(isNowSelected);
+            });
   }
 
   @FXML

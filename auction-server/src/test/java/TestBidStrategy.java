@@ -139,8 +139,8 @@ class TestBidStrategy {
     AutoBidStrategy s1 = new AutoBidStrategy(1L, 5000L, 100L, LocalDateTime.now());
     AutoBidStrategy s2 = new AutoBidStrategy(2L, 3000L, 100L, LocalDateTime.now());
 
-    assertTrue(s1.hasPriorityOver(s2), "Người có maxBid cao hơn phải được ưu tiên");
-    assertFalse(s2.hasPriorityOver(s1));
+    assertTrue(s1.compareTo(s2) < 0, "Người có maxBid cao hơn phải được ưu tiên");
+    assertFalse(s2.compareTo(s1) < 0);
   }
 
   @Test
@@ -152,8 +152,8 @@ class TestBidStrategy {
     AutoBidStrategy s1 = new AutoBidStrategy(1L, 5000L, 100L, earlier);
     AutoBidStrategy s2 = new AutoBidStrategy(2L, 5000L, 100L, later);
 
-    assertTrue(s1.hasPriorityOver(s2), "Cùng maxBid → người đăng ký trước được ưu tiên");
-    assertFalse(s2.hasPriorityOver(s1));
+    assertTrue(s1.compareTo(s2) < 0, "Cùng maxBid → người đăng ký trước được ưu tiên");
+    assertFalse(s2.compareTo(s1) < 0);
   }
 
   @Test

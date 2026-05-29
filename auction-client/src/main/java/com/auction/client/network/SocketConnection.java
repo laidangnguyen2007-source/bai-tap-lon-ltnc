@@ -35,36 +35,42 @@ public class SocketConnection {
 
   /** Khởi động 1 NetworkListener duy nhất đọc từ socket. */
   private void startSingleListener() {
-    Thread listener = new Thread(() -> {
-      try {
-        String line;
-        while ((line = in.readLine()) != null) {
-          // Xử lý trường hợp "dính dòng": tách các JSON object nếu chúng bị dính sát nhau
-          // Ví dụ: {"type":"BID"}{"status":"OK"} -> thành 2 chuỗi riêng biệt
-          String[] messages = line.split("(?<=\\})(?=\\{)"); 
-          
-          for (String msg : messages) {
-            if (msg.trim().isEmpty()) continue;
-            
-            // Phân loại an toàn hơn: Parse JSON để kiểm tra key ở level ngoài cùng
-            try {
-              JSONObject json = (JSONObject) new JSONParser().parse(msg);
-              if (json.containsKey("type") && !json.containsKey("status")) {
-                for (Consumer<String> listener2 : pushListeners) {
-                  try { listener2.accept(msg); } catch (Exception ignored) {}
+    Thread listener =
+        new Thread(
+            () -> {
+              try {
+                String line;
+                while ((line = in.readLine()) != null) {
+                  // Xử lý trường hợp "dính dòng": tách các JSON object nếu chúng bị dính sát nhau
+                  // Ví dụ: {"type":"BID"}{"status":"OK"} -> thành 2 chuỗi riêng biệt
+                  String[] messages = line.split("(?<=\\})(?=\\{)");
+
+                  for (String msg : messages) {
+                    if (msg.trim().isEmpty()) continue;
+
+                    // Phân loại an toàn hơn: Parse JSON để kiểm tra key ở level ngoài cùng
+                    try {
+                      JSONObject json = (JSONObject) new JSONParser().parse(msg);
+                      if (json.containsKey("type") && !json.containsKey("status")) {
+                        for (Consumer<String> listener2 : pushListeners) {
+                          try {
+                            listener2.accept(msg);
+                          } catch (Exception ignored) {
+                          }
+                        }
+                      } else {
+                        responseQueue.put(msg);
+                      }
+                    } catch (Exception e) {
+                      responseQueue.put(msg);
+                    }
+                  }
                 }
-              } else {
-                responseQueue.put(msg);
+              } catch (Exception e) {
+                System.err.println("[SocketConnection] NetworkListener dừng: " + e.getMessage());
               }
-            } catch (Exception e) {
-              responseQueue.put(msg);
-            }
-          }
-        }
-      } catch (Exception e) {
-        System.err.println("[SocketConnection] NetworkListener dừng: " + e.getMessage());
-      }
-    }, "GlobalNetworkListener");
+            },
+            "GlobalNetworkListener");
     listener.setDaemon(true);
     listener.start();
   }

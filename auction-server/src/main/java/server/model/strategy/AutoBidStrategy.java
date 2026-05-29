@@ -7,7 +7,7 @@ import server.model.enums.AuctionStatus;
 import server.model.exception.AuctionClosedException;
 import server.model.exception.InvalidBidException;
 
-public class AutoBidStrategy implements BidStrategy {
+public class AutoBidStrategy implements BidStrategy, Comparable<AutoBidStrategy> {
   public final Long userId;
   public final long maxBid;
   public final long increment;
@@ -66,12 +66,14 @@ public class AutoBidStrategy implements BidStrategy {
     }
   }
 
-  // Hàm xét độ ưu tiên, nếu có cùng giá trị maxBid -> ưu tiên người đặt giá trước
-  public boolean hasPriorityOver(AutoBidStrategy other) {
+  @Override
+  public int compareTo(AutoBidStrategy other) {
     if (this.maxBid != other.maxBid) {
-      return this.maxBid > other.maxBid;
+      // Sắp xếp giảm dần theo maxBid (ưu tiên maxBid lớn hơn lên đầu queue)
+      return Long.compare(other.maxBid, this.maxBid);
     }
-    return this.registerAt.isBefore(other.registerAt);
+    // Sắp xếp tăng dần theo thời gian (ưu tiên người đăng ký trước)
+    return this.registerAt.compareTo(other.registerAt);
   }
 
   @Override

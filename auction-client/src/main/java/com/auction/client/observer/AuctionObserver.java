@@ -6,9 +6,9 @@ import server.model.entity.BidTransaction;
 /**
  * Interface Observer dành cho phía Client.
  *
- * <p>Đây là "hợp đồng" giữa Thành viên 3 (NetworkLayer) và Thành viên 4 (GUI). Thành viên 3 sẽ
- * gọi phương thức {@link #onBidUpdated} mỗi khi nhận được thông báo đặt giá mới từ Server. Thành
- * viên 4 implement interface này trong BiddingRoomController để cập nhật UI tự động.
+ * <p>Đây là "hợp đồng" giữa Thành viên 3 (NetworkLayer) và Thành viên 4 (GUI). Thành viên 3 sẽ gọi
+ * phương thức {@link #onBidUpdated} mỗi khi nhận được thông báo đặt giá mới từ Server. Thành viên 4
+ * implement interface này trong BiddingRoomController để cập nhật UI tự động.
  *
  * <p>Lưu ý quan trọng về thread safety: phương thức này có thể được gọi từ background network
  * thread, do đó mọi thao tác cập nhật UI PHẢI được bọc trong Platform.runLater().
@@ -31,8 +31,8 @@ public interface AuctionObserver {
   void onAuctionStatusChanged(Long auctionId, String newStatus);
 
   /**
-   * Được gọi khi có sự kiện liên quan đến ví (FUNDS_LOCKED, OUTBID, AUCTION_WON, v.v.).
-   * Default no-op để backward compatible với các observer cũ.
+   * Được gọi khi có sự kiện liên quan đến ví (FUNDS_LOCKED, OUTBID, AUCTION_WON, v.v.). Default
+   * no-op để backward compatible với các observer cũ.
    *
    * @param eventType loại sự kiện (ví dụ: "FUNDS_LOCKED", "OUTBID_NOTIFICATION")
    * @param payload dữ liệu JSON đi kèm sự kiện
@@ -51,4 +51,3 @@ public interface AuctionObserver {
     // Default no-op
   }
 }
-

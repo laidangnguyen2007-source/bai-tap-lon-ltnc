@@ -6,9 +6,9 @@ import server.model.entity.user.User;
 /**
  * Model lưu trữ trạng thái phiên làm việc hiện tại của Client.
  *
- * <p>Đây là lớp "Model" trong mô hình MVC phía Client. Sử dụng Singleton Pattern để đảm bảo chỉ
- * tồn tại một phiên làm việc duy nhất trong suốt vòng đời ứng dụng. Tất cả Controller đều truy cập
- * vào cùng một trạng thái thông qua getInstance().
+ * <p>Đây là lớp "Model" trong mô hình MVC phía Client. Sử dụng Singleton Pattern để đảm bảo chỉ tồn
+ * tại một phiên làm việc duy nhất trong suốt vòng đời ứng dụng. Tất cả Controller đều truy cập vào
+ * cùng một trạng thái thông qua getInstance().
  *
  * <p>Ví dụ: Khi người dùng đăng nhập thành công ở LoginController, thông tin User được lưu vào đây
  * để AuctionListController có thể đọc mà không cần truyền parameter.
@@ -45,8 +45,8 @@ public class AuctionSessionState {
   }
 
   /**
-   * Xóa toàn bộ trạng thái khi người dùng đăng xuất. Lấy lại instance sau khi gọi hàm này vẫn
-   * hoạt động bình thường nhưng trạng thái đã được reset.
+   * Xóa toàn bộ trạng thái khi người dùng đăng xuất. Lấy lại instance sau khi gọi hàm này vẫn hoạt
+   * động bình thường nhưng trạng thái đã được reset.
    */
   public void clearSession() {
     this.currentUser = null;

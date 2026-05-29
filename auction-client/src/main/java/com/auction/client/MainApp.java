@@ -7,12 +7,11 @@ import javafx.stage.Stage;
 /**
  * Điểm khởi động (Entry Point) của ứng dụng Client JavaFX.
  *
- * <p>Trong JavaFX, lớp chính PHẢI kế thừa {@link Application} và override phương thức
- * {@link #start(Stage)}. JavaFX runtime tự động gọi start() sau khi khởi tạo xong JavaFX toolkit
- * và tạo primaryStage.
+ * <p>Trong JavaFX, lớp chính PHẢI kế thừa {@link Application} và override phương thức {@link
+ * #start(Stage)}. JavaFX runtime tự động gọi start() sau khi khởi tạo xong JavaFX toolkit và tạo
+ * primaryStage.
  *
- * <p>Luồng khởi động: main() → launch() → init() → start(primaryStage) → [ứng dụng chạy] →
- * stop().
+ * <p>Luồng khởi động: main() → launch() → init() → start(primaryStage) → [ứng dụng chạy] → stop().
  */
 public class MainApp extends Application {
 
