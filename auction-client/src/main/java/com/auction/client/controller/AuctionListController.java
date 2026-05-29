@@ -15,84 +15,66 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.geometry.Insets;
+import javafx.geometry.Pos;
+import javafx.scene.Node;
 import javafx.scene.control.Button;
+import javafx.scene.control.ButtonBar;
+import javafx.scene.control.ButtonType;
 import javafx.scene.control.ComboBox;
+import javafx.scene.control.DatePicker;
 import javafx.scene.control.Dialog;
 import javafx.scene.control.Label;
-
 import javafx.scene.control.TextField;
-import javafx.scene.control.ButtonType;
-import javafx.scene.control.ButtonBar;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.stage.Stage;
 import server.model.entity.Auction;
 import server.model.enums.AuctionStatus;
-import javafx.geometry.Insets;
-import javafx.geometry.Pos;
-import javafx.scene.control.DatePicker;
-import javafx.scene.Node;
 
 /**
  * Controller cho màn hình Danh Sách Đấu Giá (auction-list.fxml).
  *
- * <p>
- * Hiển thị tất cả các phiên đấu giá dưới dạng bảng (TableView). Người dùng có thể: - Lọc phiên theo
- * trạng thái (OPEN, RUNNING, FINISHED, ...) - Click vào một hàng để xem chi tiết hoặc tham gia đấu
- * giá - Đăng xuất để quay lại màn hình Login
+ * <p>Hiển thị tất cả các phiên đấu giá dưới dạng bảng (TableView). Người dùng có thể: - Lọc phiên
+ * theo trạng thái (OPEN, RUNNING, FINISHED, ...) - Click vào một hàng để xem chi tiết hoặc tham gia
+ * đấu giá - Đăng xuất để quay lại màn hình Login
  */
 public class AuctionListController implements com.auction.client.observer.AuctionObserver {
 
   // -- @FXML inject từ auction-list.fxml --
 
-  @FXML
-  private javafx.scene.layout.FlowPane auctionGridPane;
+  @FXML private javafx.scene.layout.FlowPane auctionGridPane;
 
   // Danh sách các hàm cập nhật thời gian đếm ngược cho từng thẻ
   private final java.util.List<Runnable> timeUpdaters = new java.util.ArrayList<>();
 
-  @FXML
-  private ComboBox<String> statusFilterCombo;
+  @FXML private ComboBox<String> statusFilterCombo;
 
-  @FXML
-  private ComboBox<String> categoryFilterCombo;
+  @FXML private ComboBox<String> categoryFilterCombo;
 
-  @FXML
-  private Button refreshButton;
+  @FXML private Button refreshButton;
 
-  @FXML
-  private TextField searchField;
+  @FXML private TextField searchField;
 
-  @FXML
-  private Button logoutButton;
+  @FXML private Button logoutButton;
 
-  @FXML
-  private Button myWinsButton;
+  @FXML private Button myWinsButton;
 
-  @FXML
-  private Button myStoreButton;
+  @FXML private Button myStoreButton;
 
-  @FXML
-  private Button myBidsButton;
+  @FXML private Button myBidsButton;
 
-  @FXML
-  private Button walletButton;
+  @FXML private Button walletButton;
 
-  @FXML
-  private Button adminWalletButton;
+  @FXML private Button adminWalletButton;
 
-  @FXML
-  private Label welcomeLabel;
+  @FXML private Label welcomeLabel;
 
   // -- [Tính năng 2] Thống kê dành cho Admin --
-  @FXML
-  private javafx.scene.layout.HBox adminStatsPane;
-  @FXML
-  private Label totalAuctionsLabel;
-  @FXML
-  private Label runningAuctionsLabel;
-  @FXML
-  private Label totalValueLabel;
+  @FXML private javafx.scene.layout.HBox adminStatsPane;
+  @FXML private Label totalAuctionsLabel;
+  @FXML private Label runningAuctionsLabel;
+  @FXML private Label totalValueLabel;
 
   // -- Bộ đếm thời gian thực --
   private javafx.animation.Timeline countdownTimeline;
@@ -103,14 +85,14 @@ public class AuctionListController implements com.auction.client.observer.Auctio
   private final AuctionSessionState session = AuctionSessionState.getInstance();
 
   // ObservableList để quản lý danh sách Category (dùng cho ComboBox)
-  private final ObservableList<String> categories = FXCollections.observableArrayList("Điện tử", "Nghệ thuật", "Xe cộ", "Khác");
+  private final ObservableList<String> categories =
+      FXCollections.observableArrayList("Điện tử", "Nghệ thuật", "Xe cộ", "Khác");
 
   // Định dạng hiển thị ngày giờ chuẩn Việt Nam
-  private static final DateTimeFormatter DISPLAY_FORMAT = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
+  private static final DateTimeFormatter DISPLAY_FORMAT =
+      DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
 
-  /**
-   * Được JavaFX gọi tự động sau khi load FXML. Thiết lập cấu hình bảng và load dữ liệu ban đầu.
-   */
+  /** Được JavaFX gọi tự động sau khi load FXML. Thiết lập cấu hình bảng và load dữ liệu ban đầu. */
   @FXML
   public void initialize() {
     // Hiển thị tên người dùng đang đăng nhập
@@ -137,15 +119,15 @@ public class AuctionListController implements com.auction.client.observer.Auctio
       walletButton.setManaged(true);
 
       if (session.getCurrentUser().getRole() == server.model.enums.UserRole.SELLER) {
-          // Seller: chỉ hiện nút Cửa hàng, không hiện lịch sử đấu giá/thắng
-          myStoreButton.setVisible(true);
-          myStoreButton.setManaged(true);
+        // Seller: chỉ hiện nút Cửa hàng, không hiện lịch sử đấu giá/thắng
+        myStoreButton.setVisible(true);
+        myStoreButton.setManaged(true);
       } else {
-          // Bidder: hiện lịch sử đấu giá và lịch sử thắng
-          myWinsButton.setVisible(true);
-          myWinsButton.setManaged(true);
-          myBidsButton.setVisible(true);
-          myBidsButton.setManaged(true);
+        // Bidder: hiện lịch sử đấu giá và lịch sử thắng
+        myWinsButton.setVisible(true);
+        myWinsButton.setManaged(true);
+        myBidsButton.setVisible(true);
+        myBidsButton.setManaged(true);
       }
     }
 
@@ -155,14 +137,17 @@ public class AuctionListController implements com.auction.client.observer.Auctio
     serverService.addObserver(this);
 
     // Cấu hình ComboBox lọc trạng thái
-    statusFilterCombo.setItems(FXCollections.observableArrayList("Tất cả", "Đang mở (OPEN)",
-        "Đang chạy (RUNNING)", "Đã kết thúc (FINISHED)"));
+    statusFilterCombo.setItems(
+        FXCollections.observableArrayList(
+            "Tất cả", "Đang mở (OPEN)", "Đang chạy (RUNNING)", "Đã kết thúc (FINISHED)"));
     statusFilterCombo.setValue("Tất cả");
     ComboBoxPopupWidthSync.install(statusFilterCombo);
     statusFilterCombo.setOnAction(e -> loadAuctions());
 
     // Cấu hình ComboBox lọc danh mục
-    ObservableList<String> filterCategories = FXCollections.observableArrayList("Tất cả danh mục", "Điện tử", "Nghệ thuật", "Xe cộ", "Khác");
+    ObservableList<String> filterCategories =
+        FXCollections.observableArrayList(
+            "Tất cả danh mục", "Điện tử", "Nghệ thuật", "Xe cộ", "Khác");
     categoryFilterCombo.setItems(filterCategories);
     categoryFilterCombo.setValue("Tất cả danh mục");
     ComboBoxPopupWidthSync.install(categoryFilterCombo);
@@ -184,9 +169,7 @@ public class AuctionListController implements com.auction.client.observer.Auctio
     loadAuctions();
   }
 
-  /**
-   * [Tính năng 3] Chuyển sang màn hình Lịch sử thắng cuộc.
-   */
+  /** [Tính năng 3] Chuyển sang màn hình Lịch sử thắng cuộc. */
   @FXML
   private void handleViewMyWins(ActionEvent event) {
     try {
@@ -212,7 +195,8 @@ public class AuctionListController implements com.auction.client.observer.Auctio
     try {
       serverService.removeObserver(this);
       Stage stage = (Stage) myStoreButton.getScene().getWindow();
-      FxmlLoader.navigateTo(stage, "seller-dashboard.fxml", "Online Auction System — Seller Dashboard");
+      FxmlLoader.navigateTo(
+          stage, "seller-dashboard.fxml", "Online Auction System — Seller Dashboard");
     } catch (IOException e) {
       e.printStackTrace();
     }
@@ -232,7 +216,8 @@ public class AuctionListController implements com.auction.client.observer.Auctio
   private void handleOpenAdminWallet(ActionEvent event) {
     try {
       Stage stage = (Stage) adminWalletButton.getScene().getWindow();
-      FxmlLoader.navigateTo(stage, "admin-wallet.fxml", "Online Auction System — Quản Lý Ví (Admin)");
+      FxmlLoader.navigateTo(
+          stage, "admin-wallet.fxml", "Online Auction System — Quản Lý Ví (Admin)");
     } catch (IOException e) {
       e.printStackTrace();
     }
@@ -250,61 +235,64 @@ public class AuctionListController implements com.auction.client.observer.Auctio
     }
 
     // Lọc theo bộ lọc đang chọn — dùng Stream API để code gọn và có tính biểu đạt cao
-    List<Auction> filtered = allAuctions.stream().filter(auction -> {
-      if ("Tất cả".equals(filter))
-        return true;
-      if ("Đang mở (OPEN)".equals(filter))
-        return auction.getStatus() == AuctionStatus.OPEN;
-      if ("Đang chạy (RUNNING)".equals(filter))
-        return auction.isRunning();
-      if ("Đã kết thúc (FINISHED)".equals(filter))
-        return auction.isFinished();
-      return true;
-    }).filter(auction -> {
-      if (categoryFilter == null || "Tất cả danh mục".equals(categoryFilter))
-        return true;
-      String currentCatVi = translateCategoryToVi(auction.getItemCategory());
-      return categoryFilter.equals(currentCatVi);
-    }).filter(auction -> {
-      // [Tính năng 5] Lọc theo từ khóa tìm kiếm (không phân biệt hoa thường)
-      String keyword = searchField.getText();
-      if (keyword == null || keyword.isBlank())
-        return true;
-      String lowerKeyword = keyword.toLowerCase();
-      String itemName = auction.getItemName();
-      return itemName != null && itemName.toLowerCase().contains(lowerKeyword);
-    }).collect(Collectors.toList());
+    List<Auction> filtered =
+        allAuctions.stream()
+            .filter(
+                auction -> {
+                  if ("Tất cả".equals(filter)) return true;
+                  if ("Đang mở (OPEN)".equals(filter))
+                    return auction.getStatus() == AuctionStatus.OPEN;
+                  if ("Đang chạy (RUNNING)".equals(filter)) return auction.isRunning();
+                  if ("Đã kết thúc (FINISHED)".equals(filter)) return auction.isFinished();
+                  return true;
+                })
+            .filter(
+                auction -> {
+                  if (categoryFilter == null || "Tất cả danh mục".equals(categoryFilter))
+                    return true;
+                  String currentCatVi = translateCategoryToVi(auction.getItemCategory());
+                  return categoryFilter.equals(currentCatVi);
+                })
+            .filter(
+                auction -> {
+                  // [Tính năng 5] Lọc theo từ khóa tìm kiếm (không phân biệt hoa thường)
+                  String keyword = searchField.getText();
+                  if (keyword == null || keyword.isBlank()) return true;
+                  String lowerKeyword = keyword.toLowerCase();
+                  String itemName = auction.getItemName();
+                  return itemName != null && itemName.toLowerCase().contains(lowerKeyword);
+                })
+            .collect(Collectors.toList());
 
     // Sắp xếp danh sách phiên đấu giá theo yêu cầu:
     // 1. Đang chạy (thời gian kết thúc tăng dần - sắp kết thúc xếp trước)
     // 2. Đang mở
     // 3. Đã kết thúc
-    filtered.sort((a1, a2) -> {
-      int rank1 = getStatusRank(a1.getStatus());
-      int rank2 = getStatusRank(a2.getStatus());
-      if (rank1 != rank2) {
-        return Integer.compare(rank1, rank2);
-      }
-      
-      // Nếu cùng rank
-      if (rank1 == 1) { // Đang chạy
-        if (a1.getEndTime() == null && a2.getEndTime() == null) return 0;
-        if (a1.getEndTime() == null) return 1;
-        if (a2.getEndTime() == null) return -1;
-        return a1.getEndTime().compareTo(a2.getEndTime());
-      }
-      
-      // Mặc định sắp xếp theo ID giảm dần (mới nhất lên đầu)
-      return a2.getId().compareTo(a1.getId());
-    });
+    filtered.sort(
+        (a1, a2) -> {
+          int rank1 = getStatusRank(a1.getStatus());
+          int rank2 = getStatusRank(a2.getStatus());
+          if (rank1 != rank2) {
+            return Integer.compare(rank1, rank2);
+          }
+
+          // Nếu cùng rank
+          if (rank1 == 1) { // Đang chạy
+            if (a1.getEndTime() == null && a2.getEndTime() == null) return 0;
+            if (a1.getEndTime() == null) return 1;
+            if (a2.getEndTime() == null) return -1;
+            return a1.getEndTime().compareTo(a2.getEndTime());
+          }
+
+          // Mặc định sắp xếp theo ID giảm dần (mới nhất lên đầu)
+          return a2.getId().compareTo(a1.getId());
+        });
 
     // Render thẻ giao diện thay vì TableView
     renderGrid(filtered);
   }
 
-  /**
-   * [Tính năng 2] Tính toán và hiển thị số liệu thống kê cho Admin.
-   */
+  /** [Tính năng 2] Tính toán và hiển thị số liệu thống kê cho Admin. */
   private void updateAdminStats(List<Auction> auctions) {
     long total = auctions.size();
     long running = auctions.stream().filter(Auction::isRunning).count();
@@ -316,8 +304,8 @@ public class AuctionListController implements com.auction.client.observer.Auctio
   }
 
   /**
-   * Helper method để gán độ ưu tiên (rank) cho các trạng thái phiên đấu giá.
-   * Rank càng nhỏ thì hiển thị càng cao.
+   * Helper method để gán độ ưu tiên (rank) cho các trạng thái phiên đấu giá. Rank càng nhỏ thì hiển
+   * thị càng cao.
    */
   private int getStatusRank(AuctionStatus status) {
     if (status == null) return 99;
@@ -344,9 +332,7 @@ public class AuctionListController implements com.auction.client.observer.Auctio
     return false;
   }
 
-  /**
-   * Phương thức chung để chuyển sang màn hình chi tiết phiên đấu giá.
-   */
+  /** Phương thức chung để chuyển sang màn hình chi tiết phiên đấu giá. */
   private void navigateToDetail(Auction selected) {
     serverService.removeObserver(this); // Tạm dừng observer khi rời màn hình
 
@@ -355,16 +341,14 @@ public class AuctionListController implements com.auction.client.observer.Auctio
 
     try {
       Stage stage = (Stage) searchField.getScene().getWindow(); // Thay vì lấy từ bảng
-      FxmlLoader.navigateTo(stage, "auction-detail.fxml",
-          "Online Auction System — Chi Tiết Sản Phẩm");
+      FxmlLoader.navigateTo(
+          stage, "auction-detail.fxml", "Online Auction System — Chi Tiết Sản Phẩm");
     } catch (IOException e) {
       e.printStackTrace();
     }
   }
 
-  /**
-   * Tạo lưới thẻ (Card Grid) cho các phiên đấu giá
-   */
+  /** Tạo lưới thẻ (Card Grid) cho các phiên đấu giá */
   private void renderGrid(List<Auction> auctions) {
     auctionGridPane.getChildren().clear();
     timeUpdaters.clear();
@@ -390,8 +374,8 @@ public class AuctionListController implements com.auction.client.observer.Auctio
       if (auction.getImageBase64() != null && !auction.getImageBase64().isEmpty()) {
         try {
           byte[] imgBytes = java.util.Base64.getDecoder().decode(auction.getImageBase64());
-          imgView
-              .setImage(new javafx.scene.image.Image(new java.io.ByteArrayInputStream(imgBytes)));
+          imgView.setImage(
+              new javafx.scene.image.Image(new java.io.ByteArrayInputStream(imgBytes)));
         } catch (Exception e) {
           // placeholder
         }
@@ -403,8 +387,11 @@ public class AuctionListController implements com.auction.client.observer.Auctio
       imgContainer.setMinHeight(180);
 
       // Tên sản phẩm
-      Label nameLbl = new Label(auction.getItemName() != null ? auction.getItemName()
-          : "Sản phẩm #" + auction.getItemId());
+      Label nameLbl =
+          new Label(
+              auction.getItemName() != null
+                  ? auction.getItemName()
+                  : "Sản phẩm #" + auction.getItemId());
       nameLbl.getStyleClass().add("card-title");
       nameLbl.setWrapText(true);
       nameLbl.setMinHeight(50);
@@ -429,34 +416,50 @@ public class AuctionListController implements com.auction.client.observer.Auctio
       descLbl.setMaxHeight(40);
 
       // Trạng thái + Loại (Việt hóa Loại sản phẩm)
-      Label statusLbl = new Label(translateStatus(auction.getStatus()) + " | "
-          + translateCategoryToVi(auction.getItemCategory()));
+      Label statusLbl =
+          new Label(
+              translateStatus(auction.getStatus())
+                  + " | "
+                  + translateCategoryToVi(auction.getItemCategory()));
       statusLbl.setStyle("-fx-font-size: 12px; -fx-text-fill: #bdc3c7; -fx-font-style: italic;");
 
       // Hiển thị thời gian bắt đầu/kết thúc (Sử dụng DISPLAY_FORMAT)
-      Label dateRangeLbl = new Label("📅 " + (auction.getStartTime() != null ? auction.getStartTime().format(DISPLAY_FORMAT) : "N/A") 
-          + " - " + (auction.getEndTime() != null ? auction.getEndTime().format(DISPLAY_FORMAT) : "N/A"));
+      Label dateRangeLbl =
+          new Label(
+              "📅 "
+                  + (auction.getStartTime() != null
+                      ? auction.getStartTime().format(DISPLAY_FORMAT)
+                      : "N/A")
+                  + " - "
+                  + (auction.getEndTime() != null
+                      ? auction.getEndTime().format(DISPLAY_FORMAT)
+                      : "N/A"));
       dateRangeLbl.setStyle("-fx-font-size: 11px; -fx-text-fill: #95a5a6;");
 
       // Thời gian còn lại
       Label timeLbl = new Label();
       timeLbl.setStyle("-fx-font-size: 14px;");
-      Runnable updateTime = () -> {
-        String timeLeft = formatTimeLeft(auction);
-        timeLbl.setText("⏳ " + timeLeft);
-        if (timeLeft.startsWith("00:")) {
-          timeLbl.setStyle("-fx-font-size: 14px; -fx-text-fill: #e74c3c; -fx-font-weight: bold;");
-        } else if (timeLeft.contains("kết thúc") || timeLeft.contains("thanh toán")
-            || timeLeft.contains("hủy")) {
-          timeLbl.setStyle("-fx-font-size: 14px; -fx-text-fill: #95a5a6;");
-        } else {
-          timeLbl.setStyle("-fx-font-size: 14px; -fx-text-fill: #27ae60; -fx-font-weight: bold;");
-        }
-      };
+      Runnable updateTime =
+          () -> {
+            String timeLeft = formatTimeLeft(auction);
+            timeLbl.setText("⏳ " + timeLeft);
+            if (timeLeft.startsWith("00:")) {
+              timeLbl.setStyle(
+                  "-fx-font-size: 14px; -fx-text-fill: #e74c3c; -fx-font-weight: bold;");
+            } else if (timeLeft.contains("kết thúc")
+                || timeLeft.contains("thanh toán")
+                || timeLeft.contains("hủy")) {
+              timeLbl.setStyle("-fx-font-size: 14px; -fx-text-fill: #95a5a6;");
+            } else {
+              timeLbl.setStyle(
+                  "-fx-font-size: 14px; -fx-text-fill: #27ae60; -fx-font-weight: bold;");
+            }
+          };
       updateTime.run();
       timeUpdaters.add(updateTime);
 
-      card.getChildren().addAll(imgContainer, nameLbl, priceLbl, descLbl, statusLbl, dateRangeLbl, timeLbl);
+      card.getChildren()
+          .addAll(imgContainer, nameLbl, priceLbl, descLbl, statusLbl, dateRangeLbl, timeLbl);
 
       // Admin Action Buttons
       if (session.isLoggedIn()
@@ -467,25 +470,27 @@ public class AuctionListController implements com.auction.client.observer.Auctio
 
         Button deleteBtn = new Button("Xóa");
         deleteBtn.getStyleClass().add("danger-button");
-        deleteBtn.setOnAction(e -> {
-          javafx.scene.control.Alert confirmAlert =
-              new javafx.scene.control.Alert(javafx.scene.control.Alert.AlertType.CONFIRMATION);
-          NotificationUtils.styleAlert(confirmAlert);
-          confirmAlert.setGraphic(null);
-          confirmAlert.setTitle("Xác Nhận Xóa Phiên");
-          confirmAlert.setHeaderText(
-              "Bạn có chắc chắn muốn xóa phiên đấu giá #" + auction.getId() + " không?");
-          java.util.Optional<javafx.scene.control.ButtonType> confirmResult =
-              confirmAlert.showAndWait();
-          if (confirmResult.isPresent()
-              && confirmResult.get() == javafx.scene.control.ButtonType.OK) {
-            if (serverService.deleteAuction(auction.getId())) {
-              NotificationUtils.showSuccess((Stage) searchField.getScene().getWindow(),
-                  "Đã xóa phiên #" + auction.getId());
-              loadAuctions();
-            }
-          }
-        });
+        deleteBtn.setOnAction(
+            e -> {
+              javafx.scene.control.Alert confirmAlert =
+                  new javafx.scene.control.Alert(javafx.scene.control.Alert.AlertType.CONFIRMATION);
+              NotificationUtils.styleAlert(confirmAlert);
+              confirmAlert.setGraphic(null);
+              confirmAlert.setTitle("Xác Nhận Xóa Phiên");
+              confirmAlert.setHeaderText(
+                  "Bạn có chắc chắn muốn xóa phiên đấu giá #" + auction.getId() + " không?");
+              java.util.Optional<javafx.scene.control.ButtonType> confirmResult =
+                  confirmAlert.showAndWait();
+              if (confirmResult.isPresent()
+                  && confirmResult.get() == javafx.scene.control.ButtonType.OK) {
+                if (serverService.deleteAuction(auction.getId())) {
+                  NotificationUtils.showSuccess(
+                      (Stage) searchField.getScene().getWindow(),
+                      "Đã xóa phiên #" + auction.getId());
+                  loadAuctions();
+                }
+              }
+            });
 
         // Thêm vùng đệm để đẩy nút xuống dưới cùng
         javafx.scene.layout.Region spacer = new javafx.scene.layout.Region();
@@ -504,15 +509,15 @@ public class AuctionListController implements com.auction.client.observer.Auctio
       }
 
       // Click vào thẻ để xem chi tiết (áp dụng cho cả User và Admin)
-      card.setOnMouseClicked(e -> {
-        // Nếu bấm vào các nút điều khiển (Sửa/Xóa) thì không chuyển trang chi tiết
-        if (isInteractiveControlTarget(e.getTarget()))
-          return;
+      card.setOnMouseClicked(
+          e -> {
+            // Nếu bấm vào các nút điều khiển (Sửa/Xóa) thì không chuyển trang chi tiết
+            if (isInteractiveControlTarget(e.getTarget())) return;
 
-        if (e.getButton() == javafx.scene.input.MouseButton.PRIMARY) {
-          navigateToDetail(auction);
-        }
-      });
+            if (e.getButton() == javafx.scene.input.MouseButton.PRIMARY) {
+              navigateToDetail(auction);
+            }
+          });
       card.setStyle(card.getStyle() + " -fx-cursor: hand;");
 
       auctionGridPane.getChildren().add(card);
@@ -572,8 +577,9 @@ public class AuctionListController implements com.auction.client.observer.Auctio
     priceField.setPromptText("Nhập số tiền...");
 
     // 2. Trạng thái
-    ComboBox<String> statusCombo = new ComboBox<>(
-        FXCollections.observableArrayList("OPEN", "RUNNING", "FINISHED", "PAID", "CANCELED"));
+    ComboBox<String> statusCombo =
+        new ComboBox<>(
+            FXCollections.observableArrayList("OPEN", "RUNNING", "FINISHED", "PAID", "CANCELED"));
     statusCombo.setValue(auction.getStatus().name());
     statusCombo.setMaxWidth(Double.MAX_VALUE);
 
@@ -583,13 +589,11 @@ public class AuctionListController implements com.auction.client.observer.Auctio
     startDatePicker.setMaxWidth(Double.MAX_VALUE);
 
     ComboBox<Integer> startHourCombo = new ComboBox<>();
-    for (int i = 0; i < 24; i++)
-      startHourCombo.getItems().add(i);
+    for (int i = 0; i < 24; i++) startHourCombo.getItems().add(i);
     startHourCombo.setValue(currentStart.getHour());
 
     ComboBox<Integer> startMinuteCombo = new ComboBox<>();
-    for (int i = 0; i < 60; i++)
-      startMinuteCombo.getItems().add(i);
+    for (int i = 0; i < 60; i++) startMinuteCombo.getItems().add(i);
     startMinuteCombo.setValue(currentStart.getMinute());
 
     HBox startTimePickerBox =
@@ -603,13 +607,11 @@ public class AuctionListController implements com.auction.client.observer.Auctio
     endDatePicker.setMaxWidth(Double.MAX_VALUE);
 
     ComboBox<Integer> endHourCombo = new ComboBox<>();
-    for (int i = 0; i < 24; i++)
-      endHourCombo.getItems().add(i);
+    for (int i = 0; i < 24; i++) endHourCombo.getItems().add(i);
     endHourCombo.setValue(currentEnd.getHour());
 
     ComboBox<Integer> endMinuteCombo = new ComboBox<>();
-    for (int i = 0; i < 60; i++)
-      endMinuteCombo.getItems().add(i);
+    for (int i = 0; i < 60; i++) endMinuteCombo.getItems().add(i);
     endMinuteCombo.setValue(currentEnd.getMinute());
 
     HBox endTimePickerBox =
@@ -654,42 +656,51 @@ public class AuctionListController implements com.auction.client.observer.Auctio
 
     dialog.getDialogPane().setContent(grid);
 
-    dialog.setResultConverter(dialogButton -> {
-      if (dialogButton == saveButtonType) {
-        try {
-          long price = Long.parseLong(priceField.getText().trim());
-          String status = statusCombo.getValue();
-          // Dịch từ Tiếng Việt sang Enum Tiếng Anh trước khi gửi lên Server
-          String category = translateCategoryToEn(categoryCombo.getValue());
+    dialog.setResultConverter(
+        dialogButton -> {
+          if (dialogButton == saveButtonType) {
+            try {
+              long price = Long.parseLong(priceField.getText().trim());
+              String status = statusCombo.getValue();
+              // Dịch từ Tiếng Việt sang Enum Tiếng Anh trước khi gửi lên Server
+              String category = translateCategoryToEn(categoryCombo.getValue());
 
-          // Ghép Ngày bắt đầu
-          LocalDateTime newStart = LocalDateTime.of(startDatePicker.getValue(),
-              java.time.LocalTime.of(startHourCombo.getValue(), startMinuteCombo.getValue()));
-          String startTimeStr = newStart.toString();
+              // Ghép Ngày bắt đầu
+              LocalDateTime newStart =
+                  LocalDateTime.of(
+                      startDatePicker.getValue(),
+                      java.time.LocalTime.of(
+                          startHourCombo.getValue(), startMinuteCombo.getValue()));
+              String startTimeStr = newStart.toString();
 
-          // Ghép Ngày kết thúc
-          LocalDateTime newEnd = LocalDateTime.of(endDatePicker.getValue(),
-              java.time.LocalTime.of(endHourCombo.getValue(), endMinuteCombo.getValue()));
-          String endTimeStr = newEnd.toString();
+              // Ghép Ngày kết thúc
+              LocalDateTime newEnd =
+                  LocalDateTime.of(
+                      endDatePicker.getValue(),
+                      java.time.LocalTime.of(endHourCombo.getValue(), endMinuteCombo.getValue()));
+              String endTimeStr = newEnd.toString();
 
-          boolean success = serverService.updateAuctionAdmin(auction.getId(), price, status,
-              startTimeStr, endTimeStr, category);
-          if (success) {
-            NotificationUtils.showSuccess((Stage) searchField.getScene().getWindow(),
-                "Cập nhật phiên #" + auction.getId() + " thành công!");
-            loadAuctions();
-          } else {
-            NotificationUtils.showError((Stage) searchField.getScene().getWindow(),
-                "Cập nhật thất bại. Vui lòng thử lại.");
+              boolean success =
+                  serverService.updateAuctionAdmin(
+                      auction.getId(), price, status, startTimeStr, endTimeStr, category);
+              if (success) {
+                NotificationUtils.showSuccess(
+                    (Stage) searchField.getScene().getWindow(),
+                    "Cập nhật phiên #" + auction.getId() + " thành công!");
+                loadAuctions();
+              } else {
+                NotificationUtils.showError(
+                    (Stage) searchField.getScene().getWindow(),
+                    "Cập nhật thất bại. Vui lòng thử lại.");
+              }
+            } catch (Exception e) {
+              NotificationUtils.showError(
+                  (Stage) searchField.getScene().getWindow(), "Dữ liệu nhập vào không hợp lệ!");
+              e.printStackTrace();
+            }
           }
-        } catch (Exception e) {
-          NotificationUtils.showError((Stage) searchField.getScene().getWindow(),
-              "Dữ liệu nhập vào không hợp lệ!");
-          e.printStackTrace();
-        }
-      }
-      return dialogButton;
-    });
+          return dialogButton;
+        });
 
     dialog.showAndWait();
   }
@@ -701,8 +712,7 @@ public class AuctionListController implements com.auction.client.observer.Auctio
    * @return chuỗi tiếng Việt tương ứng
    */
   private String translateStatus(AuctionStatus status) {
-    if (status == null)
-      return "Không rõ";
+    if (status == null) return "Không rõ";
     return switch (status) {
       case OPEN -> "Đang mở";
       case RUNNING -> "Đang diễn ra";
@@ -712,12 +722,9 @@ public class AuctionListController implements com.auction.client.observer.Auctio
     };
   }
 
-  /**
-   * Chuyển đổi Enum Category sang Tiếng Việt để hiển thị trên UI.
-   */
+  /** Chuyển đổi Enum Category sang Tiếng Việt để hiển thị trên UI. */
   private String translateCategoryToVi(String categoryEn) {
-    if (categoryEn == null)
-      return "Khác";
+    if (categoryEn == null) return "Khác";
     return switch (categoryEn.toUpperCase()) {
       case "ELECTRONICS" -> "Điện tử";
       case "ARTWORK" -> "Nghệ thuật";
@@ -727,12 +734,9 @@ public class AuctionListController implements com.auction.client.observer.Auctio
     };
   }
 
-  /**
-   * Chuyển đổi từ Tiếng Việt trên UI về Enum Tiếng Anh để gửi lên Server.
-   */
+  /** Chuyển đổi từ Tiếng Việt trên UI về Enum Tiếng Anh để gửi lên Server. */
   private String translateCategoryToEn(String categoryVi) {
-    if (categoryVi == null)
-      return "OTHER";
+    if (categoryVi == null) return "OTHER";
     return switch (categoryVi) {
       case "Điện tử" -> "ELECTRONICS";
       case "Nghệ thuật" -> "ARTWORK";
@@ -742,21 +746,20 @@ public class AuctionListController implements com.auction.client.observer.Auctio
     };
   }
 
-  /**
-   * [Tính năng 1] Xóa bỏ column time setup
-   */
+  /** [Tính năng 1] Xóa bỏ column time setup */
 
-  /**
-   * [Tính năng 1] Khởi chạy bộ đếm 1 giây một lần để cập nhật UI.
-   */
+  /** [Tính năng 1] Khởi chạy bộ đếm 1 giây một lần để cập nhật UI. */
   private void startCountdownTimer() {
     // Timeline là cơ chế đếm nhịp của JavaFX, chạy trên UI Thread nên an toàn để cập nhật giao diện
-    countdownTimeline = new javafx.animation.Timeline(
-        new javafx.animation.KeyFrame(javafx.util.Duration.seconds(1), event -> {
-          for (Runnable r : timeUpdaters) {
-            r.run();
-          }
-        }));
+    countdownTimeline =
+        new javafx.animation.Timeline(
+            new javafx.animation.KeyFrame(
+                javafx.util.Duration.seconds(1),
+                event -> {
+                  for (Runnable r : timeUpdaters) {
+                    r.run();
+                  }
+                }));
     countdownTimeline.setCycleCount(javafx.animation.Timeline.INDEFINITE);
     countdownTimeline.play();
   }
@@ -764,8 +767,7 @@ public class AuctionListController implements com.auction.client.observer.Auctio
   /**
    * [Tính năng 1] Chuỗi hiển thị cho cột "Còn lại" (đếm ngược theo {@code endTime}).
    *
-   * <p>
-   * <b>Vì sao trước đây vừa "Đã kết thúc" vừa "Đang kết thúc..."?</b> Trạng thái {@code
+   * <p><b>Vì sao trước đây vừa "Đã kết thúc" vừa "Đang kết thúc..."?</b> Trạng thái {@code
    * FINISHED} trong DB chỉ được gán khi server cập nhật (đặt giá sau giờ, admin sửa, v.v.). Nhiều
    * phiên vẫn là {@code RUNNING} trên DB dù đồng hồ đã quá {@code endTime} — code cũ coi duration
    * âm là "Đang kết thúc..." và treo mãi. <b>Theo thời gian thực</b>, hết {@code endTime} là hết
@@ -806,32 +808,38 @@ public class AuctionListController implements com.auction.client.observer.Auctio
     return String.format("%02d:%02d:%02d", hours, minutes, seconds);
   }
 
-  /**
-   * [Tính năng 4] Nhận cập nhật khi có người đặt giá mới.
-   */
+  /** [Tính năng 4] Nhận cập nhật khi có người đặt giá mới. */
   @Override
   public void onBidUpdated(server.model.entity.BidTransaction bid) {
-    Platform.runLater(() -> {
-      // Hiện thông báo nhỏ góc màn hình
-      NotificationUtils.showToast((Stage) searchField.getScene().getWindow(), "📣 Giá mới cho #"
-          + bid.getAuctionId() + ": " + String.format("%,d", bid.getAmount()) + " VNĐ", false);
+    Platform.runLater(
+        () -> {
+          // Hiện thông báo nhỏ góc màn hình
+          NotificationUtils.showToast(
+              (Stage) searchField.getScene().getWindow(),
+              "📣 Giá mới cho #"
+                  + bid.getAuctionId()
+                  + ": "
+                  + String.format("%,d", bid.getAmount())
+                  + " VNĐ",
+              false);
 
-      // Refresh lại bảng để số liệu luôn mới nhất
-      loadAuctions();
-    });
+          // Refresh lại bảng để số liệu luôn mới nhất
+          loadAuctions();
+        });
   }
 
-  /**
-   * [Tính năng 4] Nhận cập nhật khi trạng thái phiên thay đổi (Admin xóa/sửa).
-   */
+  /** [Tính năng 4] Nhận cập nhật khi trạng thái phiên thay đổi (Admin xóa/sửa). */
   @Override
   public void onAuctionStatusChanged(Long auctionId, String newStatus) {
-    Platform.runLater(() -> {
-      NotificationUtils.showToast((Stage) searchField.getScene().getWindow(),
-          "🔔 Phiên #" + auctionId + " đổi trạng thái: " + newStatus, newStatus.equals("CANCELED"));
+    Platform.runLater(
+        () -> {
+          NotificationUtils.showToast(
+              (Stage) searchField.getScene().getWindow(),
+              "🔔 Phiên #" + auctionId + " đổi trạng thái: " + newStatus,
+              newStatus.equals("CANCELED"));
 
-      // Refresh lại bảng
-      loadAuctions();
-    });
+          // Refresh lại bảng
+          loadAuctions();
+        });
   }
 }

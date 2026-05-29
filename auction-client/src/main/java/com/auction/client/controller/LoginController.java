@@ -46,9 +46,11 @@ public class LoginController {
     try {
       Stage stage = (Stage) loginButton.getScene().getWindow();
       if (loggedInUser.getRole() == UserRole.SELLER) {
-        FxmlLoader.navigateTo(stage, "seller-dashboard.fxml", "Online Auction System — Quản Lý Bán Hàng");
+        FxmlLoader.navigateTo(
+            stage, "seller-dashboard.fxml", "Online Auction System — Quản Lý Bán Hàng");
       } else {
-        FxmlLoader.navigateTo(stage, "auction-list.fxml", "Online Auction System — Danh Sách Đấu Giá");
+        FxmlLoader.navigateTo(
+            stage, "auction-list.fxml", "Online Auction System — Danh Sách Đấu Giá");
       }
     } catch (IOException e) {
       showError("Lỗi hệ thống: không thể chuyển màn hình.");

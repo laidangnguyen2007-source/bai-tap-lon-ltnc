@@ -33,8 +33,7 @@ public final class FxmlLoader {
    * @param title tiêu đề cửa sổ sau khi chuyển màn hình
    * @throws IOException nếu file FXML không tồn tại hoặc bị lỗi syntax
    */
-  public static void navigateTo(Stage stage, String fxmlFileName, String title)
-      throws IOException {
+  public static void navigateTo(Stage stage, String fxmlFileName, String title) throws IOException {
     String fullPath = FXML_BASE_PATH + fxmlFileName;
     FXMLLoader loader = new FXMLLoader(FxmlLoader.class.getResource(fullPath));
 
@@ -46,7 +45,8 @@ public final class FxmlLoader {
     Scene scene = new Scene(root);
 
     // Load stylesheet chung cho toàn bộ ứng dụng
-    String cssPath = FxmlLoader.class.getResource("/com/auction/client/css/styles.css").toExternalForm();
+    String cssPath =
+        FxmlLoader.class.getResource("/com/auction/client/css/styles.css").toExternalForm();
     scene.getStylesheets().add(cssPath);
 
     stage.setTitle(title);
@@ -55,8 +55,8 @@ public final class FxmlLoader {
   }
 
   /**
-   * Chỉ load FXML và trả về FXMLLoader để Controller bên ngoài có thể lấy controller instance.
-   * Dùng khi cần truyền dữ liệu vào Controller đích trước khi hiển thị màn hình.
+   * Chỉ load FXML và trả về FXMLLoader để Controller bên ngoài có thể lấy controller instance. Dùng
+   * khi cần truyền dữ liệu vào Controller đích trước khi hiển thị màn hình.
    *
    * @param fxmlFileName tên file FXML (ví dụ: "bidding-room.fxml")
    * @return FXMLLoader đã được cấu hình (chưa load)
