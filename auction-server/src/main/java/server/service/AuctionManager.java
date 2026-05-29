@@ -184,20 +184,23 @@ public class AuctionManager {
         List<AutoBidStrategy> strategies =
             autoBids.getOrDefault(auctionId, Collections.emptyList());
 
-        AutoBidStrategy bestStrategy = null;
+        if (strategies.isEmpty()) {
+          break;
+        }
+
+        java.util.PriorityQueue<AutoBidStrategy> pq = new java.util.PriorityQueue<>(strategies);
         BidTransaction bestTx = null;
 
-        for (AutoBidStrategy strategy : strategies) {
+        while (!pq.isEmpty()) {
+          AutoBidStrategy strategy = pq.poll();
           try {
             BidTransaction tx = strategy.calculateBid(auction, strategy.getUserId(), 0);
             if (tx != null) {
-              if (bestStrategy == null || strategy.hasPriorityOver(bestStrategy)) {
-                bestStrategy = strategy;
-                bestTx = tx;
-              }
+              bestTx = tx;
+              break; // Đã tìm được người có quyền ưu tiên cao nhất
             }
           } catch (Exception e) {
-            // ignore invalid bid
+            // ignore invalid bid and check next in PriorityQueue
           }
         }
 
