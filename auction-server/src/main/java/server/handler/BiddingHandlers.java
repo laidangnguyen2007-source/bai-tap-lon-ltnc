@@ -327,8 +327,8 @@ public final class BiddingHandlers {
           try {
             walletService.releaseAutoBid(bidderId, auctionId, lockedAmount);
           } catch (Exception walletEx) {
-            System.err.println("WARN: Wallet release failed during cancel auto-bid: "
-                + walletEx.getMessage());
+            System.err.println(
+                "WARN: Wallet release failed during cancel auto-bid: " + walletEx.getMessage());
           }
         }
       }
