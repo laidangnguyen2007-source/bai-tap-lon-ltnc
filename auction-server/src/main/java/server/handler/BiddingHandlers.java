@@ -198,7 +198,9 @@ public final class BiddingHandlers {
           oldLockedAmount -= currentWinner.amount;
         }
         AuctionManager.getInstance().removeAutoBid(auctionId, bidderId);
-        walletService.releaseAutoBid(bidderId, auctionId, oldLockedAmount);
+        if (oldLockedAmount > 0) {
+          walletService.releaseAutoBid(bidderId, auctionId, oldLockedAmount);
+        }
       }
 
       BidInfo prevWinner = AuctionManager.getInstance().getPreviousWinner(auctionId);
@@ -294,11 +296,13 @@ public final class BiddingHandlers {
       Long auctionId = req.getLong("auctionId");
       Long bidderId = req.getLong("bidderId");
 
+      // 1. Deactivate trong DB (luôn thực hiện trước)
       Optional<AutoBid> opt = autoBidDao.findByAuctionAndBidder(auctionId, bidderId);
       if (opt.isPresent()) {
         autoBidDao.deactivate(opt.get().getId());
       }
 
+      // 2. Tìm strategy trong memory
       List<AutoBidStrategy> strategies = AuctionManager.getInstance().getAutoBids(auctionId);
       AutoBidStrategy userStrategy = null;
       for (AutoBidStrategy s : strategies) {
@@ -308,23 +312,35 @@ public final class BiddingHandlers {
         }
       }
 
+      // 3. Luôn xóa khỏi memory trước — đây là bước quan trọng nhất
+      AuctionManager.getInstance().removeAutoBid(auctionId, bidderId);
+
+      // 4. Giải phóng tiền khóa (nếu có) — lỗi ở đây KHÔNG được abort toàn bộ cancel
       if (userStrategy != null) {
         long lockedAmount = userStrategy.getMaxBid();
-
         BidInfo currentWinner = AuctionManager.getInstance().getPreviousWinner(auctionId);
         if (currentWinner != null && currentWinner.bidderId.equals(bidderId)) {
           lockedAmount -= currentWinner.amount;
         }
 
-        AuctionManager.getInstance().removeAutoBid(auctionId, bidderId);
-        walletService.releaseAutoBid(bidderId, auctionId, lockedAmount);
-
-        JSONObject cancelledPush = new JSONObject();
-        cancelledPush.put("type", "AUTO_BID_CANCELLED");
-        cancelledPush.put("auctionId", auctionId);
-        cancelledPush.put("userId", bidderId);
-        broadcaster.sendToUser(bidderId, cancelledPush.toString());
+        if (lockedAmount > 0) {
+          try {
+            walletService.releaseAutoBid(bidderId, auctionId, lockedAmount);
+          } catch (Exception walletEx) {
+            System.err.println("WARN: Wallet release failed during cancel auto-bid: "
+                + walletEx.getMessage());
+          }
+        }
       }
+
+      // 5. Luôn gửi push thông báo hủy thành công
+      JSONObject cancelledPush = new JSONObject();
+      cancelledPush.put("type", "AUTO_BID_CANCELLED");
+      cancelledPush.put("auctionId", auctionId);
+      cancelledPush.put("userId", bidderId);
+      broadcaster.sendToUser(bidderId, cancelledPush.toString());
+
+      System.out.println("CANCEL AUTOBID OK: auction #" + auctionId + " | bidder #" + bidderId);
 
       JSONObject res = new JSONObject();
       res.put("status", "OK");

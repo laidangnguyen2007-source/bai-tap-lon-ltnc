@@ -94,8 +94,8 @@ public class SocketConnection {
     return instance;
   }
 
-  // Gửi request và chờ response đồng bộ
-  public String sendRequest(String jsonRequest) throws IOException {
+  // Gửi request và chờ response đồng bộ — synchronized để tránh 2 thread cùng gửi/nhận lẫn lộn
+  public synchronized String sendRequest(String jsonRequest) throws IOException {
     responseQueue.clear(); // Xóa rác/stale message trước khi gửi request mới để chống lỗi desync
     out.println(jsonRequest);
     try {
