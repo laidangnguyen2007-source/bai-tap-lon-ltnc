@@ -32,7 +32,8 @@ public class TestAuctionException {
     assertThrows(
         IllegalArgumentException.class,
         () -> {
-          new Auction(1L, 1L, now, past); // Constructor phải ném ra ngoại lệ IllegalArgumentException
+          new Auction(
+              1L, 1L, now, past); // Constructor phải ném ra ngoại lệ IllegalArgumentException
         });
 
     System.out.println("✅ Test Auction Time Logic (End before Start): PASS");
