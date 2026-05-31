@@ -421,8 +421,7 @@ public final class BiddingHandlers {
         } catch (Exception e) {
           e.printStackTrace();
         }
-        System.out.println(
-            "AUTO-BID EXHAUSTED: auction #" + auctionId + " | bidder #" + bidderId);
+        System.out.println("AUTO-BID EXHAUSTED: auction #" + auctionId + " | bidder #" + bidderId);
       }
     }
   }
