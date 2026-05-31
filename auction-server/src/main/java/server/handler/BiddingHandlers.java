@@ -385,9 +385,20 @@ public final class BiddingHandlers {
     List<AutoBidStrategy> strategies = AuctionManager.getInstance().getAutoBids(auctionId);
     if (strategies == null || strategies.isEmpty()) return;
 
-    long minRequired = auction.getCurrentPrice() + auction.getMinBidStep();
+    long minRequiredToBeat = auction.getCurrentPrice() + Math.max(1L, auction.getMinBidStep());
     for (AutoBidStrategy s : strategies) {
-      if (s.getMaxBid() < minRequired) {
+      boolean exhausted = false;
+      if (s.getUserId().equals(auction.getCurrentWinnerId())) {
+        if (s.getMaxBid() <= auction.getCurrentPrice()) {
+          exhausted = true;
+        }
+      } else {
+        if (s.getMaxBid() < minRequiredToBeat) {
+          exhausted = true;
+        }
+      }
+
+      if (exhausted) {
         Long bidderId = s.getUserId();
 
         Optional<AutoBid> opt = autoBidDao.findByAuctionAndBidder(auctionId, bidderId);
