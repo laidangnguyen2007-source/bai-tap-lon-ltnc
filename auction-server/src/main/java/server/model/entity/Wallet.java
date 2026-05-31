@@ -32,7 +32,7 @@ public class Wallet extends BaseEntity {
   public void lockFunds(Long amount) {
     validatePositiveAmount(amount);
 
-    if (availableBalance + amount < 0)
+    if (availableBalance < amount)
       throw new IllegalArgumentException("Insufficient available balance");
 
     availableBalance -= amount;
@@ -42,7 +42,7 @@ public class Wallet extends BaseEntity {
   public void releaseFunds(Long amount) {
     validatePositiveAmount(amount);
 
-    if (lockedBalance < 0) throw new IllegalArgumentException("Insufficient locked balance!");
+    if (lockedBalance < amount) throw new IllegalArgumentException("Insufficient locked balance!");
 
     lockedBalance -= amount;
     availableBalance += amount;

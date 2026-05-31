@@ -163,7 +163,7 @@ cd auction-client && mvn javafx:run
 | :------------------------------- | :--: | :------: | :--------: | :---------------------------------------------------------------------------------------------------------------------- |
 | Thiết kế lớp & cây kế thừa       | 0.5  | Bắt buộc |     ✅     | `User`→`Bidder`/`Seller`/`Admin`; `Item`→`Electronics`/`Artwork`/`Vehicle`; `Auction`, `BidTransaction`, `Wallet`       |
 | OOP (4 tính chất)                | 1.0  | Bắt buộc |     ✅     | Encapsulation (private fields); Inheritance; Polymorphism (`BidStrategy`); Abstraction (`User`, `Item`, DAO interfaces) |
-| Design Patterns                  | 1.0  | Bắt buộc |     ✅     | Singleton (`AuctionManager`), Factory (`ItemFactory`), Strategy (`BidStrategy`), Observer (`AuctionObserver`), DAO      |
+| Design Patterns                  | 1.0  | Bắt buộc |     ✅     | Singleton (`AuctionManager`, `DatabaseConfig`), Factory (`ItemFactory`), Strategy (`BidStrategy`), Observer (`AuctionObserver`), DAO      |
 | Quản lý người dùng & sản phẩm    | 1.0  | Bắt buộc |     ✅     | `AuthHandlers`, `CatalogHandlers`, `SellerDashboardController`                                                          |
 | Chức năng đấu giá                | 1.0  | Bắt buộc |     ✅     | `BiddingHandlers`, `AuctionManager.placeBid()`                                                                          |
 | Xử lý lỗi & ngoại lệ             | 1.0  | Bắt buộc |     ✅     | `AuctionException`, `InvalidBidException`, `AuthenticationException`; test `TestAuctionException`                       |

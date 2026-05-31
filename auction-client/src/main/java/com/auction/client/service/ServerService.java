@@ -5,6 +5,7 @@ import com.auction.client.observer.AuctionObserver;
 import com.auction.client.util.JsonMapper;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.Consumer;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -24,7 +25,7 @@ public class ServerService {
   private final ItemNetworkHandler itemHandler;
   private final WalletNetworkHandler walletHandler;
 
-  private final List<AuctionObserver> observers = new ArrayList<>();
+  private final List<AuctionObserver> observers = new CopyOnWriteArrayList<>();
   private final Consumer<String> pushHandler;
 
   public ServerService() {
