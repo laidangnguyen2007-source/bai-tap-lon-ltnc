@@ -18,6 +18,14 @@
   -fx-background-color: #0f1117;
 }
 
+/* Background ảnh cho màn hình đăng nhập */
+.login-root {
+  -fx-background-image: url('../../../../background-login.png');
+  -fx-background-size: cover;
+  -fx-background-position: center center;
+  -fx-background-repeat: no-repeat;
+}
+
 /* ── Header / Top Bar ── */
 .top-bar {
   -fx-background-color: linear-gradient(to right, #0f1117, #1a1d2f, #0f1117);

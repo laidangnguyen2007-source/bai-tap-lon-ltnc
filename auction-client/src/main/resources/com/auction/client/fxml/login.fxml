@@ -18,7 +18,7 @@
   xmlns="http://javafx.com/javafx/21"
   xmlns:fx="http://javafx.com/fxml/1"
   fx:controller="com.auction.client.controller.LoginController"
-  styleClass="root-pane">
+  styleClass="root-pane, login-root">
 
   <!-- Card trắng căn giữa màn hình -->
   <VBox styleClass="card" maxWidth="400" maxHeight="480" spacing="16">

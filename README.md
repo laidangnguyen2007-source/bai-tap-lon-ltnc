@@ -6,8 +6,6 @@
 
 ## 1. Mô tả bài toán và phạm vi hệ thống
 
-**Bài toán:** Xây dựng nền tảng đấu giá trực tuyến thời gian thực, cho phép người dùng đăng ký/đăng nhập với vai trò **Người bán (Seller)**, **Người mua (Bidder)** hoặc **Quản trị viên (Admin)**, tham gia đấu giá sản phẩm qua giao diện JavaFX và đồng bộ trạng thái tức thì qua TCP Socket.
-
 **Phạm vi hệ thống:**
 
 - Quản lý người dùng, sản phẩm đa loại (Điện tử, Tác phẩm nghệ thuật, Phương tiện) và phiên đấu giá.
@@ -64,14 +62,12 @@ bai-tap-lon-ltnc/
 │   │   └── service/         # ServerService (facade)
 │   ├── src/main/resources/com/auction/client/fxml/
 │   └── pom.xml
-├── release/                 # Fat JAR nộp/chạy cho GV (server.jar + client.jar)
+├── release/
 │   ├── server.jar
 │   └── client.jar
-├── build-jars.bat           # Nhóm build lại JAR sau khi sửa code (Windows)
+├── build-jars.bat
 └── README.md
 ```
-
-> **Lưu ý:** Thư mục `auction-server/target/` và `auction-client/target/` là artifact build tạm — không cần nộp, có thể xóa bất cứ lúc nào.
 
 ---
 
@@ -84,15 +80,8 @@ Dự án dùng **maven-shade-plugin** tạo **fat JAR / uber JAR** chạy bằng
 | **Server** | `release/server.jar` | Fat JAR server — **dùng để chạy / nộp bài** |
 | **Client** | `release/client.jar` | Fat JAR client — **dùng để chạy / nộp bài** |
 
-**Nhóm tự build lại** (sau khi sửa code):
-
 ```bash
 build-jars.bat
-# hoặc thủ công:
-cd auction-server && mvn clean install -DskipTests
-cd ../auction-client && mvn clean package -DskipTests
-copy auction-server\target\server.jar release\
-copy auction-client\target\client.jar release\
 ```
 
 > **Lưu ý OS:** Client JAR build kèm native JavaFX cho **Windows** (`javafx.platform=win` trong `auction-client/pom.xml`).
@@ -103,7 +92,7 @@ copy auction-client\target\client.jar release\
 
 **Thứ tự bắt buộc:** Bật MySQL → Chạy Server → Chạy Client.
 
-**Yêu cầu khi chạy:** JDK 21 + MySQL (username `root`, password `1234`, cổng `3306`). **Không cần Maven** nếu đã có file trong `release/`.
+**Yêu cầu khi chạy:** JDK 21 + MySQL (username `root`, password `1234`, cổng `3306`).
 
 ### Cách chạy (fat JAR — đúng yêu cầu nộp bài)
 
@@ -127,17 +116,6 @@ java -jar release/client.jar
 java -jar release/client.jar
 ```
 
-### Build lại JAR (chỉ nhóm dev, sau khi sửa code)
-
-Chạy `build-jars.bat` (Windows) hoặc lệnh Maven ở mục 4.
-
-### Maven (chỉ khi phát triển / debug)
-
-```bash
-cd auction-server && mvn exec:java
-cd auction-client && mvn javafx:run
-```
-
 ---
 
 ## 6. Danh sách chức năng đã hoàn thành
@@ -159,24 +137,24 @@ cd auction-client && mvn javafx:run
 
 ### Đối chiếu barem điểm (rubric)
 
-| Tiêu chí                         | Điểm |   Mức    | Trạng thái | Bằng chứng ngắn                                                                                                         |
-| :------------------------------- | :--: | :------: | :--------: | :---------------------------------------------------------------------------------------------------------------------- |
-| Thiết kế lớp & cây kế thừa       | 0.5  | Bắt buộc |     ✅     | `User`→`Bidder`/`Seller`/`Admin`; `Item`→`Electronics`/`Artwork`/`Vehicle`; `Auction`, `BidTransaction`, `Wallet`       |
-| OOP (4 tính chất)                | 1.0  | Bắt buộc |     ✅     | Encapsulation (private fields); Inheritance; Polymorphism (`BidStrategy`); Abstraction (`User`, `Item`, DAO interfaces) |
-| Design Patterns                  | 1.0  | Bắt buộc |     ✅     | Singleton (`AuctionManager`, `DatabaseConfig`), Factory (`ItemFactory`), Strategy (`BidStrategy`), Observer (`AuctionObserver`), DAO      |
-| Quản lý người dùng & sản phẩm    | 1.0  | Bắt buộc |     ✅     | `AuthHandlers`, `CatalogHandlers`, `SellerDashboardController`                                                          |
-| Chức năng đấu giá                | 1.0  | Bắt buộc |     ✅     | `BiddingHandlers`, `AuctionManager.placeBid()`                                                                          |
-| Xử lý lỗi & ngoại lệ             | 1.0  | Bắt buộc |     ✅     | `AuctionException`, `InvalidBidException`, `AuthenticationException`; test `TestAuctionException`                       |
-| Concurrency (không mất cập nhật) | 1.0  | Bắt buộc |     ✅     | `synchronized(auction)`, `ConcurrentHashMap`, `SELECT … FOR UPDATE`                                                     |
-| Realtime (Observer/Socket)       | 0.5  | Bắt buộc |     ✅     | `ClientBroadcaster`, `AuctionObserver`, push JSON                                                                       |
-| Client–Server                    | 0.5  | Bắt buộc |     ✅     | TCP Socket cổng 8888, `Server.java`, `SocketConnection`                                                                 |
-| MVC                              | 0.5  | Bắt buộc |     ✅     | FXML + Controller (client); Model + DAO (server)                                                                        |
-| Maven, coding convention         | 0.5  | Bắt buộc |     ✅     | Maven multi-module, Spotless Google Java Style                                                                          |
-| Unit Test JUnit                  | 0.5  | Bắt buộc |     ✅     | 4 file test, 30+ test case trong `auction-server/src/test/java/`                                                        |
-| CI/CD GitHub Actions             | 0.5  | Bắt buộc |     ✅     | `.github/workflows/ci.yml`                                                                                              |
-| **Auto-Bidding**                 | 0.5  | Tuỳ chọn |     ✅     | `AutoBidStrategy` + maxBid/increment hoạt động; **đã dùng `PriorityQueue`** (thay cho vòng lặp cũ)                      |
-| **Anti-sniping**                 | 0.5  | Tuỳ chọn |     ✅     | `Auction.ANTI_SNIPE_WINDOW_SECONDS`, `extendEndTime()`                                                                  |
-| **Bid History Visualization**    | 0.5  | Tuỳ chọn |     ✅     | `LineChart` trong `bidding-room.fxml`, cập nhật qua Observer                                                            |
+| Tiêu chí                         | Điểm |   Mức    | Trạng thái | Bằng chứng ngắn                                                                                                                      |
+| :------------------------------- | :--: | :------: | :--------: | :----------------------------------------------------------------------------------------------------------------------------------- |
+| Thiết kế lớp & cây kế thừa       | 0.5  | Bắt buộc |     ✅     | `User`→`Bidder`/`Seller`/`Admin`; `Item`→`Electronics`/`Artwork`/`Vehicle`; `Auction`, `BidTransaction`, `Wallet`                    |
+| OOP (4 tính chất)                | 1.0  | Bắt buộc |     ✅     | Encapsulation (private fields); Inheritance; Polymorphism (`BidStrategy`); Abstraction (`User`, `Item`, DAO interfaces)              |
+| Design Patterns                  | 1.0  | Bắt buộc |     ✅     | Singleton (`AuctionManager`, `DatabaseConfig`), Factory (`ItemFactory`), Strategy (`BidStrategy`), Observer (`AuctionObserver`), DAO |
+| Quản lý người dùng & sản phẩm    | 1.0  | Bắt buộc |     ✅     | `AuthHandlers`, `CatalogHandlers`, `SellerDashboardController`                                                                       |
+| Chức năng đấu giá                | 1.0  | Bắt buộc |     ✅     | `BiddingHandlers`, `AuctionManager.placeBid()`                                                                                       |
+| Xử lý lỗi & ngoại lệ             | 1.0  | Bắt buộc |     ✅     | `AuctionException`, `InvalidBidException`, `AuthenticationException`; test `TestAuctionException`                                    |
+| Concurrency (không mất cập nhật) | 1.0  | Bắt buộc |     ✅     | `synchronized(auction)`, `ConcurrentHashMap`, `SELECT … FOR UPDATE`                                                                  |
+| Realtime (Observer/Socket)       | 0.5  | Bắt buộc |     ✅     | `ClientBroadcaster`, `AuctionObserver`, push JSON                                                                                    |
+| Client–Server                    | 0.5  | Bắt buộc |     ✅     | TCP Socket cổng 8888, `Server.java`, `SocketConnection`                                                                              |
+| MVC                              | 0.5  | Bắt buộc |     ✅     | FXML + Controller (client); Model + DAO (server)                                                                                     |
+| Maven, coding convention         | 0.5  | Bắt buộc |     ✅     | Maven multi-module, Spotless Google Java Style                                                                                       |
+| Unit Test JUnit                  | 0.5  | Bắt buộc |     ✅     | 4 file test, 30+ test case trong `auction-server/src/test/java/`                                                                     |
+| CI/CD GitHub Actions             | 0.5  | Bắt buộc |     ✅     | `.github/workflows/ci.yml`                                                                                                           |
+| **Auto-Bidding**                 | 0.5  | Tuỳ chọn |     ✅     | `AutoBidStrategy` + maxBid/increment hoạt động; **đã dùng `PriorityQueue`** (thay cho vòng lặp cũ)                                   |
+| **Anti-sniping**                 | 0.5  | Tuỳ chọn |     ✅     | `Auction.ANTI_SNIPE_WINDOW_SECONDS`, `extendEndTime()`                                                                               |
+| **Bid History Visualization**    | 0.5  | Tuỳ chọn |     ✅     | `LineChart` trong `bidding-room.fxml`, cập nhật qua Observer                                                                         |
 
 ---
 
