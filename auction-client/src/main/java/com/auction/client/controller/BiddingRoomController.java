@@ -700,6 +700,7 @@ public class BiddingRoomController implements AuctionObserver {
       autoBidStatusLabel.setStyle("-fx-text-fill: #9e9e9e; -fx-font-weight: normal;"); // Gray
       autoBidButton.setVisible(true);
       autoBidButton.setManaged(true);
+      autoBidButton.setDisable(false);
       cancelAutoBidButton.setVisible(false);
       cancelAutoBidButton.setManaged(false);
       maxBidField.setDisable(false);
