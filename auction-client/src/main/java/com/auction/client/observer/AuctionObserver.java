@@ -6,8 +6,8 @@ import server.model.entity.BidTransaction;
 /**
  * Interface Observer dành cho phía Client.
  *
- * <p>Đây là "hợp đồng" giữa Thành viên 3 (NetworkLayer) và Thành viên 4 (GUI). Thành viên 3 sẽ gọi
- * phương thức {@link #onBidUpdated} mỗi khi nhận được thông báo đặt giá mới từ Server. Thành viên 4
+ * <p>Đây là "hợp đồng" giữa NetworkLayer (tầng mạng) và GUI (giao diện đồ họa). Tầng mạng sẽ gọi
+ * phương thức {@link #onBidUpdated} mỗi khi nhận được thông báo đặt giá mới từ Server. GUI
  * implement interface này trong BiddingRoomController để cập nhật UI tự động.
  *
  * <p>Lưu ý quan trọng về thread safety: phương thức này có thể được gọi từ background network

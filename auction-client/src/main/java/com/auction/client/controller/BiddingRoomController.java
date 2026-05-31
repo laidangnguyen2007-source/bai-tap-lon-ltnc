@@ -34,15 +34,13 @@ import server.model.entity.BidTransaction;
 /**
  * Controller cho màn hình Phòng Đấu Giá Trực Tiếp (bidding-room.fxml).
  *
- * <p><b>Đây là Controller phức tạp và quan trọng nhất của Thành viên 4.</b>
- *
  * <p><b>Vai trò trong mô hình Observer:</b> Lớp này implement {@link AuctionObserver} để nhận thông
- * báo realtime từ TV3 (NetworkLayer). Mỗi khi có lượt đặt giá mới từ BẤT KỲ người dùng nào trong
- * phòng, TV3 sẽ gọi {@link #onBidUpdated(BidTransaction)}, và controller này sẽ tự động cập nhật
+ * báo realtime từ tầng mạng (NetworkLayer). Mỗi khi có lượt đặt giá mới từ BẤT KỲ người dùng nào trong
+ * phòng, NetworkLayer sẽ gọi {@link #onBidUpdated(BidTransaction)}, và controller này sẽ tự động cập nhật
  * biểu đồ và nhãn giá — không cần người dùng nhấn refresh.
  *
  * <p><b>Nguyên tắc thread safety bắt buộc:</b> {@link #onBidUpdated} được gọi từ background network
- * thread của TV3. Mọi thao tác cập nhật UI đều phải được bọc trong {@link Platform#runLater} để
+ * thread của NetworkLayer. Mọi thao tác cập nhật UI đều phải được bọc trong {@link Platform#runLater} để
  * chuyển về JavaFX Application Thread — vi phạm điều này sẽ gây IllegalStateException.
  */
 public class BiddingRoomController implements AuctionObserver {
@@ -169,7 +167,7 @@ public class BiddingRoomController implements AuctionObserver {
     // Load lịch sử bid đã có từ trước (khi mới vào phòng, client lấy toàn bộ history từ server)
     loadBidHistory(auction.getId());
 
-    // Đăng ký lớp này làm Observer — TV3 sẽ notify mỗi khi có bid mới
+    // Đăng ký lớp này làm Observer để nhận thông báo mỗi khi có bid mới
     serverService.addObserver(this);
 
     // Gắn dữ liệu ListView
@@ -343,12 +341,12 @@ public class BiddingRoomController implements AuctionObserver {
     bidHistoryItems.add(0, entry);
   }
 
-  // ===== OBSERVER PATTERN — NHẬN CẬP NHẬT REALTIME TỪ TV3 =====
+  // ===== OBSERVER PATTERN — NHẬN CẬP NHẬT REALTIME =====
 
   /**
    * <b>Điểm then chốt của toàn bộ hệ thống realtime.</b>
    *
-   * <p>TV3 gọi phương thức này từ background network thread mỗi khi nhận được thông báo bid mới từ
+   * <p>Tầng mạng gọi phương thức này từ background network thread mỗi khi nhận được thông báo bid mới từ
    * Server. Bắt buộc phải dùng Platform.runLater() để chuyển mọi thao tác UI về JavaFX Application
    * Thread — đây là quy tắc căn bản của lập trình đa luồng với JavaFX.
    *
@@ -377,7 +375,7 @@ public class BiddingRoomController implements AuctionObserver {
           currentAuction.setCurrentPrice(bid.getAmount());
           currentAuction.setCurrentWinnerId(bid.getBidderId());
 
-          // Nếu bid này là của chính mình, hiện thông báo thành công và MỞ KHÓA nút ngay
+          // Nếu bid này là của chính bidder hiện tại, hiện thông báo thành công và MỞ KHÓA nút ngay
           if (pendingBidAmount > 0 && bid.getAmount() == pendingBidAmount) {
             infoLabel.setText("");
             NotificationUtils.showSuccess(

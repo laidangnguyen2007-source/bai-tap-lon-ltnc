@@ -1,14 +1,18 @@
 package com.auction.client.service;
 
-import com.auction.client.network.*;
-import com.auction.client.observer.AuctionObserver;
-import com.auction.client.util.JsonMapper;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.Consumer;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
+import com.auction.client.network.AuctionNetworkHandler;
+import com.auction.client.network.BidNetworkHandler;
+import com.auction.client.network.ItemNetworkHandler;
+import com.auction.client.network.SocketConnection;
+import com.auction.client.network.UserNetworkHandler;
+import com.auction.client.network.WalletNetworkHandler;
+import com.auction.client.observer.AuctionObserver;
+import com.auction.client.util.JsonMapper;
 import server.model.entity.Auction;
 import server.model.entity.BidTransaction;
 import server.model.entity.item.Item;

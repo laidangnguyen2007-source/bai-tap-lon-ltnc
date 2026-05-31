@@ -193,37 +193,31 @@ public class JdbcAutoBidDao implements AutoBidDao {
 
   @Override
   public Optional<AutoBid> findById(Long id) {
-    // TODO Auto-generated method stub
     throw new UnsupportedOperationException("Unimplemented method 'findById'");
   }
 
   @Override
   public List<AutoBid> findAll() {
-    // TODO Auto-generated method stub
     throw new UnsupportedOperationException("Unimplemented method 'findAll'");
   }
 
   @Override
   public AutoBid update(AutoBid entity) {
-    // TODO Auto-generated method stub
     throw new UnsupportedOperationException("Unimplemented method 'update'");
   }
 
   @Override
   public boolean deleteById(Long id) {
-    // TODO Auto-generated method stub
     throw new UnsupportedOperationException("Unimplemented method 'deleteById'");
   }
 
   @Override
   public boolean existsById(Long id) {
-    // TODO Auto-generated method stub
     throw new UnsupportedOperationException("Unimplemented method 'existsById'");
   }
 
   @Override
   public long count() {
-    // TODO Auto-generated method stub
     throw new UnsupportedOperationException("Unimplemented method 'count'");
   }
 }

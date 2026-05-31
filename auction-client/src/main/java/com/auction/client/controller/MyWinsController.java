@@ -73,8 +73,8 @@ public class MyWinsController {
     List<Auction> all = serverService.getAllAuctions();
 
     // Sử dụng Stream API để lọc ra các phiên thỏa mãn đồng thời 2 điều kiện:
-    // 1. currentWinnerId khớp với ID của mình (Nghĩa là mình đang là người trả giá cao nhất)
-    // 2. Trạng thái phiên là FINISHED hoặc PAID (Nghĩa là phiên đã đóng, xác nhận mình là người
+    // 1. currentWinnerId khớp với ID người dùng hiện tại (nghĩa là đang là người trả giá cao nhất)
+    // 2. Trạng thái phiên là FINISHED hoặc PAID (nghĩa là phiên đã kết thúc và xác nhận người dùng
     // thắng cuộc)
     List<Auction> won =
         all.stream()

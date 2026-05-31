@@ -9,8 +9,8 @@ public class TestAuctionException {
 
   @Test
   void testInvalidBidException() {
-    // 1. Test thử cái Exception
-    // Xem nó có lưu đúng message mình truyền vào không
+    // 1. Kiểm tra InvalidBidException
+    // Kiểm tra xem ngoại lệ có lưu đúng thông điệp (message) được truyền vào hay không
     InvalidBidException ex =
         assertThrows(
             InvalidBidException.class,
@@ -24,15 +24,15 @@ public class TestAuctionException {
 
   @Test
   void testAuctionTimeLogic() {
-    // 2. Test cái bẫy thời gian trong lớp Auction
-    // Cố tình để endTime TRƯỚC startTime
+    // 2. Kiểm tra logic ràng buộc thời gian trong lớp Auction
+    // Thiết lập endTime trước startTime để kiểm tra hành vi ném ngoại lệ
     LocalDateTime now = LocalDateTime.now();
     LocalDateTime past = now.minusDays(1);
 
     assertThrows(
         IllegalArgumentException.class,
         () -> {
-          new Auction(1L, 1L, now, past); // Cái này phải văng lỗi!
+          new Auction(1L, 1L, now, past); // Constructor phải ném ra ngoại lệ IllegalArgumentException
         });
 
     System.out.println("✅ Test Auction Time Logic (End before Start): PASS");

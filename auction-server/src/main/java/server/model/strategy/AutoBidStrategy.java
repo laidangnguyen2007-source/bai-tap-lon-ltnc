@@ -29,7 +29,7 @@ public class AutoBidStrategy implements BidStrategy, Comparable<AutoBidStrategy>
 
     long currentPrice = auction.getCurrentPrice();
 
-    // Kiểm tra xem người này có đang dẫn đầu không -> nếu có thì ko cập nhật bid
+    // Kiểm tra xem người này có đang dẫn đầu không -> nếu có thì không cập nhật bid
     if (auction.getCurrentWinnerId() != null && auction.getCurrentWinnerId().equals(userId)) {
       return null;
     }

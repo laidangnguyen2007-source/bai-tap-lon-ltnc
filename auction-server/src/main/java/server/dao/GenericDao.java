@@ -15,7 +15,7 @@ public interface GenericDao<T extends BaseEntity> {
   // Tìm entity theo ID. Trả về hộp Optional để tránh NullPointerException
   Optional<T> findById(Long id);
 
-  // Quét sạch bộ nhớ, trả về 1 List chứa toàn bộ danh sách
+  // Lấy toàn bộ danh sách các entity
   List<T> findAll();
 
   // Ghi đè lên entity đã tồn tại. Entity phải có ID hợp lệ

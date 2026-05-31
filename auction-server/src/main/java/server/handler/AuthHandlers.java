@@ -15,7 +15,7 @@ import server.service.util.PasswordUtil;
  * Các handler liên quan <b>xác thực và tài khoản</b> (đăng nhập / đăng ký).
  *
  * <p><b>SRP + DIP (gần):</b> Class chỉ lo luồng user; nhận {@link UserDao} qua constructor thay vì
- * singleton static — dễ test giả lập DAO sau này (đồ án nâng cao có thể dùng mock).
+ * singleton static — dễ test giả lập DAO sau này (có thể sử dụng mock).
  */
 public final class AuthHandlers {
 
