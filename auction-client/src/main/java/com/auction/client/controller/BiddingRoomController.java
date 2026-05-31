@@ -478,6 +478,11 @@ public class BiddingRoomController implements AuctionObserver {
             setAutoBidActive(false);
           } else if ("AUTO_BID_ACTIVATED".equals(eventType)) {
             setAutoBidActive(true);
+          } else if ("AUTO_BID_EXHAUSTED".equals(eventType)) {
+            infoLabel.setText("");
+            NotificationUtils.showError(
+                (Stage) bidChart.getScene().getWindow(), "Auto-Bid đã dừng do giá vượt mức tối đa!");
+            setAutoBidActive(false);
           }
         });
   }

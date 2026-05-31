@@ -78,6 +78,7 @@ public class ServerService {
           || "SELLER_PAYOUT".equals(type)
           || "ADMIN_BALANCE_ADJUSTED".equals(type)
           || "AUTO_BID_CANCELLED".equals(type)
+          || "AUTO_BID_EXHAUSTED".equals(type)
           || "USER_TOP_UP".equals(type)
           || "AUTO_BID_ACTIVATED".equals(type)) {
         observers.forEach(o -> o.onWalletEvent(type, push));

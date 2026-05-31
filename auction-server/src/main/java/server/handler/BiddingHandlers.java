@@ -157,6 +157,8 @@ public final class BiddingHandlers {
         }
       }
 
+      cleanUpExhaustedAutoBids(auctionId, auction);
+
       JSONObject res = new JSONObject();
       res.put("status", "OK");
       return res.toString();
@@ -281,6 +283,8 @@ public final class BiddingHandlers {
         }
       }
 
+      cleanUpExhaustedAutoBids(auctionId, auction);
+
       JSONObject res = new JSONObject();
       res.put("status", "OK");
       return res.toString();
@@ -373,6 +377,53 @@ public final class BiddingHandlers {
     } catch (Exception e) {
       e.printStackTrace();
       return JsonResponses.error(e.getMessage());
+    }
+  }
+
+  private void cleanUpExhaustedAutoBids(Long auctionId, Auction auction) {
+    if (auction == null) return;
+    List<AutoBidStrategy> strategies = AuctionManager.getInstance().getAutoBids(auctionId);
+    if (strategies == null || strategies.isEmpty()) return;
+
+    long minRequired = auction.getCurrentPrice() + auction.getMinBidStep();
+    for (AutoBidStrategy s : strategies) {
+      if (s.getMaxBid() < minRequired) {
+        Long bidderId = s.getUserId();
+
+        Optional<AutoBid> opt = autoBidDao.findByAuctionAndBidder(auctionId, bidderId);
+        if (opt.isPresent()) {
+          autoBidDao.deactivate(opt.get().getId());
+        }
+
+        AuctionManager.getInstance().removeAutoBid(auctionId, bidderId);
+
+        long lockedAmount = s.getMaxBid();
+        BidInfo currentWinner = AuctionManager.getInstance().getPreviousWinner(auctionId);
+        if (currentWinner != null && currentWinner.bidderId.equals(bidderId)) {
+          lockedAmount -= currentWinner.amount;
+        }
+
+        if (lockedAmount > 0) {
+          try {
+            walletService.releaseAutoBid(bidderId, auctionId, lockedAmount);
+          } catch (Exception e) {
+            System.err.println(
+                "WARN: Wallet release failed during exhaust auto-bid: " + e.getMessage());
+          }
+        }
+
+        try {
+          JSONObject exhaustedPush = new JSONObject();
+          exhaustedPush.put("type", "AUTO_BID_EXHAUSTED");
+          exhaustedPush.put("auctionId", auctionId);
+          exhaustedPush.put("userId", bidderId);
+          broadcaster.sendToUser(bidderId, exhaustedPush.toString());
+        } catch (Exception e) {
+          e.printStackTrace();
+        }
+        System.out.println(
+            "AUTO-BID EXHAUSTED: auction #" + auctionId + " | bidder #" + bidderId);
+      }
     }
   }
 }
