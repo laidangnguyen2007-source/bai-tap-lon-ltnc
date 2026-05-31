@@ -161,7 +161,7 @@ java -jar release/client.jar
 ## 7. Link báo cáo PDF và video demo
 
 - **Báo cáo PDF:** [https://drive.google.com/file/d/105np4jyQ9K0evI9sWoFKNvOj5JN_7Sl4/view?usp=sharing](#)
-- **Video demo:** [https://www.youtube.com/watch?v=JOw7UVB6rEY](#)
+- **Video demo:** [https://drive.google.com/file/d/1AkFOaAuS5H0-QqPASHoZJ1Y6bpQuDtJr/view?usp=sharing](#)
 
 ---
 
