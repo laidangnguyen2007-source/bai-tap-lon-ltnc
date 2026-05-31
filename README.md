@@ -21,16 +21,16 @@
 
 ## 2. Công nghệ sử dụng, môi trường chạy, yêu cầu cài đặt
 
-| Hạng mục | Chi tiết |
-| :--- | :--- |
-| **Ngôn ngữ** | Java 21+ |
-| **Build tool** | Apache Maven 3.9+ |
-| **Giao diện Client** | JavaFX 21 + FXML (MVC) |
-| **Kiến trúc** | Client–Server qua TCP Socket (cổng `8888`) |
-| **Cơ sở dữ liệu** | MySQL 8 (JDBC, Pessimistic Locking `SELECT … FOR UPDATE`) |
-| **Thư viện JSON** | org.json (server), json-simple (client) |
-| **Kiểm thử** | JUnit 5 |
-| **CI/CD** | GitHub Actions (`.github/workflows/ci.yml`) |
+| Hạng mục             | Chi tiết                                                  |
+| :------------------- | :-------------------------------------------------------- |
+| **Ngôn ngữ**         | Java 21+                                                  |
+| **Build tool**       | Apache Maven 3.9+                                         |
+| **Giao diện Client** | JavaFX 21 + FXML (MVC)                                    |
+| **Kiến trúc**        | Client–Server qua TCP Socket (cổng `8888`)                |
+| **Cơ sở dữ liệu**    | MySQL 8 (JDBC, Pessimistic Locking `SELECT … FOR UPDATE`) |
+| **Thư viện JSON**    | org.json (server), json-simple (client)                   |
+| **Kiểm thử**         | JUnit 5                                                   |
+| **CI/CD**            | GitHub Actions (`.github/workflows/ci.yml`)               |
 
 **Yêu cầu cài đặt:**
 
@@ -79,12 +79,13 @@ bai-tap-lon-ltnc/
 
 Dự án dùng **maven-shade-plugin** tạo **fat JAR / uber JAR** chạy bằng `java -jar`.
 
-| File | Vị trí | Mô tả |
-| :--- | :--- | :--- |
+| File       | Vị trí               | Mô tả                                       |
+| :--------- | :------------------- | :------------------------------------------ |
 | **Server** | `release/server.jar` | Fat JAR server — **dùng để chạy / nộp bài** |
 | **Client** | `release/client.jar` | Fat JAR client — **dùng để chạy / nộp bài** |
 
 **Nhóm tự build lại** (sau khi sửa code):
+
 ```bash
 build-jars.bat
 # hoặc thủ công:
@@ -109,16 +110,19 @@ copy auction-client\target\client.jar release\
 **Bước 1 — MySQL:** Start MySQL (XAMPP, cổng 3306).
 
 **Bước 2 — Server (Terminal 1):**
+
 ```bash
 java -jar release/server.jar
 ```
 
 **Bước 3 — Client (Terminal 2):**
+
 ```bash
 java -jar release/client.jar
 ```
 
 **Chạy nhiều Client:** Mở thêm terminal, lặp lại:
+
 ```bash
 java -jar release/client.jar
 ```
@@ -140,48 +144,46 @@ cd auction-client && mvn javafx:run
 
 ### Chức năng nghiệp vụ
 
-| Chức năng | Mô tả |
-| :--- | :--- |
-| Đăng ký / Đăng nhập | Bidder, Seller, Admin; mật khẩu hash |
-| Quản lý sản phẩm | Seller tạo/sửa/xóa item theo danh mục (Factory Pattern) |
-| Tạo & mở phiên đấu giá | Seller khởi tạo phiên, set giá khởi điểm, bước giá, thời gian |
-| Đặt giá thủ công | Bidder đặt giá trong phòng đấu giá |
-| Auto-Bidding | Đăng ký maxBid + increment; server tự đấu giá (Dùng PriorityQueue) |
-| Anti-sniping | Gia hạn phiên khi bid trong cửa sổ cuối |
-| Ví điện tử | Nạp tiền, khóa/giải phóng khi outbid, trừ tiền khi thắng |
-| Lịch sử bid | ListView + biểu đồ LineChart realtime |
-| Admin | Quản lý ví toàn hệ thống |
-| Realtime | Push bid/status/wallet qua Socket + Observer |
+| Chức năng              | Mô tả                                                              |
+| :--------------------- | :----------------------------------------------------------------- |
+| Đăng ký / Đăng nhập    | Bidder, Seller, Admin; mật khẩu hash                               |
+| Quản lý sản phẩm       | Seller tạo/sửa/xóa item theo danh mục (Factory Pattern)            |
+| Tạo & mở phiên đấu giá | Seller khởi tạo phiên, set giá khởi điểm, bước giá, thời gian      |
+| Đặt giá thủ công       | Bidder đặt giá trong phòng đấu giá                                 |
+| Auto-Bidding           | Đăng ký maxBid + increment; server tự đấu giá (Dùng PriorityQueue) |
+| Anti-sniping           | Gia hạn phiên khi bid trong cửa sổ cuối                            |
+| Ví điện tử             | Nạp tiền, khóa/giải phóng khi outbid, trừ tiền khi thắng           |
+| Lịch sử bid            | ListView + biểu đồ LineChart realtime                              |
+| Admin                  | Quản lý ví toàn hệ thống                                           |
+| Realtime               | Push bid/status/wallet qua Socket + Observer                       |
 
 ### Đối chiếu barem điểm (rubric)
 
-| Tiêu chí | Điểm | Mức | Trạng thái | Bằng chứng ngắn |
-| :--- | :---: | :---: | :---: | :--- |
-| Thiết kế lớp & cây kế thừa | 0.5 | Bắt buộc | ✅ | `User`→`Bidder`/`Seller`/`Admin`; `Item`→`Electronics`/`Artwork`/`Vehicle`; `Auction`, `BidTransaction`, `Wallet` |
-| OOP (4 tính chất) | 1.0 | Bắt buộc | ✅ | Encapsulation (private fields); Inheritance; Polymorphism (`BidStrategy`); Abstraction (`User`, `Item`, DAO interfaces) |
-| Design Patterns | 1.0 | Bắt buộc | ✅ | Singleton (`AuctionManager`), Factory (`ItemFactory`), Strategy (`BidStrategy`), Observer (`AuctionObserver`), DAO |
-| Quản lý người dùng & sản phẩm | 1.0 | Bắt buộc | ✅ | `AuthHandlers`, `CatalogHandlers`, `SellerDashboardController` |
-| Chức năng đấu giá | 1.0 | Bắt buộc | ✅ | `BiddingHandlers`, `AuctionManager.placeBid()` |
-| Xử lý lỗi & ngoại lệ | 1.0 | Bắt buộc | ✅ | `AuctionException`, `InvalidBidException`, `AuthenticationException`; test `TestAuctionException` |
-| Concurrency (không mất cập nhật) | 1.0 | Bắt buộc | ✅ | `synchronized(auction)`, `ConcurrentHashMap`, `SELECT … FOR UPDATE` |
-| Realtime (Observer/Socket) | 0.5 | Bắt buộc | ✅ | `ClientBroadcaster`, `AuctionObserver`, push JSON |
-| Client–Server | 0.5 | Bắt buộc | ✅ | TCP Socket cổng 8888, `Server.java`, `SocketConnection` |
-| MVC | 0.5 | Bắt buộc | ✅ | FXML + Controller (client); Model + DAO (server) |
-| Maven, coding convention | 0.5 | Bắt buộc | ✅ | Maven multi-module, Spotless Google Java Style |
-| Unit Test JUnit | 0.5 | Bắt buộc | ✅ | 4 file test, 30+ test case trong `auction-server/src/test/java/` |
-| CI/CD GitHub Actions | 0.5 | Bắt buộc | ✅ | `.github/workflows/ci.yml` |
-| **Auto-Bidding** | 0.5 | Tuỳ chọn | ✅ | `AutoBidStrategy` + maxBid/increment hoạt động; **đã dùng `PriorityQueue`** (thay cho vòng lặp cũ) |
-| **Anti-sniping** | 0.5 | Tuỳ chọn | ✅ | `Auction.ANTI_SNIPE_WINDOW_SECONDS`, `extendEndTime()` |
-| **Bid History Visualization** | 0.5 | Tuỳ chọn | ✅ | `LineChart` trong `bidding-room.fxml`, cập nhật qua Observer |
+| Tiêu chí                         | Điểm |   Mức    | Trạng thái | Bằng chứng ngắn                                                                                                         |
+| :------------------------------- | :--: | :------: | :--------: | :---------------------------------------------------------------------------------------------------------------------- |
+| Thiết kế lớp & cây kế thừa       | 0.5  | Bắt buộc |     ✅     | `User`→`Bidder`/`Seller`/`Admin`; `Item`→`Electronics`/`Artwork`/`Vehicle`; `Auction`, `BidTransaction`, `Wallet`       |
+| OOP (4 tính chất)                | 1.0  | Bắt buộc |     ✅     | Encapsulation (private fields); Inheritance; Polymorphism (`BidStrategy`); Abstraction (`User`, `Item`, DAO interfaces) |
+| Design Patterns                  | 1.0  | Bắt buộc |     ✅     | Singleton (`AuctionManager`), Factory (`ItemFactory`), Strategy (`BidStrategy`), Observer (`AuctionObserver`), DAO      |
+| Quản lý người dùng & sản phẩm    | 1.0  | Bắt buộc |     ✅     | `AuthHandlers`, `CatalogHandlers`, `SellerDashboardController`                                                          |
+| Chức năng đấu giá                | 1.0  | Bắt buộc |     ✅     | `BiddingHandlers`, `AuctionManager.placeBid()`                                                                          |
+| Xử lý lỗi & ngoại lệ             | 1.0  | Bắt buộc |     ✅     | `AuctionException`, `InvalidBidException`, `AuthenticationException`; test `TestAuctionException`                       |
+| Concurrency (không mất cập nhật) | 1.0  | Bắt buộc |     ✅     | `synchronized(auction)`, `ConcurrentHashMap`, `SELECT … FOR UPDATE`                                                     |
+| Realtime (Observer/Socket)       | 0.5  | Bắt buộc |     ✅     | `ClientBroadcaster`, `AuctionObserver`, push JSON                                                                       |
+| Client–Server                    | 0.5  | Bắt buộc |     ✅     | TCP Socket cổng 8888, `Server.java`, `SocketConnection`                                                                 |
+| MVC                              | 0.5  | Bắt buộc |     ✅     | FXML + Controller (client); Model + DAO (server)                                                                        |
+| Maven, coding convention         | 0.5  | Bắt buộc |     ✅     | Maven multi-module, Spotless Google Java Style                                                                          |
+| Unit Test JUnit                  | 0.5  | Bắt buộc |     ✅     | 4 file test, 30+ test case trong `auction-server/src/test/java/`                                                        |
+| CI/CD GitHub Actions             | 0.5  | Bắt buộc |     ✅     | `.github/workflows/ci.yml`                                                                                              |
+| **Auto-Bidding**                 | 0.5  | Tuỳ chọn |     ✅     | `AutoBidStrategy` + maxBid/increment hoạt động; **đã dùng `PriorityQueue`** (thay cho vòng lặp cũ)                      |
+| **Anti-sniping**                 | 0.5  | Tuỳ chọn |     ✅     | `Auction.ANTI_SNIPE_WINDOW_SECONDS`, `extendEndTime()`                                                                  |
+| **Bid History Visualization**    | 0.5  | Tuỳ chọn |     ✅     | `LineChart` trong `bidding-room.fxml`, cập nhật qua Observer                                                            |
 
 ---
 
 ## 7. Link báo cáo PDF và video demo
 
-- **Báo cáo PDF:** [Chèn link báo cáo PDF tại đây](#)
-- **Video demo:** [Chèn link video demo tại đây](#)
-
-> Nhóm cần cập nhật hai link trên trước khi nộp bài (deadline: **31/05/2026**).
+- **Báo cáo PDF:** [https://drive.google.com/file/d/105np4jyQ9K0evI9sWoFKNvOj5JN_7Sl4/view?usp=sharing](#)
+- **Video demo:** [https://www.youtube.com/watch?v=JOw7UVB6rEY](#)
 
 ---
 
